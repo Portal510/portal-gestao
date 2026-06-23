@@ -3398,10 +3398,10 @@ function showZipResult(rows, zipName){
 let upMode = 'ambos'; // 'ambos' | 'tipo' | 'colab' | 'auto'
 
 const UP_MODE_HINTS = {
-  ambos: 'Selecione o tipo e o colaborador, depois importe os arquivos. O sistema aplica os mesmos tipo e colaborador a todos os arquivos importados.',
+  ambos: 'Selecione o colaborador (obrigatório). O tipo é opcional — se não selecionado, o sistema tenta identificar pelo nome do arquivo.',
   tipo:  'Selecione apenas o tipo do documento. O colaborador será identificado automaticamente pelo nome do arquivo.',
-  colab: 'Selecione apenas o colaborador. O tipo do documento será identificado automaticamente pelo nome do arquivo.',
-  auto:  'Não é necessário selecionar nada. O sistema identifica o colaborador e o tipo pelo nome do arquivo automaticamente.',
+  colab: 'Selecione apenas o colaborador. O tipo será identificado pelo nome do arquivo (ou ficará em branco se não identificado).',
+  auto:  'Não é necessário selecionar nada. O sistema identifica colaborador e tipo pelo nome do arquivo automaticamente.',
 };
 
 function setUpMode(mode){
@@ -3429,16 +3429,12 @@ function upHandleFiles(files){
   const tipo    = document.getElementById('up-tipo').value;
   const colabId = parseInt(document.getElementById('up-colab').value);
 
-  // Validate based on mode
-  if(upMode==='ambos'){
-    if(!tipo)       { alert('Selecione o tipo de documento.'); return; }
-    if(isNaN(colabId)){ alert('Selecione o colaborador.'); return; }
-  } else if(upMode==='tipo'){
-    if(!tipo){ alert('Selecione o tipo de documento.'); return; }
-  } else if(upMode==='colab'){
+  // Validate based on mode — tipo é sempre opcional (identificado pelo nome se não informado)
+  if(upMode==='ambos'||upMode==='colab'){
     if(isNaN(colabId)){ alert('Selecione o colaborador.'); return; }
   }
-  // mode==='auto' needs neither
+  // tipo is never mandatory — if missing it will be guessed from filename or left blank
+  // mode==='auto' and mode==='tipo' need nothing mandatory
 
   const resultDiv = document.getElementById('up-batch-result');
   const rows = [];
@@ -3449,31 +3445,30 @@ function upHandleFiles(files){
     let resolvedTipo   = tipo   || null;
     let resolvedColabId= isNaN(colabId) ? null : colabId;
 
-    if(upMode==='tipo'||upMode==='auto'){
+    // Always try to guess from filename what's not provided
+    if(!resolvedColabId){
       const guessed = upGuessColab(file.name);
       if(guessed) resolvedColabId = guessed._id;
     }
-    if(upMode==='colab'||upMode==='auto'){
+    if(!resolvedTipo){
       const guessed = upGuessType(file.name);
       if(guessed) resolvedTipo = guessed;
     }
 
-    // Still missing after auto-detect?
-    if(!resolvedTipo||resolvedColabId===null){
-      const colab = resolvedColabId!==null ? DATA.find(x=>x._id===resolvedColabId) : null;
+    // If colab still missing → needs manual resolution
+    if(resolvedColabId===null){
       rows.push({
-        fileName:file.name,
-        _fileObj: file,  // keep File object for manual confirm
-        status: !resolvedColabId&&!resolvedTipo?'manual':!resolvedColabId?'no-colab':'no-tipo',
-        msg: !resolvedColabId&&!resolvedTipo ? 'Não identificado — selecione manualmente'
-          : !resolvedColabId ? `Tipo: ${resolvedTipo} — colaborador não identificado`
-          : `Colaborador: ${colab?.nome||'?'} — tipo não identificado`,
-        colab, tipo:resolvedTipo
+        fileName:file.name, _fileObj:file,
+        status:'no-colab',
+        msg: resolvedTipo ? `Tipo: ${resolvedTipo} — colaborador não identificado` : 'Colaborador não identificado',
+        colab:null, tipo:resolvedTipo
       });
       pending--;
       if(pending===0) showQuickUploadResult(rows);
       return;
     }
+    // tipo is optional — import without it if not found
+    const tipoFinal = resolvedTipo || null;
 
     const colab = DATA.find(x=>x._id===resolvedColabId);
     if(!colab){ pending--; if(pending===0) showQuickUploadResult(rows); return; }
@@ -3482,20 +3477,19 @@ function upHandleFiles(files){
     const id  = Date.now().toString()+Math.random().toString(36).slice(2,6);
     const reader = new FileReader();
     reader.onload = (e)=>{
-      // Check duplicate
-      const dup = uploadedDocs.find(d=>d.colabId===resolvedColabId&&d.tipo===resolvedTipo&&d.fileName===file.name);
+      const dup = uploadedDocs.find(d=>d.colabId===resolvedColabId&&d.tipo===tipoFinal&&d.fileName===file.name);
       if(dup){
-        rows.push({fileName:file.name,status:'dup',msg:'Duplicado — já existe',colab,tipo:resolvedTipo});
+        rows.push({fileName:file.name,status:'dup',msg:'Duplicado — já existe',colab,tipo:tipoFinal});
       } else {
         uploadedDocs.unshift({
           id, colabId:resolvedColabId, colabNome:colab.nome, colabUf:colab.uf,
-          tipo:resolvedTipo, cat:TIPO_CAT[resolvedTipo]||'Outros',
+          tipo:tipoFinal||'—', cat:TIPO_CAT[tipoFinal]||'Outros',
           fileName:file.name, ext, size:file.size,
           dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
           dataUrl:e.target.result,
         });
-        upAtualizarStatus(resolvedColabId, resolvedTipo);
-        rows.push({fileName:file.name,status:'ok',msg:`✅ ${colab.nome} · ${resolvedTipo}`,colab,tipo:resolvedTipo});
+        if(tipoFinal) upAtualizarStatus(resolvedColabId, tipoFinal);
+        rows.push({fileName:file.name,status:'ok',msg:`✅ ${colab.nome}${tipoFinal?' · '+tipoFinal:''}`,colab,tipo:tipoFinal});
       }
       saveUploadDocs();
       pending--;
