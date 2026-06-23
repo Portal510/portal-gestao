@@ -898,6 +898,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <option value="Pendente">⏳ Pendente</option>
     </select>
     <button class="up-btn" onclick="upLimparTudo()" style="margin-left:auto">🗑 Limpar tudo</button>
+    <button class="up-btn" onclick="initUpload();upFilterDocs();" style="background:#E8F0FE;border-color:#2E75B6;color:#1F4E79;font-weight:600">🔄 Atualizar</button>
   </div>
 
   <!-- Doc list -->
@@ -3462,6 +3463,7 @@ function upHandleFiles(files){
       const colab = resolvedColabId!==null ? DATA.find(x=>x._id===resolvedColabId) : null;
       rows.push({
         fileName:file.name,
+        _fileObj: file,  // keep File object for manual confirm
         status: !resolvedColabId&&!resolvedTipo?'manual':!resolvedColabId?'no-colab':'no-tipo',
         msg: !resolvedColabId&&!resolvedTipo ? 'Não identificado — selecione manualmente'
           : !resolvedColabId ? `Tipo: ${resolvedTipo} — colaborador não identificado`
@@ -3535,11 +3537,12 @@ function showQuickUploadResult(rows){
               <option value="">Selecionar tipo…</option>
               ${Object.keys(TIPO_TO_FIELD).map(t=>`<option value="${t}">${t}</option>`).join('')}
             </select>`:''}
-            <button class="up-btn" style="font-size:11px;padding:3px 10px" onclick="upBatchConfirmRow('${r.fileName}')">Confirmar</button>
+            <button class="btn-primary" style="font-size:12px;padding:4px 12px" onclick="upBatchConfirmRow('${r.fileName}')">✓ Confirmar</button>
           </div>
         </div>`).join('');
     window._batchPendingRows = rows;
     window._batchPendingFiles = {};
+    rows.forEach(r=>{ if(r._fileObj) window._batchPendingFiles[r.fileName]=r._fileObj; });
   }
 }
 
@@ -3827,44 +3830,87 @@ function showBatchResult(rows, matched, skipped, noColab, noTipo, total){
 
 // Manual fix for unidentified files
 function upBatchSetColab(sel, fname){
-  const row = window._batchPendingRows?.find(r=>r.file.name===fname);
+  const row = window._batchPendingRows?.find(r=>(r.fileName||r.file?.name)===fname);
   if(row) row._manualColabId = parseInt(sel.value)||null;
 }
 function upBatchSetTipo(sel, fname){
-  const row = window._batchPendingRows?.find(r=>r.file.name===fname);
+  const row = window._batchPendingRows?.find(r=>(r.fileName||r.file?.name)===fname);
   if(row) row._manualTipo = sel.value||null;
 }
 function upBatchConfirmRow(fname){
-  const row = window._batchPendingRows?.find(r=>r.file.name===fname);
-  if(!row) return;
+  const row = window._batchPendingRows?.find(r=>(r.fileName||r.file?.name)===fname);
+  if(!row){ alert('Registro não encontrado. Tente reenviar o arquivo.'); return; }
+
   const colabId = row.colab?._id ?? row._manualColabId;
-  const tipo    = row.tipo ?? row._manualTipo;
+  const tipo    = row.tipo   ?? row._manualTipo;
   if(!colabId||!tipo){ alert('Selecione colaborador e tipo antes de confirmar.'); return; }
+
   const colab = DATA.find(x=>x._id===colabId);
-  const file  = row.file;
-  const ext   = file.name.split('.').pop().toLowerCase();
-  const reader = new FileReader();
-  reader.onload = (e)=>{
+  if(!colab){ alert('Colaborador não encontrado.'); return; }
+
+  // Get the File object — stored in _batchPendingFiles or row.file
+  const fileKey = row.fileName || row.file?.name;
+  const file = window._batchPendingFiles?.[fileKey] || row.file || null;
+
+  function doImport(dataUrl, size, ext){
+    const dup = uploadedDocs.find(d=>d.colabId===colabId&&d.tipo===tipo&&d.fileName===fileKey);
+    if(dup){ alert('Este arquivo já foi importado anteriormente.'); return; }
     const id = Date.now().toString()+Math.random().toString(36).slice(2,5);
     uploadedDocs.unshift({
       id, colabId, colabNome:colab.nome, colabUf:colab.uf,
       tipo, cat:TIPO_CAT[tipo]||'Outros',
-      fileName:file.name, ext, size:file.size,
+      fileName:fileKey, ext, size,
       dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
-      dataUrl:e.target.result, batchImported:true,
+      dataUrl, batchImported:true,
     });
     upAtualizarStatus(colabId, tipo);
     saveUploadDocs();
     row.status='ok'; row.colab=colab; row.tipo=tipo;
     row.msg=`✅ ${colab.nome} · ${tipo}`;
     upFilterDocs();
-    // Refresh result panel
-    const matched = window._batchPendingRows.filter(r=>r.status==='ok').length;
-    const skipped = window._batchPendingRows.filter(r=>r.status==='dup').length;
-    const noId    = window._batchPendingRows.filter(r=>['no-colab','no-tipo','manual'].includes(r.status)).length;
-    showBatchResult(window._batchPendingRows, matched, skipped, noId, 0, window._batchPendingRows.length);
-  };
-  reader.readAsDataURL(file);
+    // Refresh the result panel
+    const allRows = window._batchPendingRows;
+    const ok  = allRows.filter(r=>r.status==='ok').length;
+    const dup2= allRows.filter(r=>r.status==='dup').length;
+    const noid= allRows.filter(r=>['no-colab','no-tipo','manual'].includes(r.status)).length;
+    // Re-render result panel inline
+    const resultDiv = document.getElementById('up-batch-result');
+    if(!resultDiv) return;
+    resultDiv.innerHTML = `<div style="font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:10px">
+        ✅ ${ok} importado(s) &nbsp;·&nbsp; ⏩ ${dup2} duplicado(s) &nbsp;·&nbsp; <span style="color:#7A5000">⚠️ ${noid} não identificado(s)</span>
+      </div>` +
+      allRows.filter(r=>['manual','no-colab','no-tipo'].includes(r.status)).map(r=>`
+        <div style="padding:6px 0;border-bottom:1px solid #dee2e6;font-size:12px">
+          <span style="color:#7A5000">⚠️</span>
+          <span style="color:#1a1a2e;font-weight:500;margin-left:6px">${r.fileName||r.file?.name}</span>
+          <span style="color:#6c757d;margin-left:8px">${r.msg}</span>
+          <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap">
+            ${!r.colab?`<select class="up-select" style="font-size:11px;padding:3px 6px" onchange="upBatchSetColab(this,'${r.fileName||r.file?.name}')">
+              <option value="">Selecionar colaborador…</option>
+              ${[...DATA].sort((a,b)=>a.nome.localeCompare(b.nome)).map(c=>`<option value="${c._id}"${r._manualColabId===c._id?' selected':''}>${c.nome} (${c.uf})</option>`).join('')}
+            </select>`:'<span style="color:#155724;font-size:11px">👤 '+r.colab.nome+'</span>'}
+            ${!r.tipo?`<select class="up-select" style="font-size:11px;padding:3px 6px" onchange="upBatchSetTipo(this,'${r.fileName||r.file?.name}')">
+              <option value="">Selecionar tipo…</option>
+              ${Object.keys(TIPO_TO_FIELD).map(t=>`<option value="${t}"${r._manualTipo===t?' selected':''}>${t}</option>`).join('')}
+            </select>`:'<span style="color:#155724;font-size:11px">📄 '+r.tipo+'</span>'}
+            <button class="btn-primary" style="padding:4px 12px;font-size:12px" onclick="upBatchConfirmRow('${r.fileName||r.file?.name}')">✓ Confirmar</button>
+          </div>
+        </div>`).join('') +
+      (noid===0?'<div style="color:#155724;font-size:13px;font-weight:600;margin-top:8px">✅ Todos os arquivos foram importados!</div>':'');
+  }
+
+  if(file){
+    const ext = file.name.split('.').pop().toLowerCase();
+    const reader = new FileReader();
+    reader.onload = (e)=>doImport(e.target.result, file.size, ext);
+    reader.readAsDataURL(file);
+  } else if(row.dataUrl){
+    // ZIP entries already have dataUrl
+    const ext = fileKey.split('.').pop().toLowerCase();
+    doImport(row.dataUrl, row.size||0, ext);
+  } else {
+    alert('Arquivo não disponível para confirmar. Importe novamente usando "Identificar pelo nome".');
+  }
 }
 
 // ── End batch import ──────────────────────
