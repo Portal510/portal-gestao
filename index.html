@@ -3486,6 +3486,149 @@ renderUniItemsTable();
 const _uniDat=document.getElementById('uni-data');
 if(_uniDat&&!_uniDat.value) _uniDat.value=new Date().toISOString().slice(0,10);
 
+// ══════════════════════════════════════════
+// SINCRONIZAÇÃO COM PORTAL T&S
+// hepta_portal_data <-> Portal Gestão
+// ══════════════════════════════════════════
+
+const SYNC_KEY   = 'hepta_portal_data';
+const SYNC_TS_KEY= 'hepta_portal_data_sync';
+
+// Cargo map portal-ts abbreviation ↔ nome completo
+const CARGO_FROM_TS = {
+  'TEL':'Analista de suporte telefônico (TEL)',
+  'BSB':'Analista de suporte (BSB)',
+  'EST':'Analista de suporte (EST)',
+  'AE' :'Analista de suporte especializado (AE)',
+  'AC' :'Analista de suporte especializado (AC)',
+  'AP' :'Administração de parque tecnológico (AP)',
+  'CE' :'Cabeamento estruturado (CE)',
+  'STEL':'Supervisor de suporte (STEL)',
+  'SBSB':'Supervisor de suporte (BSB)',
+  'SEST':'Supervisor de suporte (EST)',
+  'SAE' :'Supervisor de suporte (SAE)',
+  'SCHA':'Supervisor de suporte (SCHA)',
+  'GCON':'Gestor de conhecimento',
+  'GSD' :'Gestor de Service desk',
+};
+
+function tsDateToIso(d){ if(!d) return ''; const p=d.split('/'); return p.length===3?`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`:''; }
+function isoToTsDate(d){ if(!d) return ''; const p=d.split('-'); return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:''; }
+
+function syncFromPortalTs(){
+  try{
+    const raw=localStorage.getItem(SYNC_KEY);
+    if(!raw) return 0;
+    const stored=JSON.parse(raw);
+    const tsColl=stored.COLL;
+    if(!tsColl||!tsColl.length) return 0;
+    let updated=0;
+    tsColl.forEach(ts=>{
+      const normNome=(ts.nome||'').trim().toLowerCase();
+      const local=DATA.find(c=>c.nome.trim().toLowerCase()===normNome);
+      if(!local) return;
+      if(ts.email_imp && ts.email_imp!==local.email){ local.email=ts.email_imp; updated++; }
+      if(ts.email_tcu && ts.email_tcu!==local.email_inst){ local.email_inst=ts.email_tcu; updated++; }
+      if(ts.admissao){ const iso=tsDateToIso(ts.admissao); if(iso&&iso!==local.data_admissao){ local.data_admissao=iso; updated++; } }
+      if(ts.status){ const st=ts.status==='desligado'?'inativo':ts.status; if(st!==local.status){ local.status=st; updated++; } }
+      // Sync cargo if TS has abbreviated version
+      if(ts.cargo && CARGO_FROM_TS[ts.cargo] && CARGO_FROM_TS[ts.cargo]!==local.cargo){ local.cargo=CARGO_FROM_TS[ts.cargo]; updated++; }
+    });
+    return updated;
+  }catch(e){ console.warn('[Sync→]',e); return 0; }
+}
+
+function syncToPortalTs(){
+  try{
+    const raw=localStorage.getItem(SYNC_KEY);
+    if(!raw) return 0;
+    const stored=JSON.parse(raw);
+    const tsColl=stored.COLL;
+    if(!tsColl||!tsColl.length) return 0;
+    let updated=0;
+    DATA.forEach(local=>{
+      const normNome=local.nome.trim().toLowerCase();
+      const ts=tsColl.find(t=>(t.nome||'').trim().toLowerCase()===normNome);
+      if(!ts) return;
+      const newStatus=local.status==='inativo'?'desligado':'ativo';
+      if(ts.status!==newStatus){ ts.status=newStatus; updated++; }
+      if(local.email_inst&&local.email_inst!=='Pendente'&&local.email_inst!==ts.email_tcu){ ts.email_tcu=local.email_inst; updated++; }
+      if(local.data_admissao){ const td=isoToTsDate(local.data_admissao); if(td&&td!==ts.admissao){ ts.admissao=td; updated++; } }
+    });
+    if(updated>0){
+      stored.COLL=tsColl;
+      localStorage.setItem(SYNC_KEY,JSON.stringify(stored));
+      localStorage.setItem(SYNC_TS_KEY,Date.now().toString());
+    }
+    return updated;
+  }catch(e){ console.warn('[Sync←]',e); return 0; }
+}
+
+function runFullSync(){
+  const pulled=syncFromPortalTs();
+  const pushed=syncToPortalTs();
+  renderGeral();
+  showSyncToast(pulled,pushed);
+  return {pulled,pushed};
+}
+
+function showSyncToast(pulled,pushed){
+  let t=document.getElementById('sync-toast');
+  if(!t){
+    t=document.createElement('div');
+    t.id='sync-toast';
+    t.style.cssText='position:fixed;bottom:20px;right:20px;background:#1F4E79;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;z-index:9998;box-shadow:0 4px 16px rgba(0,0,0,.25);transition:opacity .4s;pointer-events:none';
+    document.body.appendChild(t);
+  }
+  const total=pulled+pushed;
+  t.textContent=total>0?`🔄 Sincronizado: ↓${pulled} recebidos · ↑${pushed} enviados`:'🔄 Sincronização: portais já atualizados';
+  t.style.opacity='1';
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.style.opacity='0',4000);
+}
+
+// Live sync: quando portal-ts escreve no localStorage desta aba
+window.addEventListener('storage',e=>{
+  if(e.key===SYNC_TS_KEY||e.key===SYNC_KEY){
+    const n=syncFromPortalTs();
+    if(n>0){ renderGeral(); showSyncToast(n,0); }
+  }
+});
+
+// Sync button in header
+(function addSyncBtn(){
+  const header=document.querySelector('.header');
+  if(!header) return;
+  const btn=document.createElement('button');
+  btn.id='btn-sync-ts';
+  btn.title='Sincronizar com Portal T&S (portal510.github.io/portal-ts/)';
+  btn.style.cssText='margin-left:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 14px;border-radius:16px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;transition:background .2s';
+  btn.onmouseover=()=>btn.style.background='rgba(255,255,255,.25)';
+  btn.onmouseout=()=>btn.style.background='rgba(255,255,255,.15)';
+  btn.innerHTML='🔄 Sync T&S';
+  btn.onclick=()=>{
+    const hasData=!!localStorage.getItem(SYNC_KEY);
+    if(!hasData){
+      alert('Portal T&S não encontrado no navegador.\n\nPara sincronizar:\n1. Abra portal510.github.io/portal-ts/ nesta mesma janela do navegador\n2. Faça login e aguarde carregar\n3. Volte para este portal e clique em Sync T&S novamente');
+      return;
+    }
+    btn.innerHTML='⏳...';
+    btn.disabled=true;
+    setTimeout(()=>{
+      const {pulled,pushed}=runFullSync();
+      btn.innerHTML='🔄 Sync T&S';
+      btn.disabled=false;
+      alert(`Sincronização com Portal T&S concluída!\n\n↓ Recebido do Portal T&S: ${pulled} campo(s)\n↑ Enviado ao Portal T&S: ${pushed} campo(s)\n\nOs dois portais estão atualizados.`);
+    },400);
+  };
+  const stats=document.querySelector('.header-stats');
+  if(stats) header.insertBefore(btn,stats);
+  else header.appendChild(btn);
+})();
+
+// Initial sync on load (silent)
+(function(){ const n=syncFromPortalTs(); if(n>0) console.log(`[Sync] Load: ${n} campo(s) sincronizados`); })();
+
 renderGeral();
 </script>
 </body>
