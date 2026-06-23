@@ -748,6 +748,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     .up-stat{background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:10px 16px;text-align:center;flex:1;min-width:100px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
     .up-stat .n{font-size:20px;font-weight:700}
     .up-stat .l{font-size:11px;color:#6c757d;margin-top:2px}
+    .up-mode-btn{padding:7px 16px;background:#f0f2f5;border:1.5px solid #dee2e6;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;color:#495057;transition:all .15s;white-space:nowrap}
+    .up-mode-btn:hover{background:#e2e6ea;border-color:#2E75B6;color:#1F4E79}
+    .up-mode-btn.active{background:#1F4E79;color:#fff;border-color:#1F4E79}
   </style>
 
   <!-- Stats -->
@@ -755,9 +758,22 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
   <!-- Upload Form -->
   <div class="up-section">
-    <div class="up-section-title">📎 Definir Tipo de Documento + Colaborador + Importar Arquivos</div>
-    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:0">
-      <div style="flex:1;min-width:180px">
+    <div class="up-section-title">📎 Importar Documentos</div>
+
+    <!-- Mode selector -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="up-mode-btn active" id="upmode-ambos" onclick="setUpMode('ambos')">📎 Tipo + Colaborador</button>
+      <button class="up-mode-btn" id="upmode-tipo" onclick="setUpMode('tipo')">📄 Só pelo Tipo</button>
+      <button class="up-mode-btn" id="upmode-colab" onclick="setUpMode('colab')">👤 Só pelo Colaborador</button>
+      <button class="up-mode-btn" id="upmode-auto" onclick="setUpMode('auto')">🔍 Identificar pelo nome</button>
+    </div>
+    <div id="up-mode-hint" style="font-size:12px;color:#6c757d;margin-bottom:12px;padding:8px 12px;background:#f8f9fa;border-radius:6px;border-left:3px solid #2E75B6">
+      Selecione o tipo e o colaborador, depois importe os arquivos.
+    </div>
+
+    <!-- Fields — shown/hidden per mode -->
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:4px" id="up-fields">
+      <div style="flex:1;min-width:180px" id="up-field-tipo">
         <div style="font-size:11px;color:#6c757d;font-weight:600;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Tipo de Documento</div>
         <select id="up-tipo" class="up-select" style="width:100%" onchange="upFilterDocs()">
           <option value="">Selecione o tipo</option>
@@ -795,7 +811,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           </optgroup>
         </select>
       </div>
-      <div style="flex:1;min-width:220px">
+      <div style="flex:1;min-width:220px" id="up-field-colab">
         <div style="font-size:11px;color:#6c757d;font-weight:600;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Colaborador</div>
         <select id="up-colab" class="up-select" style="width:100%">
           <option value="">Selecione o colaborador</option>
@@ -3377,49 +3393,154 @@ function showZipResult(rows, zipName){
   // For ZIP, we don't have File objects for manual fix — note this
 }
 
+// ── Upload mode selector ──────────────────
+let upMode = 'ambos'; // 'ambos' | 'tipo' | 'colab' | 'auto'
+
+const UP_MODE_HINTS = {
+  ambos: 'Selecione o tipo e o colaborador, depois importe os arquivos. O sistema aplica os mesmos tipo e colaborador a todos os arquivos importados.',
+  tipo:  'Selecione apenas o tipo do documento. O colaborador será identificado automaticamente pelo nome do arquivo.',
+  colab: 'Selecione apenas o colaborador. O tipo do documento será identificado automaticamente pelo nome do arquivo.',
+  auto:  'Não é necessário selecionar nada. O sistema identifica o colaborador e o tipo pelo nome do arquivo automaticamente.',
+};
+
+function setUpMode(mode){
+  upMode = mode;
+  ['ambos','tipo','colab','auto'].forEach(m=>{
+    const btn = document.getElementById('upmode-'+m);
+    if(btn) btn.classList.toggle('active', m===mode);
+  });
+  document.getElementById('up-mode-hint').textContent = UP_MODE_HINTS[mode];
+  const fieldTipo  = document.getElementById('up-field-tipo');
+  const fieldColab = document.getElementById('up-field-colab');
+  if(fieldTipo)  fieldTipo.style.display  = (mode==='colab'||mode==='auto') ? 'none' : '';
+  if(fieldColab) fieldColab.style.display = (mode==='tipo' ||mode==='auto') ? 'none' : '';
+}
+
 // ── End ZIP Import ─────────────────────────
 
 function upHandleFiles(files){
-  // If a ZIP file is among the selection, route it to ZIP handler
-  const zipFiles = Array.from(files).filter(f=>f.name.toLowerCase().endsWith('.zip'));
-  const otherFiles = Array.from(files).filter(f=>!f.name.toLowerCase().endsWith('.zip'));
-
-  if(zipFiles.length){
-    zipFiles.forEach(zf=>upImportZip(zf));
-  }
+  // Route ZIP files to ZIP handler
+  const zipFiles  = Array.from(files).filter(f=>f.name.toLowerCase().endsWith('.zip'));
+  const otherFiles= Array.from(files).filter(f=>!f.name.toLowerCase().endsWith('.zip'));
+  if(zipFiles.length) zipFiles.forEach(zf=>upImportZip(zf));
   if(!otherFiles.length) return;
-  const tipo  = document.getElementById('up-tipo').value;
+
+  const tipo    = document.getElementById('up-tipo').value;
   const colabId = parseInt(document.getElementById('up-colab').value);
 
-  if(!tipo)   { alert('Selecione o tipo de documento antes de importar.'); return; }
-  if(isNaN(colabId)){ alert('Selecione um colaborador antes de importar.'); return; }
+  // Validate based on mode
+  if(upMode==='ambos'){
+    if(!tipo)       { alert('Selecione o tipo de documento.'); return; }
+    if(isNaN(colabId)){ alert('Selecione o colaborador.'); return; }
+  } else if(upMode==='tipo'){
+    if(!tipo){ alert('Selecione o tipo de documento.'); return; }
+  } else if(upMode==='colab'){
+    if(isNaN(colabId)){ alert('Selecione o colaborador.'); return; }
+  }
+  // mode==='auto' needs neither
 
-  const colab = DATA.find(x=>x._id===colabId);
-  if(!colab) return;
+  const resultDiv = document.getElementById('up-batch-result');
+  const rows = [];
+  let pending = otherFiles.length;
 
-  let added = 0;
   otherFiles.forEach(file=>{
+    // Determine tipo and colab based on mode
+    let resolvedTipo   = tipo   || null;
+    let resolvedColabId= isNaN(colabId) ? null : colabId;
+
+    if(upMode==='tipo'||upMode==='auto'){
+      const guessed = upGuessColab(file.name);
+      if(guessed) resolvedColabId = guessed._id;
+    }
+    if(upMode==='colab'||upMode==='auto'){
+      const guessed = upGuessType(file.name);
+      if(guessed) resolvedTipo = guessed;
+    }
+
+    // Still missing after auto-detect?
+    if(!resolvedTipo||resolvedColabId===null){
+      const colab = resolvedColabId!==null ? DATA.find(x=>x._id===resolvedColabId) : null;
+      rows.push({
+        fileName:file.name,
+        status: !resolvedColabId&&!resolvedTipo?'manual':!resolvedColabId?'no-colab':'no-tipo',
+        msg: !resolvedColabId&&!resolvedTipo ? 'Não identificado — selecione manualmente'
+          : !resolvedColabId ? `Tipo: ${resolvedTipo} — colaborador não identificado`
+          : `Colaborador: ${colab?.nome||'?'} — tipo não identificado`,
+        colab, tipo:resolvedTipo
+      });
+      pending--;
+      if(pending===0) showQuickUploadResult(rows);
+      return;
+    }
+
+    const colab = DATA.find(x=>x._id===resolvedColabId);
+    if(!colab){ pending--; if(pending===0) showQuickUploadResult(rows); return; }
+
     const ext = file.name.split('.').pop().toLowerCase();
-    const id = Date.now().toString() + Math.random().toString(36).slice(2,6);
+    const id  = Date.now().toString()+Math.random().toString(36).slice(2,6);
     const reader = new FileReader();
     reader.onload = (e)=>{
-      uploadedDocs.unshift({
-        id, colabId, colabNome: colab.nome, colabUf: colab.uf,
-        tipo, cat: TIPO_CAT[tipo]||'Outros',
-        fileName: file.name, ext, size: file.size,
-        dataUpload: new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
-        dataUrl: e.target.result,
-      });
+      // Check duplicate
+      const dup = uploadedDocs.find(d=>d.colabId===resolvedColabId&&d.tipo===resolvedTipo&&d.fileName===file.name);
+      if(dup){
+        rows.push({fileName:file.name,status:'dup',msg:'Duplicado — já existe',colab,tipo:resolvedTipo});
+      } else {
+        uploadedDocs.unshift({
+          id, colabId:resolvedColabId, colabNome:colab.nome, colabUf:colab.uf,
+          tipo:resolvedTipo, cat:TIPO_CAT[resolvedTipo]||'Outros',
+          fileName:file.name, ext, size:file.size,
+          dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+          dataUrl:e.target.result,
+        });
+        upAtualizarStatus(resolvedColabId, resolvedTipo);
+        rows.push({fileName:file.name,status:'ok',msg:`✅ ${colab.nome} · ${resolvedTipo}`,colab,tipo:resolvedTipo});
+      }
       saveUploadDocs();
-      // Update colaborador status in DATA
-      upAtualizarStatus(colabId, tipo);
-      added++;
-      upFilterDocs();
+      pending--;
+      if(pending===0){ upFilterDocs(); showQuickUploadResult(rows); }
     };
     reader.readAsDataURL(file);
   });
-  // Reset input
   document.getElementById('up-file-input').value='';
+}
+
+function showQuickUploadResult(rows){
+  if(!rows.length) return;
+  const ok  = rows.filter(r=>r.status==='ok').length;
+  const dup = rows.filter(r=>r.status==='dup').length;
+  const noid= rows.filter(r=>['manual','no-colab','no-tipo'].includes(r.status)).length;
+  if(ok>0 || dup>0){
+    // Show brief toast
+    showSyncToast && showSyncToast(ok,0);
+  }
+  if(noid>0){
+    // Show result panel for unidentified files
+    const resultDiv=document.getElementById('up-batch-result');
+    resultDiv.style.display='block';
+    resultDiv.innerHTML=`
+      <div style="font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:10px">
+        ✅ ${ok} importado(s) &nbsp;·&nbsp; ⏩ ${dup} duplicado(s) &nbsp;·&nbsp; <span style="color:#7A5000">⚠️ ${noid} não identificado(s)</span>
+      </div>`+
+      rows.filter(r=>['manual','no-colab','no-tipo'].includes(r.status)).map(r=>`
+        <div style="padding:6px 0;border-bottom:1px solid #dee2e6;font-size:12px">
+          <span style="color:#7A5000">⚠️</span>
+          <span style="color:#1a1a2e;font-weight:500;margin-left:6px">${r.fileName}</span>
+          <span style="color:#6c757d;margin-left:8px">${r.msg}</span>
+          <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap">
+            ${!r.colab?`<select class="up-select" style="font-size:11px;padding:3px 6px" onchange="upBatchSetColab(this,'${r.fileName}')">
+              <option value="">Selecionar colaborador…</option>
+              ${[...DATA].sort((a,b)=>a.nome.localeCompare(b.nome)).map(c=>`<option value="${c._id}">${c.nome} (${c.uf})</option>`).join('')}
+            </select>`:''}
+            ${!r.tipo?`<select class="up-select" style="font-size:11px;padding:3px 6px" onchange="upBatchSetTipo(this,'${r.fileName}')">
+              <option value="">Selecionar tipo…</option>
+              ${Object.keys(TIPO_TO_FIELD).map(t=>`<option value="${t}">${t}</option>`).join('')}
+            </select>`:''}
+            <button class="up-btn" style="font-size:11px;padding:3px 10px" onclick="upBatchConfirmRow('${r.fileName}')">Confirmar</button>
+          </div>
+        </div>`).join('');
+    window._batchPendingRows = rows;
+    window._batchPendingFiles = {};
+  }
 }
 
 function upAtualizarStatus(colabId, tipo){
