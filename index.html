@@ -3202,11 +3202,22 @@ function upDrop(e){
 // Load JSZip on demand
 function loadJSZip(){
   return new Promise((resolve, reject)=>{
-    if(window.JSZip){ resolve(window.JSZip); return; }
+    // Already loaded
+    if(window.JSZip){
+      resolve(typeof window.JSZip==='function'?window.JSZip:window.JSZip.default||window.JSZip);
+      return;
+    }
     const s=document.createElement('script');
     s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-    s.onload=()=>resolve(window.JSZip);
-    s.onerror=()=>reject(new Error('Falha ao carregar JSZip'));
+    s.onload=()=>{
+      // Small delay to ensure global is set
+      setTimeout(()=>{
+        const Z=window.JSZip;
+        if(!Z){ reject(new Error('JSZip não carregou corretamente')); return; }
+        resolve(typeof Z==='function'?Z:Z.default||Z);
+      }, 50);
+    };
+    s.onerror=()=>reject(new Error('Falha ao carregar JSZip. Verifique sua conexão.'));
     document.head.appendChild(s);
   });
 }
@@ -3215,80 +3226,115 @@ function upImportZip(file){
   if(!file) return;
   const resultDiv=document.getElementById('up-batch-result');
   resultDiv.style.display='block';
-  resultDiv.innerHTML=`<div style="color:#6c757d;font-size:13px">📦 Lendo arquivo ZIP <b>${file.name}</b>...</div>`;
+  resultDiv.innerHTML=`<div style="color:#6c757d;font-size:13px">📦 Lendo arquivo ZIP <b>${file.name}</b> (${(file.size/1024).toFixed(0)} KB)...</div>`;
 
-  loadJSZip().then(JSZip=>{
-    return JSZip.loadAsync(file);
-  }).then(zip=>{
-    const entries=[];
-    zip.forEach((path, entry)=>{
-      if(!entry.dir) entries.push({path, entry});
-    });
+  // Read ZIP as ArrayBuffer first, then pass to JSZip
+  const arrayBufReader = new FileReader();
+  arrayBufReader.onload = function(e){
+    const arrayBuffer = e.target.result;
+    loadJSZip().then(JSZip=>{
+      const jszip = new JSZip();
+      return jszip.loadAsync(arrayBuffer);
+    }).then(zip=>{
+      const entries=[];
+      zip.forEach((path, entry)=>{
+        if(!entry.dir) entries.push({path, entry});
+      });
 
-    // Filter to supported file types only
-    const supported=['pdf','jpg','jpeg','png','webp','doc','docx'];
-    const validEntries=entries.filter(({path})=>{
-      const ext=path.split('.').pop().toLowerCase();
-      return supported.includes(ext);
-    });
+      const supported=['pdf','jpg','jpeg','png','webp','doc','docx'];
+      const validEntries=entries.filter(({path})=>{
+        const ext=path.split('.').pop().toLowerCase();
+        return supported.includes(ext);
+      });
 
-    resultDiv.innerHTML=`<div style="color:#6c757d;font-size:13px;margin-bottom:10px">📦 ZIP: <b>${file.name}</b> · ${validEntries.length} arquivo(s) encontrado(s) de ${entries.length} total</div>`;
+      if(!validEntries.length){
+        resultDiv.innerHTML=`
+          <div style="color:#6c757d;font-size:13px;margin-bottom:6px">📦 <b>${file.name}</b> · ${entries.length} arquivo(s) no ZIP</div>
+          <div style="color:#a32d2d;font-size:13px;padding:10px;background:#FFE0E0;border-radius:6px">
+            Nenhum arquivo suportado encontrado.<br>
+            Formatos aceitos: PDF, JPG, PNG, JPEG, WEBP, DOC, DOCX<br>
+            Arquivos encontrados: ${entries.map(e=>e.path.split('/').pop()).join(', ')||'nenhum'}
+          </div>`;
+        return;
+      }
 
-    if(!validEntries.length){
-      resultDiv.innerHTML+=`<div style="color:#a32d2d;font-size:13px">Nenhum arquivo suportado encontrado no ZIP. Formatos aceitos: PDF, JPG, PNG, DOC.</div>`;
-      return;
-    }
+      resultDiv.innerHTML=`<div style="color:#6c757d;font-size:13px;margin-bottom:8px">📦 <b>${file.name}</b> · Processando ${validEntries.length} de ${entries.length} arquivo(s)... <span id="zip-progress">0/${validEntries.length}</span></div>`;
 
-    const rows=[];
-    let processed=0;
+      const rows=[];
+      let processed=0;
 
-    validEntries.forEach(({path, entry})=>{
-      const fileName=path.split('/').pop(); // basename only
-      const ext=fileName.split('.').pop().toLowerCase();
-      const colab=upGuessColab(fileName);
-      const tipo=upGuessType(fileName);
-
-      entry.async('base64').then(b64=>{
-        const dataUrl=`data:application/${ext==='pdf'?'pdf':'octet-stream'};base64,${b64}`;
-        const sizeEstimate=Math.round(b64.length*0.75);
-
-        if(colab && tipo){
-          // Check duplicate
-          const dup=uploadedDocs.find(d=>d.colabId===colab._id && d.tipo===tipo && d.fileName===fileName);
-          if(dup){
-            rows.push({fileName, colab, tipo, status:'dup', msg:'Duplicado — já existe'});
-          } else {
-            const id=Date.now().toString()+Math.random().toString(36).slice(2,5);
-            uploadedDocs.unshift({
-              id, colabId:colab._id, colabNome:colab.nome, colabUf:colab.uf,
-              tipo, cat:TIPO_CAT[tipo]||'Outros',
-              fileName, ext, size:sizeEstimate,
-              dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
-              dataUrl, batchImported:true, fromZip:true,
-            });
-            upAtualizarStatus(colab._id, tipo);
-            rows.push({fileName, colab, tipo, status:'ok', msg:`✅ ${colab.nome} · ${tipo}`});
-          }
-        } else {
-          rows.push({
-            fileName, colab, tipo,
-            status: !colab&&!tipo?'manual': !colab?'no-colab':'no-tipo',
-            msg: !colab&&!tipo?'Não identificado': !colab?`Tipo: ${tipo} — colaborador não identificado`:`Colaborador: ${colab.nome} — tipo não identificado`
-          });
-        }
-
-        processed++;
-        if(processed===validEntries.length){
+      const processNext=(idx)=>{
+        if(idx>=validEntries.length){
           saveUploadDocs();
           upFilterDocs();
           showZipResult(rows, file.name);
+          return;
         }
-      });
+        const {path, entry}=validEntries[idx];
+        const fileName=path.split('/').pop();
+        const ext=fileName.split('.').pop().toLowerCase();
+        const colab=upGuessColab(fileName);
+        const tipo=upGuessType(fileName);
+
+        // Update progress
+        const prog=document.getElementById('zip-progress');
+        if(prog) prog.textContent=`${idx+1}/${validEntries.length}`;
+
+        // Read each file as base64
+        entry.async('base64').then(b64=>{
+          const mimeMap={pdf:'application/pdf',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',doc:'application/msword',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'};
+          const mime=mimeMap[ext]||'application/octet-stream';
+          const dataUrl=`data:${mime};base64,${b64}`;
+          const sizeEst=Math.round(b64.length*0.75);
+
+          if(colab && tipo){
+            const dup=uploadedDocs.find(d=>d.colabId===colab._id&&d.tipo===tipo&&d.fileName===fileName);
+            if(dup){
+              rows.push({fileName,colab,tipo,status:'dup',msg:'Duplicado — já importado'});
+            } else {
+              const id=Date.now().toString()+Math.random().toString(36).slice(2,5)+idx;
+              uploadedDocs.unshift({
+                id,colabId:colab._id,colabNome:colab.nome,colabUf:colab.uf,
+                tipo,cat:TIPO_CAT[tipo]||'Outros',
+                fileName,ext,size:sizeEst,
+                dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+                dataUrl,batchImported:true,fromZip:true,
+              });
+              upAtualizarStatus(colab._id,tipo);
+              rows.push({fileName,colab,tipo,status:'ok',msg:`✅ ${colab.nome} · ${tipo}`});
+            }
+          } else {
+            rows.push({
+              fileName,colab,tipo,
+              status:!colab&&!tipo?'manual':!colab?'no-colab':'no-tipo',
+              msg:!colab&&!tipo?'Não identificado automaticamente':!colab?`Tipo: ${tipo} — colaborador não identificado`:`Colaborador: ${colab.nome} — tipo não identificado`,
+            });
+          }
+          // Process next file sequentially to avoid timestamp collisions
+          setTimeout(()=>processNext(idx+1), 10);
+        }).catch(err=>{
+          rows.push({fileName,colab:null,tipo:null,status:'err',msg:`Erro: ${err.message}`});
+          setTimeout(()=>processNext(idx+1), 10);
+        });
+      };
+
+      processNext(0);
+
+    }).catch(err=>{
+      resultDiv.innerHTML=`<div style="color:#a32d2d;font-size:13px;padding:10px;background:#FFE0E0;border-radius:6px">
+        ❌ Erro ao processar ZIP: ${err.message}<br>
+        <span style="font-size:11px;color:#888;margin-top:4px;display:block">Verifique se o arquivo é um ZIP válido e não está corrompido.</span>
+      </div>`;
+      console.error('[ZIP Import]', err);
     });
-  }).catch(err=>{
-    resultDiv.innerHTML=`<div style="color:#a32d2d;font-size:13px">❌ Erro ao processar ZIP: ${err.message}</div>`;
-    console.error('[ZIP Import]', err);
-  });
+  };
+
+  arrayBufReader.onerror=function(){
+    resultDiv.innerHTML=`<div style="color:#a32d2d;font-size:13px">❌ Erro ao ler o arquivo. Tente novamente.</div>`;
+  };
+
+  // Read as ArrayBuffer — correct format for JSZip
+  arrayBufReader.readAsArrayBuffer(file);
 
   // Reset input
   document.getElementById('up-zip-input').value='';
