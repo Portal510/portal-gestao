@@ -867,7 +867,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <option value="Pendente">⏳ Pendente</option>
     </select>
     <button class="up-btn" onclick="upLimparTudo()" style="margin-left:auto">🗑 Limpar tudo</button>
-    <button class="up-btn" onclick="initUpload();upFilterDocs();" style="background:#E8F0FE;border-color:#2E75B6;color:#1F4E79;font-weight:600">🔄 Atualizar</button>
+    <button class="up-btn" onclick="upAtualizar()" style="background:#E8F0FE;border-color:#2E75B6;color:#1F4E79;font-weight:600">🔄 Atualizar</button>
   </div>
 
   <!-- Doc list -->
@@ -3228,18 +3228,33 @@ const FILE_ICONS = {pdf:'📄',jpg:'🖼',jpeg:'🖼',png:'🖼',webp:'🖼',doc
 function saveUploadDocs(){ localStorage.setItem('ts_upload_docs', JSON.stringify(uploadedDocs)); }
 
 function initUpload(){
-  // Populate colab selects
+  // Populate colab selects (repopulate if DATA changed)
   ['up-colab','up-fil-colab'].forEach(id=>{
     const sel = document.getElementById(id);
-    if(!sel || sel.options.length > 1) return;
+    if(!sel) return;
+    const currentVal = sel.value;
+    sel.innerHTML = id==='up-colab'
+      ? '<option value="">— Qualquer colaborador —</option>'
+      : '<option value="">Todos os colaboradores</option>';
     [...DATA].sort((a,b)=>a.nome.localeCompare(b.nome)).forEach(c=>{
       const o = document.createElement('option');
       o.value = c._id;
       o.textContent = `${c.nome} (${c.uf})`;
       sel.appendChild(o);
     });
+    if(currentVal) sel.value = currentVal;
   });
   upFilterDocs();
+}
+
+function upAtualizar(){
+  // Re-apply all stored uploads to DATA (restore statuses)
+  uploadedDocs.forEach(doc=>upAtualizarStatus(doc.colabId, doc.tipo));
+  // Hide batch result panel
+  const r=document.getElementById('up-batch-result');
+  if(r){ r.style.display='none'; r.innerHTML=''; }
+  // Full reinit
+  initUpload();
 }
 
 // ── Drag & Drop ───────────────────────────
