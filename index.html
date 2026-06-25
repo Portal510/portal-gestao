@@ -279,7 +279,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 </div>
 
 <div class="tabs" id="tabs">
-  <div class="tab active" onclick="showTab('geral',this)">📋 Geral</div>
+  <div class="tab active" onclick="showTab('geral',this)">👥 Colaboradores</div>
   <div class="tab" onclick="showTab('equipamentos',this)">📱 Equipamentos</div>
   <div class="tab" onclick="showTab('admissao',this)">🎓 Admissão</div>
   <div class="tab" onclick="showTab('termos',this)">📝 Termos</div>
@@ -290,6 +290,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div class="tab" onclick="showTab('uniforme',this)">👔 Uniforme</div>
   <div class="tab" onclick="showTab('upload',this)">📎 Documentos</div>
   <div class="tab" onclick="showTab('requisitos',this)">📋 Cargos e Requisitos</div>
+  <div class="tab" onclick="showTab('pendencias',this)">⚠️ Pendências</div>
+  <div class="tab" onclick="showTab('contrata',this)">🖥️ Sistema Contrata</div>
 </div>
 
 <div class="content">
@@ -323,6 +325,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <th>Admissão</th>
       <th>Demissão</th>
       <th>Portal T&S</th>
+      <th>Vínculo</th>
     </tr></thead>
     <tbody id="body-geral"></tbody>
   </table></div>
@@ -901,6 +904,49 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div id="req-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px"></div>
 </div>
 
+<!-- ═══════════════════ PENDÊNCIAS ═══════════════════ -->
+<div id="tab-pendencias" style="display:none">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+    <div>
+      <div style="font-weight:700;font-size:16px;color:#1F4E79">⚠️ Controle de Pendências</div>
+      <div style="font-size:12px;color:#6c757d;margin-top:3px">Colaboradores com documentos, certificações ou equipamentos pendentes</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input type="text" id="pend-busca" placeholder="🔍 Buscar nome…" style="padding:7px 11px;border:1px solid #ced4da;border-radius:6px;font-size:13px" oninput="renderPendencias()">
+      <select id="pend-cat" style="padding:7px 11px;border:1px solid #ced4da;border-radius:6px;font-size:13px" onchange="renderPendencias()">
+        <option value="">Todas as categorias</option>
+        <option value="docs">📄 Documentos TCU</option>
+        <option value="admissao">🎓 Admissão</option>
+        <option value="termos">📝 Termos</option>
+        <option value="certs">🏆 Certificações</option>
+        <option value="equip">📱 Equipamentos</option>
+      </select>
+      <select id="pend-uf" style="padding:7px 11px;border:1px solid #ced4da;border-radius:6px;font-size:13px" onchange="renderPendencias()">
+        <option value="">Todas as UF</option>
+      </select>
+      <button class="btn-export" onclick="exportPendencias()" style="padding:7px 14px">⬇ Exportar</button>
+    </div>
+  </div>
+  <div id="pend-stats" style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap"></div>
+  <div id="pend-lista"></div>
+</div>
+
+<!-- ═══════════════════ SISTEMA CONTRATA ═══════════════════ -->
+<div id="tab-contrata" style="display:none">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+    <div>
+      <div style="font-weight:700;font-size:16px;color:#1F4E79">🖥️ Sistema Contrata — Fila de Cadastro</div>
+      <div style="font-size:12px;color:#6c757d;margin-top:3px">Colaboradores novos aguardando envio de e-mail para o Fiscal realizar o cadastro no Sistema Contrata</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-clear" onclick="limparContrataEnviados()">🗑 Limpar enviados</button>
+    </div>
+  </div>
+  <div id="contrata-lista">
+    <div style="text-align:center;padding:40px;color:#aaa">Nenhum colaborador na fila.</div>
+  </div>
+</div>
+
 </div><!-- /content -->
 
 <!-- ══ TERMO UNIFORME MODAL ══ -->
@@ -1230,6 +1276,66 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         <label>Data de Demissão</label>
         <input type="date" id="cad-demissao">
       </div>
+      <!-- Dados pessoais adicionais (para Sistema Contrata) -->
+      <div>
+        <label>RG</label>
+        <input type="text" id="cad-rg" placeholder="Ex.: 1234567 SSP/DF">
+      </div>
+      <div>
+        <label>Data de Nascimento</label>
+        <input type="date" id="cad-nascimento">
+      </div>
+      <div>
+        <label>Gênero</label>
+        <select id="cad-genero">
+          <option value="">—</option>
+          <option>Masculino</option>
+          <option>Feminino</option>
+          <option>Outro</option>
+          <option>Prefiro não informar</option>
+        </select>
+      </div>
+      <div>
+        <label>Cor / Raça</label>
+        <select id="cad-cor">
+          <option value="">—</option>
+          <option>Amarela</option>
+          <option>Branca</option>
+          <option>Indígena</option>
+          <option>Parda</option>
+          <option>Preta</option>
+          <option>Prefiro não informar</option>
+        </select>
+      </div>
+      <!-- Tipo de vínculo -->
+      <div style="grid-column:1/-1">
+        <label>Tipo de Vínculo *</label>
+        <div style="display:flex;gap:16px;margin-top:6px">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+            <input type="radio" name="cad-vinculo" id="cad-vinculo-efetivo" value="Efetivo" checked onchange="toggleCoberturaFields()"> Efetivo
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+            <input type="radio" name="cad-vinculo" id="cad-vinculo-cobertura" value="Cobertura" onchange="toggleCoberturaFields()"> Cobertura
+          </label>
+        </div>
+      </div>
+      <div id="cad-cobertura-fields" style="grid-column:1/-1;display:none;background:#FFF3CD;border-radius:8px;padding:12px;border:1px solid #FFD700">
+        <div style="font-size:12px;font-weight:600;color:#7A5000;margin-bottom:8px">🔄 Dados da Cobertura</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="grid-column:1/-1">
+            <label>Nome do colaborador que será coberto</label>
+            <input type="text" id="cad-coberto" placeholder="Nome completo do efetivo">
+          </div>
+          <div>
+            <label>Início da Cobertura</label>
+            <input type="date" id="cad-inicio-cobertura">
+          </div>
+          <div>
+            <label>Fim da Cobertura</label>
+            <input type="date" id="cad-fim-cobertura">
+          </div>
+        </div>
+      </div>
     </div>
     <div id="cad-erro" style="color:#a32d2d;font-size:12px;margin-top:8px;display:none"></div>
     <div class="modal-btns">
@@ -1427,8 +1533,13 @@ function renderGeral(){
       <span class="edit-icon" onclick="openGeralEditDate(${c._id},'data_demissao','${demVal}')" title="Editar data de demissão">✎</span>
     </td>
     <td style="text-align:center">${portalLink}</td>
+    <td style="text-align:center">
+      ${c.tipo_vinculo==='Cobertura'
+        ? `<span style="background:#FFF3CD;color:#7A5000;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer" onclick="openDetalheCobertura(${c._id})" title="${c.coberto||''}">🔄 Cobertura</span>`
+        : `<span style="background:#D4EDDA;color:#155724;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:600">✅ Efetivo</span>`}
+    </td>
   </tr>`;
-  }).join(''):`<tr><td colspan="11" class="empty">Nenhum resultado</td></tr>`;
+  }).join(''):`<tr><td colspan="12" class="empty">Nenhum resultado</td></tr>`;
   updateStats('geral',rows);
 }
 
@@ -1695,7 +1806,7 @@ function clearFilters(tab){
 }
 
 // TAB SWITCHING
-const tabIds=['geral','equipamentos','admissao','termos','certif','calendario','comunicados','predef','uniforme','upload','requisitos'];
+const tabIds=['geral','equipamentos','admissao','termos','certif','calendario','comunicados','predef','uniforme','upload','requisitos','pendencias','contrata'];
 function showTab(id,el){
   tabIds.forEach(t=>{
     const el2=document.getElementById('tab-'+t);
@@ -1703,7 +1814,7 @@ function showTab(id,el){
   });
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,requisitos:renderRequisitos};
+  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,requisitos:renderRequisitos,pendencias:renderPendencias,contrata:renderContrata};
   if(renders[id]) renders[id]();
 }
 
@@ -1906,11 +2017,11 @@ const CARGO_EXP_MAP = {
 };
 
 function openCadastro(){
-  ['cad-nome','cad-cpf','cad-celular','cad-email','cad-email-inst'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('cad-cargo').value='';
-  document.getElementById('cad-uf').value='';
-  document.getElementById('cad-admissao').value='';
-  document.getElementById('cad-demissao').value='';
+  ['cad-nome','cad-cpf','cad-celular','cad-email','cad-email-inst','cad-rg','cad-coberto'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['cad-cargo','cad-uf','cad-genero','cad-cor'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['cad-admissao','cad-demissao','cad-nascimento','cad-inicio-cobertura','cad-fim-cobertura'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('cad-vinculo-efetivo').checked=true;
+  document.getElementById('cad-cobertura-fields').style.display='none';
   document.getElementById('cad-erro').style.display='none';
   document.getElementById('modal-cadastro').classList.add('open');
 }
@@ -1925,18 +2036,29 @@ function salvarCadastro(){
   const email_inst=document.getElementById('cad-email-inst').value.trim()||'Pendente';
   const data_admissao=document.getElementById('cad-admissao').value||'';
   const data_demissao=document.getElementById('cad-demissao').value||'';
+  const rg=document.getElementById('cad-rg')?.value.trim()||'';
+  const data_nascimento=document.getElementById('cad-nascimento')?.value||'';
+  const genero=document.getElementById('cad-genero')?.value||'';
+  const cor_raca=document.getElementById('cad-cor')?.value||'';
+  const tipo_vinculo=document.querySelector('input[name="cad-vinculo"]:checked')?.value||'Efetivo';
+  const coberto=document.getElementById('cad-coberto')?.value.trim()||'';
+  const inicio_cobertura=document.getElementById('cad-inicio-cobertura')?.value||'';
+  const fim_cobertura=document.getElementById('cad-fim-cobertura')?.value||'';
   const erro=document.getElementById('cad-erro');
   if(!nome||!cpf||!uf||!cargo){erro.textContent='Preencha os campos obrigatórios: Nome, CPF, UF e Cargo.';erro.style.display='block';return;}
   const certs=CARGO_CERTS_MAP[cargo]||{};
   const [exp_s,exp_m]=CARGO_EXP_MAP[cargo]||['N/A','N/A'];
   const docsAll={'Termo TCU':'Pendente','Cadastro TCU':'Pendente','Decl. Não Parentesco':'Pendente','Diploma/Superior':'Pendente','Especialização TI':'Pendente','Exp. Suporte':'Pendente','Exp. Microcomputadores':exp_m==='N/A'?'N/A':'Pendente','ASO Admissional':'Pendente','CTPS':'Pendente','Contrato de Trabalho':'Pendente','Termo Vale Transporte':'Pendente','Termo de Conduta T&S':'Pendente'};
-  const novo={_id:DATA.length,nome,cpf,uf,cargo,celular,email,email_inst,data_admissao,data_demissao,celular_tablet:'Pendente',cracha:'Pendente',maleta:'Pendente',uniforme:'Pendente',certs,docs:docsAll,exp_suporte:exp_s,exp_micro:exp_m};
+  const novo={_id:DATA.length,nome,cpf,uf,cargo,celular,email,email_inst,data_admissao,data_demissao,rg,data_nascimento,genero,cor_raca,tipo_vinculo,coberto,inicio_cobertura,fim_cobertura,celular_tablet:'Pendente',cracha:'Pendente',maleta:'Pendente',uniforme:'Pendente',certs,docs:docsAll,exp_suporte:exp_s,exp_micro:exp_m};
   DATA.push(novo);
   saveData();
+  // Add to Sistema Contrata queue
+  contrataQueue.push({colabId:novo._id, status:'pendente', addedAt:new Date().toISOString()});
+  saveContrata();
   closeModal('modal-cadastro');
   document.getElementById('hs-total').textContent=DATA.length;
   renderGeral();
-  alert(`✅ Colaborador "${nome}" cadastrado com sucesso!\nOs dados já aparecem em todas as abas.`);
+  alert(`✅ Colaborador "${nome}" cadastrado com sucesso!\nFoi adicionado à aba Sistema Contrata para envio ao Fiscal.`);
 }
 
 // ── Date field editing ────────────────────
@@ -3250,10 +3372,21 @@ function initUpload(){
 function upAtualizar(){
   // Re-apply all stored uploads to DATA (restore statuses)
   uploadedDocs.forEach(doc=>upAtualizarStatus(doc.colabId, doc.tipo));
-  // Hide batch result panel
+  // Clear ALL result panels
   const r=document.getElementById('up-batch-result');
   if(r){ r.style.display='none'; r.innerHTML=''; }
-  // Full reinit
+  // Remove docs that were marked Entregue from the visible list (keep in uploadedDocs for history)
+  // They were already processed — optionally clear batch result
+  window._batchPendingRows=null; window._batchPendingFiles={};
+  // Reset file inputs
+  ['up-file-input','up-batch-input','up-zip-input'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  // Clear filters and reload
+  document.getElementById('up-busca').value='';
+  document.getElementById('up-fil-tipo').value='';
+  document.getElementById('up-fil-colab').value='';
+  document.getElementById('up-fil-status').value='';
   initUpload();
 }
 
@@ -4079,6 +4212,278 @@ function openReqModal(cargo, e){
     <ul style="margin:10px 0 0 16px;padding:0">${reqHtml}</ul>
   `;
   document.getElementById('modal-detail').classList.add('open');
+}
+
+// ══════════════════════════════════════════
+// PENDÊNCIAS
+// ══════════════════════════════════════════
+const PEND_DOC_LABELS = {
+  'Termo TCU':'Termo TCU', 'Cadastro TCU':'Cadastro TCU',
+  'Decl. Não Parentesco':'Decl. Não Parentesco',
+  'Diploma/Superior':'Diploma/Superior', 'Especialização TI':'Especialização TI',
+  'Exp. Suporte':'Exp. Suporte', 'Exp. Microcomputadores':'Exp. Microcomputadores',
+  'ASO Admissional':'ASO Admissional', 'CTPS':'CTPS',
+  'Contrato de Trabalho':'Contrato de Trabalho',
+  'Termo Vale Transporte':'Termo Vale Transporte',
+  'Termo de Conduta T&S':'Termo de Conduta T&S',
+};
+const PEND_CAT_MAP = {
+  docs:   ['Termo TCU','Cadastro TCU','Decl. Não Parentesco'],
+  admissao:['Diploma/Superior','Especialização TI','Exp. Suporte','Exp. Microcomputadores','ASO Admissional','CTPS','Contrato de Trabalho'],
+  termos: ['Termo Vale Transporte','Termo de Conduta T&S'],
+};
+
+function getPendencias(c){
+  const items = [];
+  // Docs
+  Object.entries(c.docs||{}).forEach(([k,v])=>{
+    if(v==='Pendente') items.push({cat:'docs',label:k,tipo:'doc'});
+  });
+  // Certs
+  Object.entries(c.certs||{}).forEach(([k,v])=>{
+    if(v==='Pendente') items.push({cat:'certs',label:k,tipo:'cert'});
+  });
+  // Equipamentos
+  ['celular_tablet','cracha','maleta','uniforme'].forEach(k=>{
+    if(c[k]==='Pendente') items.push({cat:'equip',label:k.replace('_',' '),tipo:'equip'});
+  });
+  return items;
+}
+
+function renderPendencias(){
+  // Populate UF filter
+  const ufSel = document.getElementById('pend-uf');
+  if(ufSel && ufSel.options.length <= 1){
+    [...new Set(DATA.map(c=>c.uf))].sort().forEach(uf=>{
+      const o=document.createElement('option'); o.value=uf; o.textContent=uf; ufSel.appendChild(o);
+    });
+  }
+
+  const busca = (document.getElementById('pend-busca')?.value||'').toLowerCase();
+  const cat   = document.getElementById('pend-cat')?.value||'';
+  const uf    = document.getElementById('pend-uf')?.value||'';
+
+  // Build list of colabs with pendencies
+  const ativos = DATA.filter(c=>c.status!=='inativo');
+  let list = ativos.map(c=>({c, pends:getPendencias(c)})).filter(({pends})=>pends.length>0);
+
+  if(busca) list=list.filter(({c})=>c.nome.toLowerCase().includes(busca)||c.uf.toLowerCase().includes(busca));
+  if(uf)    list=list.filter(({c})=>c.uf===uf);
+  if(cat)   list=list.filter(({pends})=>pends.some(p=>p.cat===cat));
+
+  // Stats
+  const total=list.length;
+  const totalPends=list.reduce((n,{pends})=>n+pends.length,0);
+  const byCat={docs:0,admissao:0,termos:0,certs:0,equip:0};
+  list.forEach(({pends})=>pends.forEach(p=>{
+    if(p.cat==='docs'){
+      if(PEND_CAT_MAP.docs.includes(p.label)) byCat.docs++;
+      else if(PEND_CAT_MAP.admissao.includes(p.label)) byCat.admissao++;
+      else if(PEND_CAT_MAP.termos.includes(p.label)) byCat.termos++;
+    } else if(p.cat==='certs') byCat.certs++;
+    else if(p.cat==='equip') byCat.equip++;
+  }));
+
+  const statsEl = document.getElementById('pend-stats');
+  if(statsEl) statsEl.innerHTML=`
+    <div class="stat-card red"><div class="n">${total}</div><div class="l">Com pendências</div></div>
+    <div class="stat-card amber"><div class="n">${totalPends}</div><div class="l">Total pendências</div></div>
+    <div class="stat-card"><div class="n">${byCat.docs+byCat.admissao+byCat.termos}</div><div class="l">📄 Documentos</div></div>
+    <div class="stat-card"><div class="n">${byCat.certs}</div><div class="l">🏆 Certificações</div></div>
+    <div class="stat-card"><div class="n">${byCat.equip}</div><div class="l">📱 Equipamentos</div></div>
+  `;
+
+  const lista = document.getElementById('pend-lista');
+  if(!lista) return;
+
+  if(!list.length){
+    lista.innerHTML=`<div style="text-align:center;padding:40px;color:#aaa;background:#fff;border-radius:10px;border:1px solid #dee2e6">
+      <div style="font-size:32px;margin-bottom:8px">✅</div>
+      <div style="font-size:14px;font-weight:600">Nenhuma pendência encontrada!</div>
+    </div>`;
+    return;
+  }
+
+  const CAT_COLORS={docs:'#FFF3CD',admissao:'#FFE0E0',termos:'#FDE8E8',certs:'#E8F0FE',equip:'#E8FFE8'};
+  const CAT_ICONS={docs:'📄',admissao:'🎓',termos:'📝',certs:'🏆',equip:'📱'};
+
+  lista.innerHTML=list.map(({c,pends})=>{
+    // Group pends by category
+    const byGroup = {};
+    pends.forEach(p=>{
+      const g = p.cat==='docs'
+        ? (PEND_CAT_MAP.docs.includes(p.label)?'docs': PEND_CAT_MAP.admissao.includes(p.label)?'admissao':'termos')
+        : p.cat;
+      if(!byGroup[g]) byGroup[g]=[];
+      byGroup[g].push(p.label);
+    });
+    if(cat && !Object.keys(byGroup).includes(cat)) return '';
+
+    const groups = Object.entries(byGroup).map(([g,items])=>`
+      <div style="margin-top:8px">
+        <div style="font-size:11px;font-weight:600;color:#6c757d;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">${CAT_ICONS[g]||'📋'} ${g==='docs'?'Docs TCU':g==='admissao'?'Admissão':g==='termos'?'Termos':g==='certs'?'Certificações':'Equipamentos'}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">
+          ${items.map(i=>`<span style="background:#FFE0E0;color:#7A0000;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${i}</span>`).join('')}
+        </div>
+      </div>`).join('');
+
+    return `<div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:14px 16px;margin-bottom:8px;border-left:4px solid #C55A11">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div>
+          <div style="font-weight:700;color:#1F4E79;font-size:14px;cursor:pointer" onclick="openDetail(${c._id})">${c.nome}</div>
+          <div style="font-size:12px;color:#6c757d;margin-top:2px">${c.cargo} · <b>${c.uf}</b> · <span style="color:#C55A11;font-weight:600">${pends.length} pendência(s)</span></div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn-sec" style="padding:4px 12px;font-size:12px" onclick="openDetail(${c._id})">Ver ficha</button>
+          <button class="btn-primary" style="padding:4px 12px;font-size:12px" onclick="enviarLembretePend(${c._id})">📧 Lembrete</button>
+        </div>
+      </div>
+      ${groups}
+    </div>`;
+  }).filter(Boolean).join('');
+}
+
+function exportPendencias(){
+  const ativos=DATA.filter(c=>c.status!=='inativo');
+  const headers=['Nome','CPF','UF','Cargo','Status','Tipo Pendência','Pendência'];
+  const rows=[];
+  ativos.forEach(c=>{
+    const pends=getPendencias(c);
+    if(!pends.length) return;
+    pends.forEach(p=>{
+      rows.push([c.nome,c.cpf,c.uf,c.cargo,'Ativo',
+        p.cat==='certs'?'Certificação':p.cat==='equip'?'Equipamento':'Documento',p.label]);
+    });
+  });
+  downloadCsv(headers,rows,'Relatorio_Pendencias');
+}
+
+function enviarLembretePend(id){
+  const c=DATA.find(x=>x._id===id);
+  if(!c) return;
+  const pends=getPendencias(c).map(p=>p.label);
+  const emailTo=c.email_inst&&c.email_inst!=='Pendente'?c.email_inst:(c.email!=='Pendente'?c.email:'');
+  const assunto=encodeURIComponent(`[TCU/T&S] Pendências cadastrais — ${c.nome}`);
+  const corpo=encodeURIComponent(`Prezado(a) ${c.nome},\n\nInformamos que constam os seguintes itens pendentes em seu cadastro:\n\n${pends.map(p=>`  • ${p}`).join('\n')}\n\nSolicitamos a regularização no prazo de 5 dias úteis.\n\nAtenciosamente,\nCentral de Serviços de TI — TCU`);
+  window.location.href=`mailto:${emailTo}?subject=${assunto}&body=${corpo}`;
+}
+
+// ══════════════════════════════════════════
+// SISTEMA CONTRATA
+// ══════════════════════════════════════════
+let contrataQueue = JSON.parse(localStorage.getItem('ts_contrata_queue')||'[]');
+function saveContrata(){ localStorage.setItem('ts_contrata_queue',JSON.stringify(contrataQueue)); }
+
+function renderContrata(){
+  const el=document.getElementById('contrata-lista');
+  if(!el) return;
+  if(!contrataQueue.length){
+    el.innerHTML='<div style="text-align:center;padding:40px;color:#aaa">Nenhum colaborador na fila.</div>';
+    return;
+  }
+  el.innerHTML=contrataQueue.map((entry,i)=>{
+    const c=DATA.find(x=>x._id===entry.colabId);
+    if(!c) return '';
+    const adm=c.data_admissao?c.data_admissao.split('-').reverse().join('/'):'—';
+    const enviado=entry.status==='enviado';
+    return `<div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:16px;margin-bottom:10px;border-left:4px solid ${enviado?'#375623':'#1F4E79'}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div>
+          <div style="font-weight:700;color:#1F4E79;font-size:14px">${c.nome}</div>
+          <div style="font-size:12px;color:#6c757d;margin-top:3px">
+            CPF: ${c.cpf} · Cargo: ${c.cargo} · UF: <b>${c.uf}</b> · Admissão: ${adm}
+          </div>
+          <div style="margin-top:4px">
+            <span style="padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;background:${enviado?'#D4EDDA':'#FFF3CD'};color:${enviado?'#155724':'#7A5000'}">
+              ${enviado?'✅ E-mail enviado':'⏳ Aguardando envio'}
+            </span>
+            ${entry.enviadoEm?`<span style="font-size:11px;color:#6c757d;margin-left:8px">em ${entry.enviadoEm}</span>`:''}
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-primary" style="padding:7px 16px;font-size:13px" onclick="enviarEmailContrata(${i})">📧 Enviar ao Fiscal</button>
+          <button class="btn-sec" style="padding:7px 12px;font-size:12px" onclick="removeContrata(${i})">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).filter(Boolean).join('');
+}
+
+// ── Cobertura fields toggle ───────────────
+function toggleCoberturaFields(){
+  const isCobertura = document.getElementById('cad-vinculo-cobertura')?.checked;
+  const fields = document.getElementById('cad-cobertura-fields');
+  if(fields) fields.style.display = isCobertura ? 'block' : 'none';
+}
+
+function openDetalheCobertura(id){
+  const c = DATA.find(x=>x._id===id);
+  if(!c) return;
+  const ini = c.inicio_cobertura ? c.inicio_cobertura.split('-').reverse().join('/') : '—';
+  const fim = c.fim_cobertura   ? c.fim_cobertura.split('-').reverse().join('/')   : '—';
+  alert(`🔄 Cobertura\n\nColaborador: ${c.nome}\nCobre: ${c.coberto||'—'}\nPeríodo: ${ini} a ${fim}`);
+}
+
+function buildEmailContrata(c){
+  const fmt = d => d ? d.split('-').reverse().join('/') : '—';
+  const adm  = fmt(c.data_admissao);
+  const nasc = fmt(c.data_nascimento);
+  const ini  = fmt(c.inicio_cobertura);
+  const fim  = fmt(c.fim_cobertura);
+  return `Prezado(a) Fiscal,
+
+Encaminho os dados cadastrais do colaborador terceirizado para providências de acesso ao sistema contrata.
+
+— CADASTRO DE TERCEIRIZADO T&S Engenharia —
+──────────────────────────────────────────────
+
+DADOS PESSOAIS
+Nome completo: ${c.nome}
+CPF: ${c.cpf}
+RG: ${c.rg||'—'}
+Data de Nascimento: ${nasc}
+E-mail pessoal: ${c.email!=='Pendente'?c.email:'—'}
+Gênero: ${c.genero||'—'}
+Cor / Raça: ${c.cor_raca||'—'}
+
+DADOS CONTRATUAIS
+Cargo / Função: ${c.cargo}
+UF / Localidade: ${c.uf}
+Tipo de Vínculo: ${c.tipo_vinculo||'Efetivo'}
+${c.tipo_vinculo==='Cobertura'?`Colaborador coberto: ${c.coberto||'—'}\n`:''}Data de Admissão: ${adm}
+Início da Cobertura: ${ini}
+Fim da Cobertura: ${fim}
+
+──────────────────────────────────────────────
+Portal de Gestão T&S — TCU`;
+}
+
+function enviarEmailContrata(idx){
+  const entry=contrataQueue[idx];
+  const c=DATA.find(x=>x._id===entry.colabId);
+  if(!c) return;
+  const assunto=encodeURIComponent(`[Sistema Contrata] Cadastro de Terceirizado — ${c.nome}`);
+  const corpo=encodeURIComponent(buildEmailContrata(c));
+  window.location.href=`mailto:?subject=${assunto}&body=${corpo}`;
+  // Mark as sent
+  contrataQueue[idx].status='enviado';
+  contrataQueue[idx].enviadoEm=new Date().toLocaleDateString('pt-BR');
+  saveContrata();
+  setTimeout(()=>renderContrata(),300);
+}
+
+function removeContrata(idx){
+  if(!confirm('Remover este colaborador da fila?')) return;
+  contrataQueue.splice(idx,1);
+  saveContrata();
+  renderContrata();
+}
+
+function limparContrataEnviados(){
+  if(!confirm('Remover todos os já enviados?')) return;
+  contrataQueue=contrataQueue.filter(e=>e.status!=='enviado');
+  saveContrata();
+  renderContrata();
 }
 
 // ══════════════════════════════════════════
