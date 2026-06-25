@@ -4012,7 +4012,7 @@ function renderRequisitos(){
           <div style="font-size:12px;color:#6c757d">
             <b style="color:#1F4E79">${nAtivos}</b> ativo(s) · ${nColab-nAtivos} inativo(s)
           </div>
-          <button onclick="showColabCargo('${r.cargo.replace(/'/g,\"\\\'")}')" style="padding:4px 12px;background:${border};color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600">
+          <button onclick="showColabCargo(this.dataset.cargo)" data-cargo="${r.cargo}" style="padding:4px 12px;background:${border};color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600">
             Ver colaboradores
           </button>
         </div>
