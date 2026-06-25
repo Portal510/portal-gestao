@@ -311,6 +311,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <button class="btn-clear" onclick="clearFilters('geral')">Limpar</button>
     <button class="btn-primary" onclick="openCadastro()" style="margin-left:auto">+ Novo Colaborador</button>
     <button class="btn-export" onclick="exportXlsx('geral')">⬇ Exportar XLSX</button>
+    <button class="btn-export" onclick="exportPDF('geral')" style="background:#a32d2d">📄 Exportar PDF</button>
   </div>
   <div class="tbl-wrap"><table id="tbl-geral">
     <thead><tr>
@@ -924,7 +925,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <select id="pend-uf" style="padding:7px 11px;border:1px solid #ced4da;border-radius:6px;font-size:13px" onchange="renderPendencias()">
         <option value="">Todas as UF</option>
       </select>
-      <button class="btn-export" onclick="exportPendencias()" style="padding:7px 14px">⬇ Exportar</button>
+      <button class="btn-export" onclick="exportPendencias()" style="padding:7px 14px">⬇ Exportar XLSX</button>
+      <button class="btn-export" onclick="exportPDF('pendencias')" style="background:#a32d2d;padding:7px 14px">📄 PDF</button>
     </div>
   </div>
   <div id="pend-stats" style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap"></div>
@@ -939,6 +941,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <div style="font-size:12px;color:#6c757d;margin-top:3px">Colaboradores novos aguardando envio de e-mail para o Fiscal realizar o cadastro no Sistema Contrata</div>
     </div>
     <div style="display:flex;gap:8px">
+      <button class="btn-export" onclick="exportPDF('contrata')" style="background:#a32d2d">📄 Exportar PDF</button>
       <button class="btn-clear" onclick="limparContrataEnviados()">🗑 Limpar enviados</button>
     </div>
   </div>
@@ -1402,8 +1405,11 @@ const DATA_KEY = 'ts_portal_data_v2';
 // ── Save DATA to localStorage ──────────────
 function saveData(){
   try{
-    // Don't store dataUrls (files) — they're already in uploadedDocs
-    // Store everything else
+    // Normalize CPF and phone before saving
+    DATA.forEach(c=>{
+      if(c.cpf) c.cpf = fmtCPF(c.cpf.replace(/\D/g,''));
+      if(c.celular && c.celular!=='Pendente') c.celular = normTel(c.celular);
+    });
     localStorage.setItem(DATA_KEY, JSON.stringify(DATA));
   }catch(e){
     console.warn('[saveData] Erro ao salvar:', e);
@@ -1416,13 +1422,17 @@ function loadData(){
     const saved = localStorage.getItem(DATA_KEY);
     if(saved){
       const parsed = JSON.parse(saved);
-      if(Array.isArray(parsed) && parsed.length >= COLAB.length){
-        return parsed;
+      if(Array.isArray(parsed) && parsed.length > 0){
+        // Merge: preserve saved changes, add any new COLAB fields missing from saved
+        return parsed.map((savedColab, i) => {
+          const base = COLAB.find(c=>c.cpf===savedColab.cpf) || COLAB[i] || {};
+          return {...base, ...savedColab, _id: savedColab._id ?? i};
+        });
       }
     }
   }catch(e){ console.warn('[loadData] Erro:', e); }
-  // First run or corrupted — use COLAB base and save
   const fresh = COLAB.map((c,i)=>({...c,_id:i}));
+  localStorage.setItem(DATA_KEY, JSON.stringify(fresh));
   return fresh;
 }
 
@@ -1430,6 +1440,70 @@ let DATA = loadData();
 let calNotes = JSON.parse(localStorage.getItem('ts_cal_notes')||'{}');
 let calYear, calMonth;
 let editTarget = null;
+
+
+// ── Field formatters ─────────────────────────────────────────────
+function fmtCPF(v){
+  if(!v) return '';
+  const d=v.replace(/\D/g,'');
+  if(d.length!==11) return v;
+  return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4');
+}
+function fmtTel(v){
+  if(!v||v==='Pendente') return v;
+  const d=v.replace(/\D/g,'');
+  if(d.length===11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+  if(d.length===10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+  return v;
+}
+function fmtDateISO(s){
+  if(!s) return '—';
+  const p=s.split('-');
+  return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:s;
+}
+function normCPF(v){
+  // Remove mask then reapply
+  if(!v) return '';
+  return fmtCPF(v.replace(/\D/g,''));
+}
+function normTel(v){
+  if(!v||v==='Pendente') return v;
+  return fmtTel(v.replace(/\D/g,''));
+}
+// Apply formatting when user finishes typing
+function setupFieldFormatting(){
+  document.addEventListener('change', e=>{
+    const id=e.target.id;
+    if(id==='cad-cpf') e.target.value=fmtCPF(e.target.value.replace(/\D/g,''));
+    if(id==='cad-celular') e.target.value=normTel(e.target.value);
+    if(id==='geral-edit-input'){
+      const f=window._geralEditField||'';
+      if(f==='cpf') e.target.value=fmtCPF(e.target.value.replace(/\D/g,''));
+      if(f==='celular') e.target.value=normTel(e.target.value);
+    }
+  });
+  // Mask on input for CPF/tel fields
+  document.addEventListener('input', e=>{
+    const id=e.target.id;
+    if(id==='cad-cpf'){
+      let v=e.target.value.replace(/\D/g,'').slice(0,11);
+      if(v.length>9) v=v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/,'$1.$2.$3-$4');
+      else if(v.length>6) v=v.replace(/(\d{3})(\d{3})(\d{1,3})/,'$1.$2.$3');
+      else if(v.length>3) v=v.replace(/(\d{3})(\d{1,3})/,'$1.$2');
+      e.target.value=v;
+    }
+    if(id==='cad-celular'){
+      let v=e.target.value.replace(/\D/g,'').slice(0,11);
+      if(v.length>6) v=v.replace(/(\d{2})(\d{5})(\d{1,4})/,'($1) $2-$3');
+      else if(v.length>2) v=v.replace(/(\d{2})(\d{1,5})/,'($1) $2');
+      e.target.value=v;
+    }
+    if(id==='cad-rg'){
+      // Keep as typed but trim
+      e.target.value=e.target.value.toUpperCase();
+    }
+  });
+}
 
 function badge(v){
   if(v==='Entregue'||v==='Sim') return `<span class="badge badge-ok">${v}</span>`;
@@ -1501,7 +1575,7 @@ function renderGeral(){
       <span class="edit-icon" onclick="openGeralEdit(${c._id},'nome','${escQ(c.nome)}')" title="Editar nome">✎</span>
     </td>
     <td style="font-size:11px;color:#555">
-      ${c.cpf}
+      ${fmtCPF(c.cpf)}
       <span class="edit-icon" onclick="openGeralEdit(${c._id},'cpf','${escQ(c.cpf)}')" title="Editar CPF">✎</span>
     </td>
     <td>
@@ -1513,7 +1587,7 @@ function renderGeral(){
       <span class="edit-icon" onclick="openGeralEditCargo(${c._id},'${escQ(c.cargo)}')" title="Editar cargo">✎</span>
     </td>
     <td style="font-size:11px">
-      ${c.celular!=='Pendente'?c.celular:`<span class="badge badge-pend">Pendente</span>`}
+      ${c.celular&&c.celular!=='Pendente'?fmtTel(c.celular):`<span class="badge badge-pend">Pendente</span>`}
       <span class="edit-icon" onclick="openGeralEdit(${c._id},'celular','${escQ(c.celular)}')" title="Editar celular">✎</span>
     </td>
     <td style="font-size:11px;color:#555">
@@ -1525,7 +1599,7 @@ function renderGeral(){
       <span class="edit-icon" onclick="openGeralEdit(${c._id},'email_inst','${escQ(c.email_inst||'')}')" title="Editar e-mail institucional">✎</span>
     </td>
     <td style="text-align:center">
-      ${admCell}
+      ${admStr?`<span style="font-size:12px;color:#155724;font-weight:600">${admStr}</span>`:`<span class="badge badge-pend" style="font-size:10px">—</span>`}
       <span class="edit-icon" onclick="openGeralEditDate(${c._id},'data_admissao','${admVal}')" title="Editar data de admissão">✎</span>
     </td>
     <td style="text-align:center">
@@ -1919,6 +1993,7 @@ const FIELD_LABELS={nome:'Nome completo',cpf:'CPF',celular:'Número de celular',
 
 function openGeralEdit(id,field,currentVal){
   geralEditTarget={id,field};
+  window._geralEditField=field;
   document.getElementById('geral-edit-title').textContent='Editar: '+(FIELD_LABELS[field]||field);
   document.getElementById('geral-edit-label').textContent=FIELD_LABELS[field]||field;
   const inp=document.getElementById('geral-edit-input');
@@ -4487,6 +4562,108 @@ function limparContrataEnviados(){
 }
 
 // ══════════════════════════════════════════
+// EXPORTAÇÃO PDF
+// ══════════════════════════════════════════
+function exportPDF(tab){
+  const all = DATA;
+  let title = '', headers = [], rows = [];
+
+  if(tab==='geral'){
+    title = 'Relação de Colaboradores — Portal T&S/TCU';
+    headers = ['Nome','CPF','UF','Cargo','Celular','E-mail Institucional','Admissão','Status','Vínculo'];
+    rows = all.map(c=>[
+      c.nome, fmtCPF(c.cpf), c.uf, c.cargo,
+      c.celular&&c.celular!=='Pendente'?fmtTel(c.celular):'—',
+      c.email_inst&&c.email_inst!=='Pendente'?c.email_inst:'—',
+      c.data_admissao?fmtDateISO(c.data_admissao):'—',
+      c.status==='inativo'?'Inativo':'Ativo',
+      c.tipo_vinculo||'Efetivo'
+    ]);
+  } else if(tab==='pendencias'){
+    title = 'Relatório de Pendências — Portal T&S/TCU';
+    headers = ['Nome','CPF','UF','Cargo','Categoria','Pendência'];
+    const ativos=DATA.filter(c=>c.status!=='inativo');
+    ativos.forEach(c=>{
+      const pends=getPendencias(c);
+      pends.forEach(p=>{
+        rows.push([c.nome,fmtCPF(c.cpf),c.uf,c.cargo,
+          p.cat==='certs'?'Certificação':p.cat==='equip'?'Equipamento':'Documento',p.label]);
+      });
+    });
+  } else if(tab==='contrata'){
+    title = 'Fila Sistema Contrata — Portal T&S/TCU';
+    headers = ['Nome','CPF','RG','Nascimento','Cargo','UF','Admissão','Vínculo','Status'];
+    contrataQueue.forEach(entry=>{
+      const c=DATA.find(x=>x._id===entry.colabId);
+      if(!c) return;
+      rows.push([c.nome,fmtCPF(c.cpf),c.rg||'—',c.data_nascimento?fmtDateISO(c.data_nascimento):'—',
+        c.cargo,c.uf,c.data_admissao?fmtDateISO(c.data_admissao):'—',
+        c.tipo_vinculo||'Efetivo',entry.status==='enviado'?'Enviado':'Pendente']);
+    });
+  } else {
+    alert('Exportação PDF disponível para: Colaboradores, Pendências e Sistema Contrata.');
+    return;
+  }
+
+  openPDFWindow(title, headers, rows);
+}
+
+function openPDFWindow(title, headers, rows){
+  const now = new Date().toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric'});
+  const thHtml = headers.map(h=>`<th>${h}</th>`).join('');
+  const trHtml = rows.map(r=>
+    `<tr>${r.map(c=>`<td>${c||'—'}</td>`).join('')}</tr>`
+  ).join('');
+
+  const win = window.open('','_blank','width=1000,height=700');
+  win.document.write(`<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>${title}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,sans-serif;font-size:11px;color:#1a1a2e;padding:20px}
+  .header{text-align:center;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid #1F4E79}
+  .header h1{font-size:16px;color:#1F4E79;margin-bottom:4px}
+  .header p{font-size:11px;color:#6c757d}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  thead th{background:#1F4E79;color:#fff;padding:6px 8px;text-align:left;font-size:10px;font-weight:600}
+  tbody td{padding:5px 8px;border-bottom:1px solid #e9ecef;font-size:10px;vertical-align:top}
+  tbody tr:nth-child(even) td{background:#f8f9fa}
+  tbody tr:hover td{background:#E8F0FE}
+  .footer{margin-top:14px;font-size:9px;color:#aaa;text-align:center;border-top:1px solid #dee2e6;padding-top:8px}
+  .no-print{display:flex;gap:10px;justify-content:flex-end;margin-bottom:14px}
+  .btn{padding:8px 20px;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600}
+  .btn-print{background:#1F4E79;color:#fff}
+  .btn-close{background:#f0f2f5;color:#333}
+  @media print{
+    .no-print{display:none}
+    body{padding:10px}
+    @page{margin:15mm;size:A4 landscape}
+  }
+</style>
+</head>
+<body>
+  <div class="no-print">
+    <button class="btn btn-close" onclick="window.close()">✕ Fechar</button>
+    <button class="btn btn-print" onclick="window.print()">🖨 Imprimir / Salvar PDF</button>
+  </div>
+  <div class="header">
+    <h1>${title}</h1>
+    <p>Gerado em: ${now} · Total de registros: ${rows.length} · Portal T&S — Gestão de Terceirizados TCU</p>
+  </div>
+  <table>
+    <thead><tr>${thHtml}</tr></thead>
+    <tbody>${trHtml}</tbody>
+  </table>
+  <div class="footer">Tribunal de Contas da União — Central de Serviços de TI — Contrato T&S · Portal de Gestão</div>
+</body>
+</html>`);
+  win.document.close();
+}
+
+// ══════════════════════════════════════════
 // INIT
 
 document.addEventListener('DOMContentLoaded', ()=>{
@@ -4695,7 +4872,13 @@ window.addEventListener('storage', e=>{
 // Initial localStorage sync (silent)
 (function(){ const n=syncFromLocalStorage(); if(n>0) console.log(`[Sync] localStorage: ${n} campo(s)`); })();
 
+setupFieldFormatting();
 renderGeral();
+
+// ── Auto-save before page unload (F5, close, navigate) ───────────
+window.addEventListener('beforeunload', ()=>{ saveData(); });
+// Also save every 30s as belt-and-suspenders
+setInterval(saveData, 30000);
 </script>
 </body>
 </html>
