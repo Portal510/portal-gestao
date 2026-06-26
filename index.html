@@ -3507,30 +3507,46 @@ function initUpload(){
 }
 
 function upAtualizar(){
-  // 1. Apply statuses to DATA
-  uploadedDocs.forEach(doc=>{ try{ if(doc.tipo&&doc.tipo!=='—') upAtualizarStatus(doc.colabId, doc.tipo); }catch(e){} });
+  if(!confirm('Limpar todas as marcações e reiniciar?\n\nOs documentos serão removidos da lista e os status voltarão para Pendente, permitindo um novo ciclo de marcação.')) return;
+
+  // 1. REVERTER status — Entregue → Pendente para todos os docs importados
+  uploadedDocs.forEach(doc=>{
+    try{
+      if(!doc.tipo||doc.tipo==='—') return;
+      const c=DATA.find(x=>x._id===doc.colabId);
+      const field=TIPO_TO_FIELD[doc.tipo];
+      if(!c||!field) return;
+      if(field.cat==='docs' && c.docs?.[field.key]==='Entregue')
+        c.docs[field.key]='Pendente';
+      if(field.cat==='certs' && c.certs?.[field.key]==='Entregue')
+        c.certs[field.key]='Pendente';
+    }catch(e){}
+  });
   saveData();
 
-  // 2. Wipe all uploaded docs from memory + storage
-  uploadedDocs = [];
+  // 2. Limpar todos os docs importados
+  uploadedDocs=[];
   saveUploadDocs();
 
-  // 3. Clear panels + inputs + filters
+  // 3. Limpar painéis e inputs
   const r=document.getElementById('up-batch-result');
-  if(r){ r.style.display='none'; r.innerHTML=''; }
+  if(r){r.style.display='none';r.innerHTML='';}
   window._batchPendingRows=null; window._batchPendingFiles={};
-  ['up-file-input','up-batch-input','up-zip-input'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  ['up-busca'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  ['up-fil-tipo','up-fil-colab','up-fil-status'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['up-file-input','up-batch-input','up-zip-input'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+  ['up-busca','up-fil-tipo','up-fil-colab','up-fil-status'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
 
-  // 4. Force lista to empty immediately
+  // 4. Limpar lista visual imediatamente
   const lista=document.getElementById('up-lista');
   if(lista) lista.innerHTML=`<div class="up-empty"><div class="eicon">📬</div>
-    <div style="font-size:14px;font-weight:600;margin-bottom:6px">Nenhum documento carregado.</div>
-    <div style="font-size:13px">Selecione arquivos acima para importar.</div>
+    <div style="font-size:14px;font-weight:600;margin-bottom:6px">Pronto para novo ciclo.</div>
+    <div style="font-size:13px">Todos os status foram resetados para Pendente. Importe os novos arquivos acima.</div>
   </div>`;
 
-  // 5. Reset stats
+  // 5. Zerar stats
   const stats=document.getElementById('up-stats');
   if(stats) stats.innerHTML=`
     <div class="up-stat"><div class="n" style="color:#58a6ff">0</div><div class="l">Documentos</div></div>
@@ -3539,9 +3555,9 @@ function upAtualizar(){
     <div class="up-stat"><div class="n" style="color:#f85149">${DATA.length}</div><div class="l">Sem upload</div></div>
   `;
 
-  // 6. Reinit selects + refresh tabs
-  try{ initUpload(); }catch(e){}
-  try{ renderGeral(); }catch(e){}
+  // 6. Recarregar selects e abas
+  try{initUpload();}catch(e){}
+  try{renderGeral();}catch(e){}
 }
 
 // ── Config Download toggle ────────────────
