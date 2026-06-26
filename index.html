@@ -863,8 +863,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <div id="up-batch-result" style="display:none;margin-top:12px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:14px;max-height:280px;overflow-y:auto"></div>
   </div>
 
-  <!-- Filters -->
-  <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+  <!-- Filters + Action buttons -->
+  <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
     <div style="position:relative">
       <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#6c757d;font-size:13px">🔍</span>
       <input type="text" id="up-busca" class="up-search" placeholder="Buscar por nome ou arquivo..." oninput="upFilterDocs()">
@@ -881,18 +881,39 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <option value="Entregue">✅ Entregue</option>
       <option value="Pendente">⏳ Pendente</option>
     </select>
-    <button class="up-btn" onclick="upLimparTudo()" style="margin-left:auto">🗑 Limpar tudo</button>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
     <button class="up-btn" onclick="upAtualizar()" style="background:#E8F0FE;border-color:#2E75B6;color:#1F4E79;font-weight:600">🔄 Atualizar</button>
+    <button class="up-btn" onclick="toggleConfigDownload()" style="font-weight:600">⚙️ Config. Download</button>
+    <button class="up-btn" onclick="upBaixarZip()" style="background:#375623;color:#fff;border-color:#375623;font-weight:600">📥 Baixar ZIP</button>
+    <button class="up-btn" onclick="upSincronizarBaixar()" style="background:#1F4E79;color:#fff;border-color:#1F4E79;font-weight:600">⬆ Sincronizar + Baixar ZIP</button>
+    <button class="up-btn up-btn-danger" onclick="upLimparTudo()" style="margin-left:auto">🗑 Limpar tudo</button>
+  </div>
+
+  <!-- Config Download Panel -->
+  <div id="up-config-panel" style="display:none;background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:14px;margin-bottom:14px">
+    <div style="font-weight:600;color:#1F4E79;margin-bottom:10px;font-size:13px">⚙️ Estrutura de subpastas no ZIP</div>
+    <div style="display:flex;gap:20px;flex-wrap:wrap">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+        <input type="radio" name="zip-estrutura" value="uf_nome_tipo" checked> UF / Nome / Tipo
+      </label>
+      <label style="display:flex;align-items:center;gap=6px;font-size:13px;cursor:pointer">
+        <input type="radio" name="zip-estrutura" value="cargo_nome"> Cargo / Nome
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+        <input type="radio" name="zip-estrutura" value="tipo_nome"> Tipo / Nome
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+        <input type="radio" name="zip-estrutura" value="nome"> Só por Nome
+      </label>
+    </div>
+    <div style="font-size:11px;color:#6c757d;margin-top:8px">
+      Exemplo (UF/Nome/Tipo): <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px">DF/João Silva/ASO/ASO_João Silva.pdf</code>
+    </div>
   </div>
 
   <!-- Doc list -->
-  <div id="up-lista">
-    <div class="up-empty">
-      <div class="eicon">📬</div>
-      <div style="font-size:14px;font-weight:600;margin-bottom:6px">Nenhum documento carregado.</div>
-      <div style="font-size:13px">Defina o tipo, selecione o colaborador e importe os arquivos acima.</div>
-    </div>
-  </div>
+  <div id="up-lista"></div>
 </div>
 
 <!-- ═══════════════════ CARGOS E REQUISITOS ═══════════════════ -->
@@ -3486,24 +3507,106 @@ function initUpload(){
 }
 
 function upAtualizar(){
-  // Re-apply all stored uploads to DATA (restore statuses)
-  uploadedDocs.forEach(doc=>upAtualizarStatus(doc.colabId, doc.tipo));
-  // Clear ALL result panels
+  uploadedDocs.forEach(doc=>{ try{ upAtualizarStatus(doc.colabId, doc.tipo); }catch(e){} });
+  // Clear result/pending panels
   const r=document.getElementById('up-batch-result');
   if(r){ r.style.display='none'; r.innerHTML=''; }
-  // Remove docs that were marked Entregue from the visible list (keep in uploadedDocs for history)
-  // They were already processed — optionally clear batch result
   window._batchPendingRows=null; window._batchPendingFiles={};
   // Reset file inputs
   ['up-file-input','up-batch-input','up-zip-input'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
-  // Clear filters and reload
-  document.getElementById('up-busca').value='';
-  document.getElementById('up-fil-tipo').value='';
-  document.getElementById('up-fil-colab').value='';
-  document.getElementById('up-fil-status').value='';
+  // Clear search/filters
+  ['up-busca'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['up-fil-tipo','up-fil-colab','up-fil-status'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  // Reload list (this re-renders up-lista fresh)
   initUpload();
+}
+
+// ── Config Download toggle ────────────────
+function toggleConfigDownload(){
+  const p=document.getElementById('up-config-panel');
+  if(p) p.style.display=p.style.display==='none'?'block':'none';
+}
+
+function getZipEstrutura(){
+  const sel=document.querySelector('input[name="zip-estrutura"]:checked');
+  return sel?sel.value:'uf_nome_tipo';
+}
+
+function buildZipPath(doc){
+  const c=DATA.find(x=>x._id===doc.colabId)||{nome:'Desconhecido',uf:'XX',cargo:'Outro'};
+  const tipo=doc.tipo&&doc.tipo!=='—'?doc.tipo:'Documentos';
+  const ext=doc.ext||doc.fileName.split('.').pop();
+  // Standardized filename
+  const tipoAbrev=tipo.replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_').slice(0,20);
+  const nomeArq=`${tipoAbrev}_${c.nome.replace(/[^a-zA-Z0-9 ]/g,'').replace(/\s+/g,'_')}.${ext}`;
+  const estrutura=getZipEstrutura();
+  switch(estrutura){
+    case 'uf_nome_tipo':   return `${c.uf}/${c.nome}/${tipo}/${nomeArq}`;
+    case 'cargo_nome':     return `${c.cargo.split('(')[0].trim()}/${c.nome}/${nomeArq}`;
+    case 'tipo_nome':      return `${tipo}/${c.nome}/${nomeArq}`;
+    case 'nome':           return `${c.nome}/${nomeArq}`;
+    default:               return `${c.uf}/${c.nome}/${tipo}/${nomeArq}`;
+  }
+}
+
+// ── Download single file with standardized name ──
+function upDownloadFile(id){
+  const doc=uploadedDocs.find(d=>d.id===id);
+  if(!doc||!doc.dataUrl){ alert('Arquivo não disponível para download.'); return; }
+  const c=DATA.find(x=>x._id===doc.colabId)||{nome:'Desconhecido',uf:'XX'};
+  const tipo=(doc.tipo&&doc.tipo!=='—'?doc.tipo:'Doc').replace(/[^a-zA-Z0-9 ]/g,'').replace(/\s+/g,'_').slice(0,20);
+  const nome=c.nome.replace(/[^a-zA-Z0-9 ]/g,'').replace(/\s+/g,'_');
+  const ext=doc.ext||doc.fileName.split('.').pop();
+  const filename=`${c.uf}_${tipo}_${nome}.${ext}`;
+  const a=document.createElement('a');
+  a.href=doc.dataUrl; a.download=filename; a.click();
+}
+
+// ── Baixar ZIP (sem sincronizar) ──────────
+async function upBaixarZip(){
+  const docs=uploadedDocs.filter(d=>d.dataUrl);
+  if(!docs.length){ alert('Nenhum documento com arquivo disponível para download.'); return; }
+  const btn=event?.target; if(btn){ btn.textContent='⏳ Gerando ZIP...'; btn.disabled=true; }
+  try{
+    const zip=new JSZip();
+    docs.forEach(d=>{ zip.file(buildZipPath(d), d.dataUrl.split(',')[1], {base64:true}); });
+    const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    const date=new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
+    a.href=url; a.download=`Documentacao_comprobatoria_${date}.zip`; a.click();
+    URL.revokeObjectURL(url);
+  }catch(e){ alert('Erro ao gerar ZIP: '+e.message); }
+  if(btn){ btn.textContent='📥 Baixar ZIP'; btn.disabled=false; }
+}
+
+// ── Sincronizar + Baixar ZIP ──────────────
+async function upSincronizarBaixar(){
+  const docs=uploadedDocs.filter(d=>d.dataUrl);
+  if(!docs.length){ alert('Nenhum documento com arquivo disponível.'); return; }
+  const btn=event?.target; if(btn){ btn.textContent='⏳ Sincronizando...'; btn.disabled=true; }
+  // Mark all as Entregue
+  docs.forEach(d=>{ if(d.tipo&&d.tipo!=='—') upAtualizarStatus(d.colabId,d.tipo); });
+  saveData();
+  // Refresh tabs
+  try{ renderGeral(); }catch(e){}
+  // Generate ZIP
+  try{
+    if(btn) btn.textContent='⏳ Gerando ZIP...';
+    const zip=new JSZip();
+    docs.forEach(d=>{ zip.file(buildZipPath(d), d.dataUrl.split(',')[1], {base64:true}); });
+    const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    const date=new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
+    a.href=url; a.download=`Documentacao_comprobatoria_${date}.zip`; a.click();
+    URL.revokeObjectURL(url);
+    upFilterDocs(); // refresh list
+    alert(`✅ Sincronização concluída!\n\n${docs.length} documento(s) marcados como Entregue.\nZIP baixado com a estrutura de subpastas configurada.\n\nMova o ZIP para o Google Drive pelo navegador ou app do Drive.`);
+  }catch(e){ alert('Erro ao gerar ZIP: '+e.message); }
+  if(btn){ btn.textContent='⬆ Sincronizar + Baixar ZIP'; btn.disabled=false; }
 }
 
 // ── Drag & Drop ───────────────────────────
@@ -3860,8 +3963,8 @@ function upFilterDocs(){
       <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0">
         <span class="up-badge up-badge-ok">✅ Entregue</span>
         <div style="display:flex;gap:6px;margin-top:4px">
+          ${d.dataUrl?`<button class="up-btn" onclick="upDownloadFile('${d.id}')" title="Baixar com nome padronizado">⬇</button>`:''}
           ${d.dataUrl?`<button class="up-btn" onclick="upVisualizar('${d.id}')" title="Visualizar">👁</button>`:''}
-          <button class="up-btn" onclick="upDownload('${d.id}')" title="Baixar">⬇</button>
           <button class="up-btn up-btn-danger" onclick="upRemover('${d.id}')" title="Remover">🗑</button>
         </div>
       </div>
