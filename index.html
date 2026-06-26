@@ -3507,20 +3507,33 @@ function initUpload(){
 }
 
 function upAtualizar(){
-  uploadedDocs.forEach(doc=>{ try{ upAtualizarStatus(doc.colabId, doc.tipo); }catch(e){} });
-  // Clear result/pending panels
+  // 1. Apply statuses to DATA first
+  uploadedDocs.forEach(doc=>{ try{ if(doc.tipo&&doc.tipo!=='—') upAtualizarStatus(doc.colabId, doc.tipo); }catch(e){} });
+  saveData();
+
+  // 2. Clear ALL uploaded documents from memory and storage
+  uploadedDocs = [];
+  saveUploadDocs();
+
+  // 3. Clear result/pending panels
   const r=document.getElementById('up-batch-result');
   if(r){ r.style.display='none'; r.innerHTML=''; }
   window._batchPendingRows=null; window._batchPendingFiles={};
-  // Reset file inputs
+
+  // 4. Reset file inputs
   ['up-file-input','up-batch-input','up-zip-input'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
-  // Clear search/filters
+
+  // 5. Clear filters
   ['up-busca'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   ['up-fil-tipo','up-fil-colab','up-fil-status'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-  // Reload list (this re-renders up-lista fresh)
+
+  // 6. Reinit — renders empty list
   initUpload();
+
+  // 7. Refresh other tabs
+  try{ renderGeral(); }catch(e){}
 }
 
 // ── Config Download toggle ────────────────
