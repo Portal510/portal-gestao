@@ -1529,7 +1529,10 @@ function populateCargoFilter(selId){
 
 function renderGeral(){
   populateCargoFilter('filter-cargo-geral');
-  const rows=filterData(document.getElementById('search-geral').value,document.getElementById('filter-cargo-geral').value);
+  const rows=filterData(
+    (document.getElementById('search-geral')?.value||''),
+    (document.getElementById('filter-cargo-geral')?.value||'')
+  );
   const body=document.getElementById('body-geral');
   body.innerHTML=rows.length?rows.map((c,i)=>{
     const ativo=c.status!=='inativo';
@@ -4850,40 +4853,49 @@ window.addEventListener('storage', e=>{
   }
 });
 
-// ── Sync button in header ──────────────────
-(function addSyncBtn(){
+// ── Sync button — added via _portalInit after DOM ready ──────────
+function _addSyncBtn(){
+  if(document.getElementById('btn-sync-ts')) return;
   const header=document.querySelector('.header');
   if(!header) return;
   const btn=document.createElement('button');
   btn.id='btn-sync-ts';
-  btn.title='Sincronizar com Portal T&S — funciona entre dispositivos e navegadores';
-  btn.style.cssText='margin-left:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 14px;border-radius:16px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;transition:background .2s';
-  btn.onmouseover=()=>btn.style.background='rgba(255,255,255,.25)';
-  btn.onmouseout=()=>btn.style.background='rgba(255,255,255,.15)';
+  btn.title='Sincronizar com Portal T&S';
+  btn.style.cssText='margin-left:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 14px;border-radius:16px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap';
   btn.innerHTML='🔄 Sync T&S';
   btn.onclick=()=>{
-    btn.innerHTML='⏳...';
-    btn.disabled=true;
-    runFullSync().then(({pulled,pushed})=>{
-      btn.innerHTML='🔄 Sync T&S';
-      btn.disabled=false;
-    }).catch(()=>{ btn.innerHTML='🔄 Sync T&S'; btn.disabled=false; });
+    btn.innerHTML='⏳...'; btn.disabled=true;
+    runFullSync().then(()=>{btn.innerHTML='🔄 Sync T&S';btn.disabled=false;})
+      .catch(()=>{btn.innerHTML='🔄 Sync T&S';btn.disabled=false;});
   };
   const stats=document.querySelector('.header-stats');
-  if(stats) header.insertBefore(btn,stats);
-  else header.appendChild(btn);
-})();
+  if(stats) header.insertBefore(btn,stats); else header.appendChild(btn);
+}
 
 // Initial localStorage sync (silent)
-(function(){ const n=syncFromLocalStorage(); if(n>0) console.log(`[Sync] localStorage: ${n} campo(s)`); })();
+(function(){ try{ const n=syncFromLocalStorage(); if(n>0) console.log(`[Sync] localStorage: ${n} campo(s)`); }catch(e){} })();
 
-setupFieldFormatting();
-renderGeral();
+function _portalInit(){
+  try{ setupFieldFormatting(); }catch(e){}
+  try{ renderUniItemsTable(); }catch(e){}
+  try{
+    const datEl=document.getElementById('uni-data');
+    if(datEl&&!datEl.value) datEl.value=new Date().toISOString().slice(0,10);
+  }catch(e){}
+  try{ renderGeral(); }catch(e){ console.warn('renderGeral:',e); }
+  try{ _addSyncBtn(); }catch(e){}
+  try{ uploadedDocs.forEach(doc=>upAtualizarStatus(doc.colabId,doc.tipo)); }catch(e){}
+}
 
-// ── Auto-save before page unload (F5, close, navigate) ───────────
-window.addEventListener('beforeunload', ()=>{ saveData(); });
-// Also save every 30s as belt-and-suspenders
-setInterval(saveData, 30000);
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', _portalInit);
+} else {
+  _portalInit();
+}
+
+// ── Auto-save before page unload ──────────
+window.addEventListener('beforeunload', ()=>{ try{saveData();}catch(e){} });
+setInterval(()=>{ try{saveData();}catch(e){}; }, 30000);
 </script>
 </body>
 </html>
