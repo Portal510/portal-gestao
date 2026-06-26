@@ -3511,46 +3511,26 @@ function initUpload(){
 }
 
 function upAtualizar(){
-  if(!confirm('Limpar todas as marcações e reiniciar?\n\nOs documentos serão removidos da lista e os status voltarão para Pendente, permitindo um novo ciclo de marcação.')) return;
+  // Apenas limpa a lista — as marcações permanecem nas abas
+  if(!confirm('Limpar a lista de documentos importados?\n\nAs marcações (Entregue) nas demais abas serão mantidas.')) return;
 
-  // 1. REVERTER status — Entregue → Pendente para todos os docs importados
-  uploadedDocs.forEach(doc=>{
-    try{
-      if(!doc.tipo||doc.tipo==='—') return;
-      const c=DATA.find(x=>x._id===doc.colabId);
-      const field=TIPO_TO_FIELD[doc.tipo];
-      if(!c||!field) return;
-      if(field.cat==='docs' && c.docs?.[field.key]==='Entregue')
-        c.docs[field.key]='Pendente';
-      if(field.cat==='certs' && c.certs?.[field.key]==='Entregue')
-        c.certs[field.key]='Pendente';
-    }catch(e){}
-  });
-  saveData();
-
-  // 2. Limpar todos os docs importados
-  uploadedDocs=[];
+  uploadedDocs = [];
   saveUploadDocs();
 
-  // 3. Limpar painéis e inputs
-  const r=document.getElementById('up-batch-result');
-  if(r){r.style.display='none';r.innerHTML='';}
+  const r = document.getElementById('up-batch-result');
+  if(r){ r.style.display='none'; r.innerHTML=''; }
   window._batchPendingRows=null; window._batchPendingFiles={};
   ['up-file-input','up-batch-input','up-zip-input'].forEach(id=>{
-    const el=document.getElementById(id);if(el)el.value='';
+    const el=document.getElementById(id); if(el) el.value='';
   });
   ['up-busca','up-fil-tipo','up-fil-colab','up-fil-status'].forEach(id=>{
-    const el=document.getElementById(id);if(el)el.value='';
+    const el=document.getElementById(id); if(el) el.value='';
   });
-
-  // 4. Limpar lista visual imediatamente
   const lista=document.getElementById('up-lista');
   if(lista) lista.innerHTML=`<div class="up-empty"><div class="eicon">📬</div>
-    <div style="font-size:14px;font-weight:600;margin-bottom:6px">Pronto para novo ciclo.</div>
-    <div style="font-size:13px">Todos os status foram resetados para Pendente. Importe os novos arquivos acima.</div>
+    <div style="font-size:14px;font-weight:600;margin-bottom:6px">Lista limpa.</div>
+    <div style="font-size:13px">As marcações foram mantidas. Importe novos arquivos acima.</div>
   </div>`;
-
-  // 5. Zerar stats
   const stats=document.getElementById('up-stats');
   if(stats) stats.innerHTML=`
     <div class="up-stat"><div class="n" style="color:#58a6ff">0</div><div class="l">Documentos</div></div>
@@ -3558,10 +3538,60 @@ function upAtualizar(){
     <div class="up-stat"><div class="n" style="color:#d29922">0</div><div class="l">Tipos distintos</div></div>
     <div class="up-stat"><div class="n" style="color:#f85149">${DATA.length}</div><div class="l">Sem upload</div></div>
   `;
+  try{ initUpload(); }catch(e){}
+}
 
-  // 6. Recarregar selects e abas
-  try{initUpload();}catch(e){}
-  try{renderGeral();}catch(e){}
+// ══════════════════════════════════════════
+// RESETAR STATUS PARA PENDENTE
+// ══════════════════════════════════════════
+const RESET_FIELDS = {
+  equipamentos: {
+    dataFields: ['celular_tablet','cracha','maleta','uniforme'],
+    docFields:  ['Termo TCU','Cadastro TCU'],
+  },
+  admissao: {
+    docFields: ['Diploma/Superior','Especialização TI','Exp. Suporte',
+                'Exp. Microcomputadores','ASO Admissional','CTPS','Contrato de Trabalho'],
+  },
+  termos: {
+    docFields: ['Termo Vale Transporte','Termo de Conduta T&S','Decl. Não Parentesco'],
+  },
+  certif: {
+    certFields: ['HDI SCA','HDI CSR','M365 Fundamentals','MD-100 ou MD-102','HDI DAST',
+                 'AZ-900','ITIL Foundations v4','HDI SCTL','HDI KCS','HDI SCM','HDI SCD','XLA Foundation'],
+  },
+};
+
+function resetarPendente(tab){
+  const labels = {
+    equipamentos: 'Equipamentos (Celular/Tablet, Crachá, Maleta, Uniforme)',
+    admissao:     'Admissão (Diploma, ASO, CTPS, Experiências...)',
+    termos:       'Termos (Vale Transporte, Conduta T&S, Não Parentesco)',
+    certif:       'Certificações (todas as 12)',
+  };
+  if(!confirm('⚠️ Resetar ' + (labels[tab]||tab) + '?\n\nTodos os campos desta aba voltarão para "Pendente" em todos os colaboradores ativos.\n\nContinuar?')) return;
+
+  const cfg = RESET_FIELDS[tab] || {};
+  let count = 0;
+
+  DATA.filter(c => c.status !== 'inativo').forEach(c => {
+    (cfg.dataFields||[]).forEach(f => {
+      if(c[f] !== undefined && c[f] !== 'N/A') { c[f] = 'Pendente'; count++; }
+    });
+    (cfg.docFields||[]).forEach(k => {
+      if(c.docs && c.docs[k] !== undefined && c.docs[k] !== 'N/A') { c.docs[k] = 'Pendente'; count++; }
+    });
+    (cfg.certFields||[]).forEach(k => {
+      if(c.certs && c.certs[k] !== undefined && c.certs[k] !== 'N/A') { c.certs[k] = 'Pendente'; count++; }
+    });
+  });
+
+  saveData();
+
+  const refreshMap = { equipamentos:renderEquip, admissao:renderAdm, termos:renderTermos, certif:renderCert };
+  try{ if(refreshMap[tab]) refreshMap[tab](); }catch(e){}
+
+  alert('✅ Reset concluído!\n\n' + count + ' campo(s) voltaram para "Pendente".\nPronto para iniciar novo ciclo.');
 }
 
 // ── Config Download toggle ────────────────
