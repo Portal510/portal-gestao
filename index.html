@@ -3507,32 +3507,40 @@ function initUpload(){
 }
 
 function upAtualizar(){
-  // 1. Apply statuses to DATA first
+  // 1. Apply statuses to DATA
   uploadedDocs.forEach(doc=>{ try{ if(doc.tipo&&doc.tipo!=='—') upAtualizarStatus(doc.colabId, doc.tipo); }catch(e){} });
   saveData();
 
-  // 2. Clear ALL uploaded documents from memory and storage
+  // 2. Wipe all uploaded docs from memory + storage
   uploadedDocs = [];
   saveUploadDocs();
 
-  // 3. Clear result/pending panels
+  // 3. Clear panels + inputs + filters
   const r=document.getElementById('up-batch-result');
   if(r){ r.style.display='none'; r.innerHTML=''; }
   window._batchPendingRows=null; window._batchPendingFiles={};
+  ['up-file-input','up-batch-input','up-zip-input'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['up-busca'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['up-fil-tipo','up-fil-colab','up-fil-status'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
 
-  // 4. Reset file inputs
-  ['up-file-input','up-batch-input','up-zip-input'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.value='';
-  });
+  // 4. Force lista to empty immediately
+  const lista=document.getElementById('up-lista');
+  if(lista) lista.innerHTML=`<div class="up-empty"><div class="eicon">📬</div>
+    <div style="font-size:14px;font-weight:600;margin-bottom:6px">Nenhum documento carregado.</div>
+    <div style="font-size:13px">Selecione arquivos acima para importar.</div>
+  </div>`;
 
-  // 5. Clear filters
-  ['up-busca'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-  ['up-fil-tipo','up-fil-colab','up-fil-status'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  // 5. Reset stats
+  const stats=document.getElementById('up-stats');
+  if(stats) stats.innerHTML=`
+    <div class="up-stat"><div class="n" style="color:#58a6ff">0</div><div class="l">Documentos</div></div>
+    <div class="up-stat"><div class="n" style="color:#3fb950">0</div><div class="l">Colaboradores</div></div>
+    <div class="up-stat"><div class="n" style="color:#d29922">0</div><div class="l">Tipos distintos</div></div>
+    <div class="up-stat"><div class="n" style="color:#f85149">${DATA.length}</div><div class="l">Sem upload</div></div>
+  `;
 
-  // 6. Reinit — renders empty list
-  initUpload();
-
-  // 7. Refresh other tabs
+  // 6. Reinit selects + refresh tabs
+  try{ initUpload(); }catch(e){}
   try{ renderGeral(); }catch(e){}
 }
 
