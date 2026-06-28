@@ -297,6 +297,43 @@ tr:hover .edit-icon{opacity:1}
 .termo-table th{background:#1F4E79;color:#fff;padding:7px 10px;text-align:center}
 .termo-table td{padding:7px 10px;border:1px solid #dee2e6;text-align:center}
 .termo-table tr:nth-child(even) td{background:#f8f9fa}
+
+/* ═══ Portal-T&S CSS vars bridged for Abono/Gerencial tabs ═══ */
+:root {
+  --a50:#FAEEDA; --a600:#854F0B;
+  --b50:#E6F1FB; --b600:#185FA5;
+  --brd:rgba(0,0,0,0.09);
+  --g50:#EAF3DE; --g600:#3B6D11;
+  --gy50:#F1EFE8; --gy600:#5F5E5A;
+  --muted:#5F5E5A;
+  --pu50:#EEEDFE; --pu600:#534AB7;
+  --r50:#FCEBEB; --r600:#A32D2D;
+  --rad:10px; --radlg:12px;
+  --t600:#0F6E56;
+  --card:#fff; --text:#1a1a2e;
+}
+.dash-page{padding:1.25rem 1.5rem;width:100%;box-sizing:border-box;}
+.dh2{font-size:17px;font-weight:600;margin-bottom:1.125rem;display:flex;align-items:center;gap:.625rem;}
+.dhic{width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;}
+.ptitle{font-size:20px;font-weight:700;margin:0 0 4px;}
+.psub{font-size:13px;color:var(--muted);margin:0 0 1rem;}
+.ph{margin-bottom:1rem;}
+.card{background:var(--card);border:.5px solid var(--brd);border-radius:var(--radlg);padding:1.125rem;}
+.card+.card{margin-top:.75rem;}
+.sc{background:var(--card);border:.5px solid var(--brd);border-radius:var(--rad);padding:.75rem 1rem;}
+.sl{font-size:10px;color:var(--muted);margin-bottom:2px;}
+.sv{font-size:20px;font-weight:600;}
+.srow{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:.875rem;}
+.ctitle{font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:.625rem;}
+.tw{overflow-x:auto;border-radius:var(--radlg);border:.5px solid var(--brd);}
+.tw table{width:100%;border-collapse:collapse;font-size:12px;}
+.tw th{background:#f8f9fa;padding:8px 10px;text-align:left;border-bottom:1px solid var(--brd);font-size:11px;font-weight:600;white-space:nowrap;}
+.tw td{padding:7px 10px;border-bottom:.5px solid var(--brd);vertical-align:middle;}
+.tw tr:last-child td{border-bottom:none;}
+.tw tr:hover td{background:#f8f9fb;}
+.btn.bs{background:var(--gy50);color:var(--text);border:.5px solid var(--brd);padding:5px 12px;border-radius:var(--rad);cursor:pointer;font-size:11px;font-weight:600;}
+.btn.g-only{cursor:pointer;}
+#tab-abono .card, #tab-gerencial .card{box-shadow:0 1px 3px rgba(0,0,0,.06);}
 </style>
 <script>/* JSZip 3.10.1 — inlined */
 /*!
@@ -354,6 +391,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div class="tab" onclick="showTab('requisitos',this)">📋 Cargos e Requisitos</div>
   <div class="tab" onclick="showTab('pendencias',this)">⚠️ Pendências</div>
   <div class="tab" onclick="showTab('contrata',this)">🖥️ Sistema Contrata</div>
+  <div class="tab" onclick="showTab('abono',this)">💰 Abono</div>
+  <div class="tab" onclick="showTab('gerencial',this)">📊 Gerencial</div>
 </div>
 
 <div class="content">
@@ -1035,6 +1074,134 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div id="contrata-lista">
     <div style="text-align:center;padding:40px;color:#aaa">Nenhum colaborador na fila.</div>
   </div>
+</div>
+
+<!-- ═══════════════════ GERENCIAL ═══════════════════ -->
+<div id="tab-gerencial" style="display:none">
+<div  id="tab-gerencial">
+<div class="dash-page">
+  <div class="ph">
+    <h2 class="ptitle">📊 Planilha Gerencial — Frequência</h2>
+    <p class="psub">Frequência mensal dos colaboradores ativos · Registre ocorrências do dia</p>
+  </div>
+  <!-- Filtros -->
+  <div class="card" style="margin-bottom:.75rem;padding:.75rem 1rem;">
+    <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;">
+      <div style="display:flex;align-items:center;gap:.4rem;">
+        <label style="font-size:11px;font-weight:600;color:var(--muted);">Mês</label>
+        <select id="ger-mes" onchange="rGerencial()" style="font-size:11px;padding:4px 8px;border:.5px solid var(--brd);border-radius:var(--rad);">
+          <option>Janeiro</option><option>Fevereiro</option><option>Março</option>
+          <option selected>Abril</option><option>Maio</option><option>Junho</option>
+          <option>Julho</option><option>Agosto</option><option>Setembro</option>
+          <option>Outubro</option><option>Novembro</option><option>Dezembro</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:center;gap:.4rem;">
+        <label style="font-size:11px;font-weight:600;color:var(--muted);">Ano</label>
+        <select id="ger-ano" onchange="rGerencial()" style="font-size:11px;padding:4px 8px;border:.5px solid var(--brd);border-radius:var(--rad);">
+          <option>2025</option><option selected>2026</option><option>2027</option><option>2028</option><option>2029</option><option>2030</option><option>2031</option><option>2032</option><option>2033</option><option>2034</option><option>2035</option><option>2036</option><option>2028</option><option>2029</option><option>2030</option><option>2031</option><option>2032</option><option>2033</option><option>2034</option><option>2035</option><option>2036</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:center;gap:.4rem;">
+        <label style="font-size:11px;font-weight:600;color:var(--muted);">Cargo</label>
+        <select id="ger-cargo" onchange="rGerencial()" style="font-size:11px;padding:4px 8px;border:.5px solid var(--brd);border-radius:var(--rad);max-width:200px;">
+          <option value="">Todos os cargos</option>
+        </select>
+      </div>
+      <span style="display:inline-flex;border-radius:6px;overflow:hidden;margin-left:auto;"><button class="btn g-only" onclick="expGerencial('xls')" style="font-size:10px;padding:4px 9px;border:1px solid var(--b600);border-right:.5px solid var(--b600);cursor:pointer;font-weight:600;background:#fff;color:var(--b600);border-radius:0;">⬇ XLSX</button><button class="btn g-only" onclick="expGerencial('pdf')" style="font-size:10px;padding:4px 9px;border:1px solid var(--b600);cursor:pointer;font-weight:600;background:#fff;color:var(--b600);border-radius:0;">📄 PDF</button></span>
+    </div>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem;">
+      <span style="font-size:10px;background:var(--g50);color:var(--g600);border-radius:4px;padding:2px 7px;font-weight:600;">P = Presente</span>
+      <span style="font-size:10px;background:var(--r50);color:var(--r600);border-radius:4px;padding:2px 7px;font-weight:600;">F = Falta</span>
+      <span style="font-size:10px;background:var(--a50);color:var(--a600);border-radius:4px;padding:2px 7px;font-weight:600;">A = Atestado</span>
+      <span style="font-size:10px;background:var(--b50);color:var(--b600);border-radius:4px;padding:2px 7px;font-weight:600;">H = Home Office</span>
+      <span style="font-size:10px;background:var(--gy50);color:var(--gy600);border-radius:4px;padding:2px 7px;font-weight:600;">DS = Descanso</span>
+      <span style="font-size:10px;background:#FEF9C3;color:#854D0E;border-radius:4px;padding:2px 7px;font-weight:600;">PF = Ponto Facultativo</span>
+      <span style="font-size:10px;background:var(--pu50);color:var(--pu600);border-radius:4px;padding:2px 7px;font-weight:600;">OC = Ocorrência</span>
+    </div>
+  </div>
+  <!-- Tabela frequência -->
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div id="ger-table-wrap" style="overflow-x:auto;padding:.5rem;"></div>
+  </div>
+</div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════
+     PÁGINA — ABONO
+════════════════════════════════════════════════════ -->
+</div>
+
+<!-- ═══════════════════ ABONO ═══════════════════ -->
+<div id="tab-abono" style="display:none">
+<div  id="tab-abono">
+<div class="dash-page">
+  <div class="dh2" style="justify-content:space-between;flex-wrap:wrap;gap:.5rem;">
+    <div style="display:flex;align-items:center;gap:10px;"><div class="dhic" style="background:var(--g50);">💰</div>Controle de Abono</div>
+    <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
+      <span style="display:inline-flex;border-radius:6px;overflow:hidden;">
+        <button class="btn g-only" onclick="expAbono('xls')" style="font-size:10px;padding:4px 9px;border:1px solid var(--b600);background:#fff;color:var(--b600);border-right:.5px solid var(--b600);border-radius:0;cursor:pointer;font-weight:600;">⬇ XLSX</button>
+        <button class="btn g-only" onclick="expAbono('pdf')" style="font-size:10px;padding:4px 9px;border:1px solid var(--b600);background:#fff;color:var(--b600);border-radius:0;cursor:pointer;font-weight:600;">📄 PDF</button>
+      </span>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card" style="margin-bottom:.875rem;">
+    <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
+      <select id="abono-f-mes" onchange="rAbono()" style="font-size:11px;padding:5px 9px;border:.5px solid var(--brd);border-radius:var(--rad);">
+        <option value="">Todos os meses</option>
+        <option>Janeiro</option><option>Fevereiro</option><option>Março</option><option>Abril</option>
+        <option>Maio</option><option>Junho</option><option>Julho</option><option>Agosto</option>
+        <option>Setembro</option><option>Outubro</option><option>Novembro</option><option>Dezembro</option>
+      </select>
+      <select id="abono-f-ano" onchange="rAbono()" style="font-size:11px;padding:5px 9px;border:.5px solid var(--brd);border-radius:var(--rad);">
+        <option value="">Todos os anos</option>
+        <option>2025</option><option selected>2026</option><option>2027</option><option>2028</option><option>2029</option><option>2030</option><option>2031</option><option>2032</option><option>2033</option><option>2034</option><option>2035</option><option>2036</option>
+      </select>
+      <select id="abono-f-cargo" onchange="rAbono()" style="font-size:11px;padding:5px 9px;border:.5px solid var(--brd);border-radius:var(--rad);max-width:240px;">
+        <option value="">Todos os cargos</option>
+      </select>
+      <input type="text" id="abono-f-nome" placeholder="🔍 Filtrar por nome..." oninput="rAbono()" style="font-size:11px;padding:5px 9px;border:.5px solid var(--brd);border-radius:var(--rad);width:200px;">
+      <button class="btn bs" onclick="abonoSetMesAtual()" style="font-size:10px;padding:4px 12px;">📅 Mês atual</button>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="srow" style="grid-template-columns:repeat(4,1fr);margin-bottom:.875rem;">
+    <div class="sc"><div class="sl">Colaboradores</div><div class="sv" id="abono-cnt">0</div></div>
+    <div class="sc"><div class="sl">Total Desktop/Internet</div><div class="sv" style="color:var(--g600);font-size:16px;" id="abono-tot-desk">R$ 0,00</div></div>
+    <div class="sc"><div class="sl">Total Celular/Tablet</div><div class="sv" style="color:var(--b600);font-size:16px;" id="abono-tot-cel">R$ 0,00</div></div>
+    <div class="sc"><div class="sl">Total Geral</div><div class="sv" style="color:var(--t600);font-size:16px;" id="abono-tot-geral">R$ 0,00</div></div>
+  </div>
+
+  <!-- Tabela -->
+  <div class="card">
+    <div class="ctitle">Abono por Colaborador — <span id="abono-periodo-lbl">Todos os períodos</span></div>
+    <div class="tw">
+      <table>
+        <thead>
+          <tr>
+            <th>Colaborador</th>
+            <th>Cargo</th>
+            <th>Mês/Ano</th>
+            <th>Desktop</th>
+            <th>Internet</th>
+            <th>Celular/Tablet</th>
+            <th>Total</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody id="abono-tbody"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:.75rem;font-size:10px;color:var(--muted);">
+      💡 Desktop e Internet: R$ 112,07 ou R$ 0,00 · Celular/Tablet: R$ 95,00 ou sem abono
+    </div>
+  </div>
+</div>
+</div>
 </div>
 
 </div><!-- /content -->
@@ -2049,7 +2216,7 @@ function clearFilters(tab){
 }
 
 // TAB SWITCHING
-const tabIds=['geral','equipamentos','admissao','termos','certif','calendario','comunicados','predef','uniforme','upload','requisitos','pendencias','contrata'];
+const tabIds=['geral','equipamentos','admissao','termos','certif','calendario','comunicados','predef','uniforme','upload','requisitos','pendencias','contrata','abono','gerencial'];
 function showTab(id,el){
   tabIds.forEach(t=>{
     const el2=document.getElementById('tab-'+t);
@@ -2057,7 +2224,7 @@ function showTab(id,el){
   });
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,requisitos:renderRequisitos,pendencias:renderPendencias,contrata:renderContrata};
+  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,requisitos:renderRequisitos,pendencias:renderPendencias,contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){}},gerencial:()=>{try{rGerencial();}catch(e){}}};
   if(renders[id]) renders[id]();
 }
 
@@ -5345,6 +5512,8 @@ window.addEventListener('fbgestao-ready', function(){
     const n=applyGestaoPayload(payload);
     if(n>0){ saveData(); try{renderGeral();}catch(e){} showSyncToast(n,0); }
   });
+  // Load portal-ts data for abono/gerencial tabs
+  loadTsDataForTabs();
   // Initial sync on load
   runFullSync().then(({pulled})=>{
     if(pulled>0) try{renderGeral();}catch(e){}
@@ -5382,6 +5551,702 @@ function _addSyncBtn(){
 
 // ── Initial localStorage sync (silent) ───
 (function(){ try{const n=syncFromLocalStorage();if(n>0)console.log('[Sync] localStorage:',n);}catch(e){} })();
+
+
+// ══════════════════════════════════════════
+// ABONO + GERENCIAL — código do Portal T&S
+// Dados carregados via Firebase Firestore
+// ══════════════════════════════════════════
+
+// ── Globals used by abono/gerencial ──────
+let COLL = [];          // colaboradores do portal-ts
+let GER_DATA = {};      // frequência gerencial
+let ABONO_DATA = {};    // abono por mês/colaborador
+
+// ── CD — definições de cargo (portal-ts) ─
+const CD={
+  TEL:{label:'Analista de suporte telefônico (TEL)',vagas:11,sal:3830.17,docs:[
+    {i:'📄',n:'CTPS',d:'Carteira de Trabalho'},
+    {i:'🎓',n:'Diploma/Certificado em TI',d:'Ensino superior em TI ou especialização'},
+    {i:'🏅',n:'Certificação HDI SCA ou CSR',d:'Support Center Analyst ou Customer Service Rep.'},
+    {i:'📑',n:'Comprovante de Experiência (3 anos)',d:'Suporte técnico e/ou help desk'},
+    {i:'🪪',n:'Documento de Identidade',d:'RG ou CNH com foto'},
+    {i:'🏠',n:'Comprovante de Residência',d:'Últimos 90 dias'}
+  ]},
+  BSB:{label:'Analista de suporte (BSB)',vagas:12,sal:4785.35,docs:[
+    {i:'📄',n:'CTPS',d:'Carteira de Trabalho'},
+    {i:'🎓',n:'Diploma Superior em TI',d:'Ou especialização em TI'},
+    {i:'🏅',n:'Certificação Microsoft 365 Fundamentals',d:'Obrigatória'},
+    {i:'🏅',n:'Certificação MD-100 ou MD-102',d:'Desktop Administrator Associate'},
+    {i:'🏅',n:'Certificação HDI DAST',d:'Desktop Advanced Support Technician'},
+    {i:'📑',n:'Comprovante de Experiência (5 anos)',d:'Suporte técnico'},
+    {i:'🪪',n:'Documento de Identidade',d:'RG ou CNH com foto'},
+    {i:'🏠',n:'Comprovante de Residência',d:'Últimos 90 dias'}
+  ]},
+  EST:{label:'Analista de suporte (EST)',vagas:27,sal:4785.35,docs:[
+    {i:'📄',n:'CTPS',d:'Carteira de Trabalho'},
+    {i:'🎓',n:'Diploma Superior em TI',d:'Ou especialização'},
+    {i:'🏅',n:'Microsoft 365 Fundamentals',d:'Obrigatória'},
+    {i:'🏅',n:'MD-100 ou MD-102',d:'Obrigatória'},
+    {i:'🏅',n:'HDI DAST ou CSR',d:'Obrigatória'},
+    {i:'📑',n:'Experiência 3 anos em suporte',d:'Comprovante'},
+    {i:'📜',n:'Certificado Montagem Microcomp.',d:'Mínimo 20 horas'},
+    {i:'🪪',n:'Documento de Identidade',d:'RG ou CNH com foto'},
+    {i:'🏠',n:'Comprovante de Residência',d:'Últimos 90 dias'}
+  ]},
+  AE:{label:'Analista de suporte especializado (AE)',vagas:8,sal:5803.96,docs:[
+    {i:'📄',n:'CTPS',d:'Carteira de Trabalho'},
+    {i:'🎓',n:'Diploma Superior em TI',d:'Ou especialização'},
+    {i:'🏅',n:'Microsoft 365 Fundamentals',d:'Obrigatória'},
+    {i:'🏅',n:'HDI DAST ou CSR',d:'Obrigatória'},
+    {i:'🏅',n:'MD-100 ou MD-102',d:'Obrigatória'},
+    {i:'📑',n:'Experiência 5 anos em suporte',d:'Comprovante'},
+    {i:'📜',n:'Certificado Montagem Microcomp.',d:'Mínimo 20 horas'},
+    {i:'🪪',n:'Documento de Identidade',d:'RG ou CNH com foto'},
+    {i:'🏠',n:'Comprovante de Residência',d:'Últimos 90 dias'}
+  ]},
+  CE:{label:'Analista de suporte especializado (CE)',vagas:1,sal:5803.96,docs:[
+    {i:'📄',n:'CTPS',d:'Carteira de Trabalho'},
+    {i:'🎓',n:'Diploma Superior em TI',d:'Ou especialização'},
+    {i:'📑',n:'Experiência 5 anos em suporte',d:'Comprovante'},
+    {i:'📜',n:'Certificado Montagem Microcomp.',d:'Mínimo 20 horas'},
+    {i:'📜',n:'Certificado Redes e Cabeamento',d:'Curso geral de redes'},
+    {i:'🪪',n:'Documento de Identidade',d:'RG ou CNH com foto'},
+    {i:'🏠',n:'Comprovante de Residência',d:'Últimos 90 dias'}
+  ]},
+  AC:{label:'Analista de suporte especializado (AC)',vagas:1,sal:5803.96,docs:[
+    {i:'📄',n:'CTPS',d:'Carteira de Trabalho'},
+    {i:'🎓',n:'Diploma Superior em TI',d:'Ou especialização'},
+    {i:'🏅',n:'Microsoft 365 Fundamentals',d:'Obrigatória'},
+    {i:'🏅',n:'MD-100 ou MD-102',d:'Obrigatória'},
+    {i:'📜',n:'Certificado AZ-900 Azure',d:'Conceitos básicos do Microsoft Azure'},
+    {i:'📑',n:'Experiência 5 anos em suporte',d:'Comprovante'},
+    {i:'🪪',n:'Documento de Identidade',d:'RG ou CNH com foto'},
+    {i:'🏠',n:'Comprovante de Residência',d:'Últimos 90 dias'}
+  ]},
+  AP:{label:'Analista de suporte especializado (AP)',vagas:1,sal:5803.96,docs:[
+    {i:'📄',n:'CTPS',d:'Carteira de Trabalho'},
+    {i:'🎓',n:'Diploma Superior em TI',d:'Ou especialização'},
+    {i:'🏅',n:'HDI DAST ou SCA ou CSR',d:'Obrigatória'},
+    {i:'📑',n:'Experiência 5 anos em suporte',d:'Comprovante'},
+    {i:'📜',n:'Certificado Montagem Microcomp.',d:'Mínimo 20 horas'},
+    {i:'🪪',n:'Documento de Identidade',d:'RG ou CNH com foto'},
+    {i:'🏠',n:'Comprovante de Residência',d:'Últimos 90 dias'}
+  ]},
+  STEL:{label:'Supervisor de suporte telefônico (STEL)',vagas:2,sal:5842.56,docs:[
+    {i:'📄',n:'CTPS',d:'Carteira de Trabalho'},
+    {i:'🎓',n:'Diploma Superior em TI',d:'Obrigatório'},
+    {i:'🏅',n:'ITIL Foundations v4',d:'Ou posterior'},
+    {i:'🏅',n:'HDI SCTL',d:'Support Center Team Lead'},
+    {i:'📑',n:'Experiência 4 anos suporte',d:'Comprovante'},
+    {i:'📑',n:'Experiência 3 anos supervisão',d:'Comprovante'},
+    {i:'🪪',n:'Documento de Identidade',d:'RG ou CNH com foto'},
+    {i:'🏠',n:'Comprovante de Residência',d:'Últimos 90 dias'}
+  ]},
+  SBSB:{label:'Supervisor de suporte (SBSB)',vagas:2,sal:5842.56,docs:[
+    {i:'📄',n:'CTPS',d:'Carteira de Trabalho'},
+    {i:'🎓',n:'Diploma Superior em TI',d:'Obrigatório'},
+    {i:'🏅',n:'ITIL Foundations v4',d:'Ou posterior'},
+    {i:'🏅',n:'HDI SCTL',d:'Support Center Team Lead'},
+    {i:'📑',n:'Experiência 4 anos suporte',d:'Comprovante'},
+    {i:'📑',n:'Experiência 3 anos supervisão',d:'Comprovante'},
+    {i:'🪪',n:'Documento de Identidade',d:'RG ou CNH com foto'},
+    {i:'🏠',n:'Comprovante de Residência',d:'Últimos 90 dias'}
+  ]},
+  SEST:{label:'Supervisor de suporte (SEST)',vagas:2,sal:5842.56,docs:[
+    {i:'📄',n:'CTPS',d:'Carteira de Trabalho'},
+    {i:'🎓',n:'Diploma Superior em TI',d:'Obrigatório'},
+    {i:'🏅',n:'ITIL Foundations v4',d:'Ou posterior'},
+    {i:'🏅',n:'HDI SCTL',d:'Support Center Team Lead'},
+    {i:'📑',n:'Experiência 4 anos suporte',d:'Comprovante'},
+    {i:'📑',n:'Experiência 3 anos supervisão',d:'Comprovante'},
+    {i:'🪪',n:'Documento de Identidade',d:'RG ou CNH com foto'},
+    {i:'🏠',n:'Comprovante de Residência',d:'Últimos 90 dias'}
+  ]},
+  SAE:{label:'Supervisor de suporte (SAE)',vagas:1,sal:7790.08,docs:[
+    {i:'📄',n:'CTPS',d:'Carteira de Trabalho'},
+    {i:'🎓',n:'Diploma Superior em TI',d:'Obrigatório'},
+    {i:'🏅',n:'ITIL Foundations v4',d:'Ou posterior'},
+    {i:'🏅',n:'HDI SCTL',d:'Support Center Team Lead'},
+    {i:'📑',n:'Experiência 4 anos suporte',d:'Comprovante'},
+    {i:'🪪',n:'Documento de Identidade',d:'RG ou CNH com foto'},
+    {i:'🏠',n:'Comprovante de Residência',d:'Últimos 90 dias'}
+  ]},
+  SCHA:{label:'Supervisor de suporte (SCHA)',vagas:2,sal:7790.08,docs:[
+    {i:'📄',n:'CTPS',d:'Carteira de Trabalho'},
+    {i:'🎓',n:'Diploma Superior em TI',d:'Obrigatório'},
+    {i:'🏅',n:'ITIL Foundations v4',d:'Ou posterior'},
+    {i:'📑',n:'Experiência 4 anos suporte',d:'Comprovante'},
+    {i:'📑',n:'Experiência 3 anos supervisão',d:'Comprovante'},
+    {i:'🪪',n:'Documento de Identidade',d:'RG ou CNH com foto'},
+    {i:'🏠',n:'Comprovante de Residência',d:'Últimos 90 dias'}
+  ]},
+  GCON:{label:'Gestor de conhecimento (GCON)',vagas:2,sal:7790.08,docs:[
+    {i:'📄',n:'CTPS',d:'Carteira de Trabalho'},
+    {i:'🎓',n:'Diploma Superior em TI',d:'Obrigatório'},
+    {i:'🏅',n:'HDI KCS',d:'Knowledge Centered Support'},
+    {i:'📑',n:'Experiência 4 anos suporte',d:'Comprovante'},
+    {i:'📑',n:'Experiência 3 anos gestão/supervisão',d:'Comprovante'},
+    {i:'🪪',n:'Documento de Identidade',d:'RG ou CNH com foto'},
+    {i:'🏠',n:'Comprovante de Residência',d:'Últimos 90 dias'}
+  ]},
+  GSD:{label:'Gestor de Service desk (GSD)',vagas:1,sal:12995.82,docs:[
+    {i:'📄',n:'CTPS',d:'Carteira de Trabalho'},
+    {i:'🎓',n:'Diploma Superior em TI',d:'Obrigatório'},
+    {i:'🏅',n:'ITIL v4',d:'Obrigatória'},
+    {i:'🏅',n:'Duas certificações HDI',d:'SCTL, SCM, SCD ou XLA Foundation'},
+    {i:'📑',n:'Experiência 6 anos suporte',d:'Comprovante'},
+    {i:'📑',n:'Experiência 5 anos gestão de TI',d:'Comprovante'},
+    {i:'🪪',n:'Documento de Identidade',d:'RG ou CNH com foto'},
+    {i:'🏠',n:'Comprovante de Residência',d:'Últimos 90 dias'}
+  ]}
+};
+
+// ── Load dados do portal-ts via Firebase ──
+async function loadTsDataForTabs(){
+  try{
+    const tsData = await window._fbTsLoad();
+    if(!tsData) return;
+    if(Array.isArray(tsData.COLL)&&tsData.COLL.length) COLL=tsData.COLL;
+    if(tsData.GER_DATA) GER_DATA=tsData.GER_DATA;
+    if(tsData.ABONO_DATA) ABONO_DATA=tsData.ABONO_DATA;
+    console.log('[TS Tabs] Loaded: COLL='+COLL.length+', GER_DATA keys='+Object.keys(GER_DATA).length);
+  }catch(e){ console.warn('[TS Tabs load]',e); }
+}
+
+// ── Funções auxiliares do portal-ts ──────
+
+function diasUteis(mesNome, ano) {
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                 'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const m = meses.indexOf(mesNome);
+  if (m < 0) return [];
+  const dias = [];
+  const daysInMonth = new Date(ano, m + 1, 0).getDate();
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dow = new Date(ano, m, d).getDay();
+    if (dow !== 0 && dow !== 6) dias.push(d);
+  }
+  return dias;
+}
+
+// ── Abono JS (portal-ts original) ─────────
+
+function abonoKey(nome, mes, ano){ return nome+'|'+mes+'|'+ano; }
+
+function abonoSetMesAtual(){
+  var meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  var now=new Date();
+  document.getElementById('abono-f-mes').value=meses[now.getMonth()];
+  document.getElementById('abono-f-ano').value=String(now.getFullYear());
+  rAbono();
+}
+
+function rAbono(){
+  var tbody=document.getElementById('abono-tbody');if(!tbody)return;
+  // populate cargo filter
+  var cargoSel=document.getElementById('abono-f-cargo');
+  if(cargoSel&&cargoSel.options.length<=1){
+    Object.keys(CD).sort((a,b)=>(CD[a].label||a).localeCompare(CD[b].label||b)).forEach(k=>{
+      var o=document.createElement('option');o.value=k;o.textContent=(CD[k]||{}).label||k;cargoSel.appendChild(o);
+    });
+  }
+  var fMes=document.getElementById('abono-f-mes')?.value||'';
+  var fAno=document.getElementById('abono-f-ano')?.value||'';
+  var fCargo=document.getElementById('abono-f-cargo')?.value||'';
+  var fNome=(document.getElementById('abono-f-nome')?.value||'').toLowerCase();
+
+  // Determine period label
+  var periLabel=(fMes&&fAno)?fMes+'/'+fAno:(fMes||fAno||'Todos os períodos');
+  var pl=document.getElementById('abono-periodo-lbl');if(pl)pl.textContent=periLabel;
+
+  // Use current month/year if none selected for display
+  var meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  var now=new Date();
+  var curMes=fMes||meses[now.getMonth()];
+  var curAno=fAno||String(now.getFullYear());
+
+  var ativos=COLL.filter(c=>{
+    if(c.status==='inativo')return false;
+    if(fCargo&&c.cargo!==fCargo)return false;
+    if(fNome&&!c.nome.toLowerCase().includes(fNome))return false;
+    return true;
+  });
+
+  tbody.innerHTML='';
+  var totDesk=0,totCel=0;
+
+  ativos.forEach(col=>{
+    var key=abonoKey(col.nome,curMes,curAno);
+    var data=ABONO_DATA[key]||{desktop:'R$ 112,07',internet:'R$ 112,07',celular:'R$ 95,00'};
+    var dVal=parseFloat((data.desktop||'0').replace('R$ ','').replace(',','.'))||0;
+    var iVal=parseFloat((data.internet||'0').replace('R$ ','').replace(',','.'))||0;
+    var cVal=parseFloat((data.celular||'0').replace('R$ ','').replace(',','.'))||0;
+    var total=dVal+iVal+cVal;
+    totDesk+=dVal+iVal;totCel+=cVal;
+
+    var cargo=(CD[col.cargo]||{}).label||col.cargo||'—';
+    var cargoShort=col.cargo||'—';
+    var tr=document.createElement('tr');
+    tr.setAttribute('data-nome',col.nome);
+    tr.setAttribute('data-mes',curMes);
+    tr.setAttribute('data-ano',curAno);
+    tr.innerHTML='<td style="font-weight:500;white-space:nowrap;">'+col.nome+'</td>'
+      +'<td><span class="bdg bi">'+cargoShort+'</span></td>'
+      +'<td style="white-space:nowrap;">'+curMes+'/'+curAno+'</td>'
+      +'<td><select data-campo="desktop" class="abono-sel" style="font-size:11px;padding:3px 6px;border:.5px solid var(--brd);border-radius:4px;">'
+        +'<option '+(data.desktop==='R$ 112,07'?'selected':'')+'>R$ 112,07</option>'
+        +'<option '+(data.desktop==='R$ 0,00'?'selected':'')+'>R$ 0,00</option>'
+      +'</select></td>'
+      +'<td><select data-campo="internet" class="abono-sel" style="font-size:11px;padding:3px 6px;border:.5px solid var(--brd);border-radius:4px;">'
+        +'<option '+(data.internet==='R$ 112,07'?'selected':'')+'>R$ 112,07</option>'
+        +'<option '+(data.internet==='R$ 0,00'?'selected':'')+'>R$ 0,00</option>'
+      +'</select></td>'
+      +'<td><select data-campo="celular" class="abono-sel" style="font-size:11px;padding:3px 6px;border:.5px solid var(--brd);border-radius:4px;">'
+        +'<option '+(data.celular==='R$ 95,00'?'selected':'')+'>R$ 95,00</option>'
+        +'<option '+(data.celular===''?'selected':'')+' value="">— Sem abono —</option>'
+      +'</select></td>'
+      +'<td style="font-weight:600;color:var(--g600);">R$ '+total.toFixed(2).replace('.',',')+'</td>'
+      +'<td><button class="btn bs abono-rst" style="font-size:9px;padding:2px 7px;" title="Resetar">↺</button></td>';
+    tr.querySelectorAll('.abono-sel').forEach(function(sel){
+      sel.addEventListener('change',function(){
+        setAbono(col.nome,curMes,curAno,this.dataset.campo,this.value);
+      });
+    });
+    tr.querySelector('.abono-rst').addEventListener('click',function(){
+      resetAbono(col.nome,curMes,curAno);
+    });
+    tbody.appendChild(tr);
+  });
+
+  // KPIs
+  var sv=function(id,val){var el=document.getElementById(id);if(el)el.textContent=val;};
+  sv('abono-cnt',ativos.length);
+  sv('abono-tot-desk','R$ '+totDesk.toFixed(2).replace('.',','));
+  sv('abono-tot-cel','R$ '+totCel.toFixed(2).replace('.',','));
+  sv('abono-tot-geral','R$ '+(totDesk+totCel).toFixed(2).replace('.',','));
+}
+
+function setAbono(nome,mes,ano,campo,val){
+  var key=abonoKey(nome,mes,ano);
+  if(!ABONO_DATA[key]) ABONO_DATA[key]={desktop:'R$ 112,07',internet:'R$ 112,07',celular:'R$ 95,00'};
+  ABONO_DATA[key][campo]=val;
+  saveAll();
+  // Recalc row total inline
+  rAbono();
+}
+
+function resetAbono(nome,mes,ano){
+  var key=abonoKey(nome,mes,ano);
+  delete ABONO_DATA[key];
+  saveAll();rAbono();
+  toast('Abono resetado para padrão.','ok');
+}
+
+function expAbono(fmt){
+  var fMes=document.getElementById('abono-f-mes')?.value||'';
+  var fAno=document.getElementById('abono-f-ano')?.value||'';
+  var fCargo=document.getElementById('abono-f-cargo')?.value||'';
+  var fNome=(document.getElementById('abono-f-nome')?.value||'').toLowerCase();
+  var meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  var now=new Date();
+  var curMes=fMes||meses[now.getMonth()];
+  var curAno=fAno||String(now.getFullYear());
+
+  var rows=COLL.filter(c=>{
+    if(c.status==='inativo')return false;
+    if(fCargo&&c.cargo!==fCargo)return false;
+    if(fNome&&!c.nome.toLowerCase().includes(fNome))return false;
+    return true;
+  }).map(col=>{
+    var key=abonoKey(col.nome,curMes,curAno);
+    var d=ABONO_DATA[key]||{desktop:'R$ 112,07',internet:'R$ 112,07',celular:'R$ 95,00'};
+    var dVal=parseFloat((d.desktop||'0').replace('R$ ','').replace(',','.'))||0;
+    var iVal=parseFloat((d.internet||'0').replace('R$ ','').replace(',','.'))||0;
+    var cVal=parseFloat((d.celular||'0').replace('R$ ','').replace(',','.'))||0;
+    return [col.nome,(CD[col.cargo]||{}).label||col.cargo||'—',curMes+'/'+curAno,d.desktop,d.internet,d.celular||'—','R$ '+(dVal+iVal+cVal).toFixed(2).replace('.',',')];
+  });
+
+  if(!rows.length){toast('Nenhum colaborador encontrado.','warn');return;}
+  var hdrs=['Colaborador','Cargo','Período','Desktop','Internet','Celular/Tablet','Total'];
+  var sub='Abono · '+curMes+'/'+curAno+(fCargo?' · '+((CD[fCargo]||{}).label||fCargo):'');
+  if(fmt==='pdf') buildPDF('Controle de Abono',sub,hdrs,rows,'abono_'+curMes+'_'+curAno);
+  else buildXLS(hdrs,rows,'abono_'+curMes+'_'+curAno);
+}
+
+// ── Gerencial JS (portal-ts original) ────
+
+function rGerencial() {
+  const wrap = document.getElementById('ger-table-wrap');
+  if (!wrap) return;
+
+  const mes  = document.getElementById('ger-mes')?.value   || 'Abril';
+  const ano  = parseInt(document.getElementById('ger-ano')?.value || '2026');
+  const fCargo = document.getElementById('ger-cargo')?.value || '';
+
+  // Populate cargo select
+  const cargoSel = document.getElementById('ger-cargo');
+  if (cargoSel && cargoSel.options.length <= 1) {
+    Object.keys(CD).sort((a,b)=>(CD[a].label||a).localeCompare(CD[b].label||b)).forEach(k => {
+      const o = document.createElement('option');
+      o.value = k; o.textContent = (CD[k]||{}).label || k;
+      cargoSel.appendChild(o);
+    });
+  }
+
+  // Filter active collaborators
+  const colls = COLL.filter(c =>
+    c.status === 'ativo' &&
+    (!fCargo || c.cargo === fCargo || (CD[fCargo]&&c.cargo===(CD[fCargo].label||fCargo)))
+  );
+
+  const dias = diasUteis(mes, ano);
+  if (!colls.length) {
+    wrap.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--muted);">Nenhum colaborador ativo encontrado.</div>';
+    return;
+  }
+
+  // Build table
+  const STATUS_STYLE = {
+    'P':  'background:#E1F5EE;color:#3B6D11',
+    'F':  'background:#FCEBEB;color:#A32D2D',
+    'A':  'background:#FAEEDA;color:#854F0B',
+    'H':  'background:#E6F4FF;color:#185FA5',
+    'PF': 'background:#FEF9C3;color:#854D0E',
+    'DS': 'background:#F1EFE8;color:#5F5E5A',
+    'OC': 'background:#EEEDFE;color:#534AB7',
+    '':   'background:#fff;color:#444'
+  };
+
+  let html = '<table style="border-collapse:collapse;font-size:10px;width:100%;">';
+  // Header
+  html += '<thead><tr style="background:var(--b900);color:#fff;">';
+  html += '<th style="padding:6px 10px;text-align:left;white-space:nowrap;min-width:180px;position:sticky;left:0;background:var(--b900);z-index:2;">Colaborador</th>';
+  html += '<th style="padding:6px 8px;white-space:nowrap;min-width:140px;">Cargo</th>';
+  html += '<th style="padding:6px 8px;white-space:nowrap;">Horário</th>';
+  dias.forEach(d => {
+    const date = new Date(ano, ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+      'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'].indexOf(mes), d);
+    const dow = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][date.getDay()];
+    html += '<th style="padding:4px 2px;min-width:36px;text-align:center;">';
+    html += '<div style="font-size:8px;opacity:.7;">' + dow + '</div>';
+    html += '<div>' + String(d).padStart(2,'0') + '</div></th>';
+  });
+  html += '<th style="padding:6px 4px;min-width:30px;text-align:center;background:#185FA5;">P</th>';
+  html += '<th style="padding:6px 4px;min-width:30px;text-align:center;background:#A32D2D;">F</th>';
+  html += '<th style="padding:6px 4px;min-width:30px;text-align:center;background:#854F0B;">A</th>';
+  html += '<th style="padding:6px 4px;min-width:30px;text-align:center;">OC</th>';
+  html += '<th style="padding:6px 8px;min-width:110px;text-align:center;">Ocorrências do Dia</th>';
+  html += '</tr></thead><tbody>';
+
+  colls.forEach((col, ri) => {
+    const bg = ri % 2 === 0 ? '#fff' : '#F8F8F6';
+    const key = gerKey(col.nome, mes, ano);
+    const rec = GER_DATA[key] || {};
+    let cP=0, cF=0, cA=0, cOC=0;
+
+    html += '<tr style="background:' + bg + ';">';
+    html += '<td style="padding:5px 10px;font-weight:500;white-space:nowrap;position:sticky;left:0;background:' + bg + ';border-bottom:1px solid #eee;z-index:1;">' + col.nome + '</td>';
+    html += '<td style="padding:5px 8px;font-size:9px;white-space:nowrap;border-bottom:1px solid #eee;">' + ((CD[col.cargo]||{}).label||col.cargo||'—') + '</td>';
+    html += '<td style="padding:5px 8px;font-size:9px;white-space:nowrap;border-bottom:1px solid #eee;">' + (col.horas||'—') + '</td>';
+
+    dias.forEach(d => {
+      const dKey = String(d).padStart(2,'0');
+      const val  = (rec[dKey] || '').toUpperCase();
+      const st   = STATUS_STYLE[val] || STATUS_STYLE[''];
+      if (val==='P') cP++;
+      else if (val==='F') cF++;
+      else if (val==='A') cA++;
+      else if (val==='OC') cOC++;
+      html += '<td style="text-align:center;border-bottom:1px solid #eee;border-left:1px solid #f0f0f0;padding:2px;">';
+      html += '<select onchange="setGerVal(\'' + key + '\',\'' + dKey + '\',this.value)" '
+        + 'style="font-size:9px;padding:1px 2px;border:.5px solid #ddd;border-radius:3px;width:38px;text-align:center;cursor:pointer;background:inherit;' + st + '">';
+      ['','P','F','A','H','PF','DS','OC'].forEach(opt => {
+        html += '<option value="' + opt + '" ' + (val===opt?'selected':'') + ' style="' + (STATUS_STYLE[opt]||'') + '">' + (opt||'—') + '</option>';
+      });
+      html += '</select></td>';
+    });
+
+    // Totals
+    html += '<td style="text-align:center;font-weight:700;color:#3B6D11;background:#E1F5EE;border-bottom:1px solid #eee;">' + cP + '</td>';
+    html += '<td style="text-align:center;font-weight:700;color:#A32D2D;background:#FCEBEB;border-bottom:1px solid #eee;">' + cF + '</td>';
+    html += '<td style="text-align:center;font-weight:700;color:#854F0B;background:#FAEEDA;border-bottom:1px solid #eee;">' + cA + '</td>';
+    html += '<td style="text-align:center;font-weight:700;color:#534AB7;background:#EEEDFE;border-bottom:1px solid #eee;">' + cOC + '</td>';
+
+    // Ocorrências do dia — button showing count of comments, opens modal
+    const todayKey = String(new Date().getDate()).padStart(2,'0');
+    const allOCs = Object.keys(rec).filter(k => k.startsWith('oc_')).length;
+    const todayOCs = rec['oc_' + todayKey];
+    const todayCount = todayOCs ? (Array.isArray(todayOCs) ? todayOCs.length : 1) : 0;
+    const totalComments = Object.keys(rec).filter(k => k.startsWith('oc_')).reduce((a,k) => {
+      const v = rec[k]; return a + (Array.isArray(v) ? v.length : (v ? 1 : 0));
+    }, 0);
+
+    html += '<td style="padding:3px 4px;border-bottom:1px solid #eee;text-align:center;">';
+    // Today's comment button
+    html += '<button onclick="gerOcModal(\'' + key + '\',\'' + todayKey + '\')" '
+      + 'style="font-size:9px;padding:3px 7px;background:'+(todayCount>0?'#EEEDFE':'#f5f5f3')+';'
+      + 'color:'+(todayCount>0?'#534AB7':'#888')+';border:1px solid '+(todayCount>0?'#534AB7':'#ddd')+';'
+      + 'border-radius:5px;cursor:pointer;white-space:nowrap;display:block;width:100%;margin-bottom:2px;">'
+      + (todayCount>0 ? '💬 '+todayCount+' hoje' : '+ Registrar') + '</button>';
+    // All comments summary
+    if (totalComments > 0) {
+      html += '<div style="font-size:8px;color:#534AB7;cursor:pointer;" onclick="gerOcAllModal(\'' + key + '\')">'
+        + '📋 '+totalComments+' total</div>';
+    }
+    html += '</td>';
+    html += '</tr>';
+  });
+
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+function setGerVal(key, dKey, val) {
+  if (!GER_DATA[key]) GER_DATA[key] = {};
+  var oldVal = GER_DATA[key][dKey] || '';
+  var newVal = val.toUpperCase();
+  GER_DATA[key][dKey] = newVal;
+
+  // ── PF: auto-deduct from Banco de Horas ──
+  // key = "nome|mes|ano", dKey = "DD" (day zero-padded)
+  var keyParts = key.split('|');
+  var nome = keyParts[0];
+  var mesStr = keyParts[1] || '';
+  var anoStr = keyParts[2] || '';
+  var meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  var mIdx = meses.indexOf(mesStr);
+  var dataFmt = (mIdx>=0) ? (dKey+'/'+String(mIdx+1).padStart(2,'0')+'/'+anoStr) : dKey;
+  var bhId = 'ger_pf_'+key+'_'+dKey;
+
+  if(newVal === 'PF' && oldVal !== 'PF'){
+    // Add negative BH entry
+    var col = COLL.find(function(c){ return c.nome === nome; });
+    var horas = col ? (col.horas||'8h') : '8h';
+    var minutos = horas.includes('6') ? -360 : -480; // 6h=-360min, 8h=-480min
+    // Remove existing PF entry for this day if any
+    var idx = BH_DATA.findIndex(function(b){ return b.id === bhId; });
+    if(idx >= 0) BH_DATA.splice(idx, 1);
+    BH_DATA.push({
+      id: bhId,
+      nome: nome,
+      cargo: col ? col.cargo : '—',
+      tipo: 'negativo',
+      minutos: minutos,
+      data: dataFmt,
+      chamado: '—',
+      desc: 'Ponto Facultativo (automático via Gerencial)',
+      origem: 'pf'
+    });
+    toast('⚠ BH: '+(horas)+' debitadas para '+nome+' — PF em '+dataFmt, 'warn');
+  } else if(oldVal === 'PF' && newVal !== 'PF'){
+    // Remove the PF entry
+    var idx2 = BH_DATA.findIndex(function(b){ return b.id === bhId; });
+    if(idx2 >= 0){ BH_DATA.splice(idx2, 1); toast('✅ BH: PF removido para '+nome, 'ok'); }
+  }
+
+  saveAll();
+  try{ refreshGeral(); }catch(e){}
+}
+
+function setGerOC(key, dKey, val) {
+  if (!GER_DATA[key]) GER_DATA[key] = {};
+  GER_DATA[key]['oc_' + dKey] = val;
+  saveAll();
+}
+
+// ── Ocorrências modal: multiple comments per day ──
+function gerOcModal(key, dKey) {
+  // dKey = '01'...'31'  (day padded)
+  if (!GER_DATA[key]) GER_DATA[key] = {};
+  const rec = GER_DATA[key];
+  // Migrate old single string to array
+  if (rec['oc_'+dKey] && !Array.isArray(rec['oc_'+dKey])) {
+    const old = rec['oc_'+dKey];
+    rec['oc_'+dKey] = old ? [{txt: old, ts: ''}] : [];
+    saveAll();
+  }
+  if (!rec['oc_'+dKey]) rec['oc_'+dKey] = [];
+
+  // Build date label
+  const [nome, mes, ano] = key.split('|');
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+    'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const mIdx = meses.indexOf(mes);
+  const diasNoMes = new Date(parseInt(ano), mIdx+1, 0).getDate();
+
+  // Re-use existing modal overlay
+  const overlay = document.getElementById('modal-overlay');
+  const body    = document.getElementById('modal-body');
+  if (!overlay||!body) return;
+
+  // Current selected day (can be changed by user)
+  let currentDKey = dKey;
+
+  function renderOcModal() {
+    // Ensure array for current day
+    if (!rec['oc_'+currentDKey]) rec['oc_'+currentDKey] = [];
+    const comments = rec['oc_'+currentDKey] || [];
+    const dateLabel = currentDKey + '/' + String(mIdx+1).padStart(2,'0') + '/' + ano;
+    const rows = comments.length
+      ? comments.map((c,i) =>
+          '<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:.5px solid #eee;">'
+          +'<div style="flex:1;">'
+            +(c.ts?'<div style="font-size:9px;color:#888;margin-bottom:2px;">'+c.ts+'</div>':'')
+            +'<div style="font-size:12px;color:#1a1a18;white-space:pre-wrap;">'+escHtml(c.txt)+'</div>'
+          +'</div>'
+          +'<button onclick="gerOcDel(\''+key+'\',\''+currentDKey+'\','+i+')" '
+            +'style="flex-shrink:0;background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:0 2px;" title="Remover">🗑</button>'
+          +'</div>'
+        ).join('')
+      : '<div style="font-size:12px;color:#aaa;padding:8px 0;">Nenhuma ocorrência registrada.</div>';
+
+    // Build day options
+    var dayOptions = '';
+    for(var d=1; d<=diasNoMes; d++){
+      var dk = String(d).padStart(2,'0');
+      var cnt = (rec['oc_'+dk]||[]).length;
+      dayOptions += '<option value="'+dk+'"'+(dk===currentDKey?' selected':'')+'>Dia '+d+(cnt>0?' ('+cnt+')':'')+'</option>';
+    }
+
+    body.innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">'
+        +'<div>'
+          +'<div style="font-size:14px;font-weight:700;color:#042C53;">💬 Ocorrências — '+nome.split(' ').slice(0,2).join(' ')+'</div>'
+          +'<div style="font-size:11px;color:#666;">'+mes+' / '+ano+'</div>'
+        +'</div>'
+        +'<button onclick="document.getElementById(\'modal-overlay\').style.display=\'none\'" '
+          +'style="background:none;border:none;font-size:20px;cursor:pointer;color:#888;">✕</button>'
+      +'</div>'
+      // Date selector
+      +'<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;background:var(--b50);padding:.625rem .875rem;border-radius:8px;">'
+        +'<span style="font-size:11px;font-weight:600;color:var(--b800);">📅 Dia:</span>'
+        +'<select id="oc-day-sel" onchange="window._gerOcCtx.currentDKey=this.value.padStart(2,\'0\');window._gerOcCtx.renderOcModal();" '
+          +'style="font-size:11px;padding:4px 8px;border:.5px solid var(--brd);border-radius:6px;font-family:inherit;">'
+          +dayOptions
+        +'</select>'
+        +'<span style="font-size:11px;color:var(--muted);">'+dateLabel+'</span>'
+      +'</div>'
+      // List
+      +'<div id="oc-list" style="max-height:200px;overflow-y:auto;margin-bottom:1rem;">'+rows+'</div>'
+      // Add new
+      +'<div style="background:var(--b50);border:.5px solid var(--b100);border-radius:8px;padding:.875rem;">'
+        +'<div style="font-size:11px;font-weight:600;color:var(--b800);margin-bottom:.5rem;">➕ Adicionar ocorrência — Dia '+parseInt(currentDKey)+'</div>'
+        +'<textarea id="oc-new-txt" rows="3" placeholder="Descreva a ocorrência..." '
+          +'style="width:100%;padding:8px;border:.5px solid var(--brd);border-radius:6px;font-family:inherit;font-size:12px;resize:vertical;margin-bottom:.5rem;"></textarea>'
+        +'<div style="display:flex;gap:.5rem;justify-content:flex-end;">'
+          +'<button onclick="gerOcAdd(\''+key+'\',window._gerOcCtx.currentDKey)" '
+            +'style="background:#042C53;color:#fff;border:none;padding:7px 18px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;">💾 Salvar ocorrência</button>'
+          +'<button onclick="document.getElementById(\'modal-overlay\').style.display=\'none\'" '
+            +'style="background:#eee;color:#444;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:12px;">Fechar</button>'
+        +'</div>'
+      +'</div>';
+    overlay.style.display = 'flex';
+  }
+
+  renderOcModal();
+  // Store context for gerOcAdd/gerOcDel
+  window._gerOcCtx = {key, dKey: currentDKey, renderOcModal,
+    get currentDKey(){ return currentDKey; },
+    set currentDKey(v){ currentDKey = v; }
+  };
+}
+
+function gerOcAdd(key, dKey) {
+  const txt = (document.getElementById('oc-new-txt')?.value||'').trim();
+  if (!txt) { toast('Digite a ocorrência antes de salvar.','warn'); return; }
+  if (!GER_DATA[key]) GER_DATA[key] = {};
+  if (!Array.isArray(GER_DATA[key]['oc_'+dKey])) GER_DATA[key]['oc_'+dKey] = [];
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const ts  = pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()
+            + ' '+pad(now.getHours())+':'+pad(now.getMinutes());
+  GER_DATA[key]['oc_'+dKey].push({txt, ts});
+  saveAll();
+  document.getElementById('oc-new-txt').value = '';
+  toast('Ocorrência adicionada!','ok');
+  if (window._gerOcCtx) window._gerOcCtx.renderOcModal();
+  // Refresh button badge without full table re-render
+  rGerencial();
+}
+
+function gerOcDel(key, dKey, idx) {
+  if (!confirm('Remover esta ocorrência?')) return;
+  if (!GER_DATA[key]||!Array.isArray(GER_DATA[key]['oc_'+dKey])) return;
+  GER_DATA[key]['oc_'+dKey].splice(idx,1);
+  saveAll();
+  toast('Ocorrência removida.','ok');
+  if (window._gerOcCtx) window._gerOcCtx.renderOcModal();
+  rGerencial();
+}
+
+// View ALL comments for a collaborator in a month
+function gerOcAllModal(key) {
+  const [nome, mes, ano] = key.split('|');
+  const rec = GER_DATA[key] || {};
+  const overlay = document.getElementById('modal-overlay');
+  const body    = document.getElementById('modal-body');
+  if (!overlay||!body) return;
+
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+    'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const mesIdx = meses.indexOf(mes);
+  const mesNum = String(mesIdx+1).padStart(2,'0');
+
+  // Collect all OC days
+  const days = Object.keys(rec).filter(k=>k.startsWith('oc_')).sort();
+  let content = '';
+  days.forEach(k => {
+    const dKey = k.replace('oc_','');
+    const arr = Array.isArray(rec[k]) ? rec[k] : (rec[k]?[{txt:rec[k],ts:''}]:[]);
+    if (!arr.length) return;
+    content += '<div style="margin-bottom:1rem;">'
+      +'<div style="font-size:11px;font-weight:700;color:#042C53;background:#E6F4FF;border-radius:5px;padding:4px 8px;margin-bottom:4px;">📅 Dia '+parseInt(dKey)+' — '+dKey+'/'+mesNum+'/'+ano+'</div>';
+    arr.forEach((c,i) => {
+      content += '<div style="display:flex;gap:8px;align-items:flex-start;padding:5px 8px;background:#f9f9f7;border-radius:5px;margin-bottom:3px;">'
+        +'<div style="flex:1;">'
+          +(c.ts?'<div style="font-size:9px;color:#aaa;">'+c.ts+'</div>':'')
+          +'<div style="font-size:12px;color:#1a1a18;white-space:pre-wrap;">'+escHtml(c.txt)+'</div>'
+        +'</div>'
+        +'<button onclick="gerOcDel(\''+key+'\',\''+dKey+'\','+i+');gerOcAllModal(\''+key+'\')" '
+          +'style="flex-shrink:0;background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;" title="Remover">🗑</button>'
+        +'</div>';
+    });
+    content += '<div style="text-align:right;"><button onclick="gerOcModal(\''+key+'\',\''+dKey+'\')" '
+      +'style="font-size:9px;padding:2px 8px;background:var(--b50);color:var(--b600);border:.5px solid var(--b600);border-radius:4px;cursor:pointer;">+ Adicionar neste dia</button></div>';
+    content += '</div>';
+  });
+
+  body.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">'
+      +'<div>'
+        +'<div style="font-size:14px;font-weight:700;color:#042C53;">📋 Todas as Ocorrências — '+nome.split(' ').slice(0,2).join(' ')+'</div>'
+        +'<div style="font-size:11px;color:#666;">'+mes+' / '+ano+'</div>'
+      +'</div>'
+      +'<button onclick="document.getElementById(\'modal-overlay\').style.display=\'none\'" '
+        +'style="background:none;border:none;font-size:20px;cursor:pointer;color:#888;">✕</button>'
+    +'</div>'
+    +'<div style="max-height:400px;overflow-y:auto;">'
+      +(content||'<div style="font-size:12px;color:#aaa;padding:1rem 0;text-align:center;">Nenhuma ocorrência registrada neste mês.</div>')
+    +'</div>'
+    +'<div style="margin-top:1rem;text-align:right;">'
+      +'<button onclick="document.getElementById(\'modal-overlay\').style.display=\'none\'" '
+        +'style="background:#eee;color:#444;border:none;padding:7px 18px;border-radius:6px;cursor:pointer;font-size:12px;">Fechar</button>'
+    +'</div>';
+  overlay.style.display = 'flex';
+}
+
+// ── Hook: ao abrir as abas, garantir dados carregados ─
+const _origShowTab = typeof showTab === 'function' ? showTab : null;
+function _ensureTsData(tab){
+  if(tab==='abono'||tab==='gerencial'){
+    if(!COLL.length){
+      loadTsDataForTabs().then(()=>{
+        try{ if(tab==='abono') rAbono(); else rGerencial(); }catch(e){}
+      });
+    }
+  }
+}
 
 function _portalInit(){
   try{ setupFieldFormatting(); }catch(e){}
