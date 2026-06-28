@@ -875,7 +875,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </div>
     <select id="up-fil-tipo" class="up-select" onchange="upFilterDocs()">
       <option value="">Todos os tipos</option>
-      <option>Admissão</option><option>Documentos TCU</option><option>Termos T&S</option><option>Certificações</option>
+      <option>Admissão</option><option>Documentos TCU</option><option>Termos T&S</option><option>Certificações</option><option>Equipamentos</option>
     </select>
     <select id="up-fil-colab" class="up-select" onchange="upFilterDocs()">
       <option value="">Todos os colaboradores</option>
@@ -1443,8 +1443,10 @@ function fmtCPF(v){
 function fmtTel(v){
   if(!v||v==='Pendente') return v;
   const d=v.replace(/\D/g,'');
-  if(d.length===11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
-  if(d.length===10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+  if(d.length===11) return '('+d.slice(0,2)+') '+d.slice(2,7)+'-'+d.slice(7);
+  if(d.length===10) return '('+d.slice(0,2)+') '+d.slice(2,6)+'-'+d.slice(6);
+  // Already formatted - return as is
+  if(v.includes('(')) return v;
   return v;
 }
 function fmtDateISO(s){
@@ -1485,8 +1487,9 @@ function setupFieldFormatting(){
     }
     if(id==='cad-celular'){
       let v=e.target.value.replace(/\D/g,'').slice(0,11);
-      if(v.length>6) v=v.replace(/(\d{2})(\d{5})(\d{1,4})/,'($1) $2-$3');
-      else if(v.length>2) v=v.replace(/(\d{2})(\d{1,5})/,'($1) $2');
+      if(v.length>7) v=v.replace(/(\d{2})(\d{5})(\d{1,4})/,'($1) $2-$3');
+      else if(v.length>6) v=v.replace(/(\d{2})(\d{1,5})/,'($1) $2');
+      else if(v.length>2) v=v.replace(/(\d{2})(\d{1,2})/,'($1) $2');
       e.target.value=v;
     }
     if(id==='cad-rg'){
@@ -1724,7 +1727,9 @@ function renderAdm(){
     <td class="left" style="cursor:pointer;color:#1F4E79;font-weight:600" onclick="openDetail(${c._id})">${c.nome}${inativoBadge(c)}</td>
     <td class="left"><span class="badge-cargo">${c.cargo}</span></td>
     <td>${editBadge(c.docs['Diploma/Superior'],c._id,'docs.Diploma/Superior')}</td>
-    <td>${editBadge(c.docs['Especialização TI'],c._id,'docs.Especialização TI')}</td>
+    <td>${(c.cargo.includes('(TEL)') || c.cargo.includes('Cabeamento') || c.cargo.includes('Administração de parque'))
+      ? editBadge('N/A',c._id,'docs.Especialização TI')
+      : editBadge(c.docs['Especialização TI'],c._id,'docs.Especialização TI')}</td>
     <td>${editBadge(c.docs['Exp. Suporte'],c._id,'docs.Exp. Suporte')}</td>
     <td>${editBadge(c.docs['Exp. Microcomputadores'],c._id,'docs.Exp. Microcomputadores')}</td>
     <td class="left" style="font-size:11px;color:#666;max-width:200px">${c.exp_suporte}${c.exp_micro!=='N/A'?' | '+c.exp_micro:''}</td>
@@ -4742,7 +4747,7 @@ function renderPendencias(){
         </div>
         <div style="display:flex;gap:6px">
           <button class="btn-sec" style="padding:4px 12px;font-size:12px" onclick="openDetail(${c._id})">Ver ficha</button>
-          <button class="btn-primary" style="padding:4px 12px;font-size:12px" onclick="enviarLembretePend(${c._id})">📧 Lembrete</button>
+          <button class="btn-primary" style="padding:4px 12px;font-size:12px;background:#C55A11;border-color:#C55A11" onclick="enviarLembretePend(${c._id})">📧 Solicitar Documentos</button>
         </div>
       </div>
       ${groups}
@@ -4768,11 +4773,35 @@ function exportPendencias(){
 function enviarLembretePend(id){
   const c=DATA.find(x=>x._id===id);
   if(!c) return;
-  const pends=getPendencias(c).map(p=>p.label);
-  const emailTo=c.email_inst&&c.email_inst!=='Pendente'?c.email_inst:(c.email!=='Pendente'?c.email:'');
-  const assunto=encodeURIComponent(`[TCU/T&S] Pendências cadastrais — ${c.nome}`);
-  const corpo=encodeURIComponent(`Prezado(a) ${c.nome},\n\nInformamos que constam os seguintes itens pendentes em seu cadastro:\n\n${pends.map(p=>`  • ${p}`).join('\n')}\n\nSolicitamos a regularização no prazo de 5 dias úteis.\n\nAtenciosamente,\nCentral de Serviços de TI — TCU`);
-  window.location.href=`mailto:${emailTo}?subject=${assunto}&body=${corpo}`;
+  const pends=getPendencias(c);
+  const emailTo=c.email_inst&&c.email_inst!=='Pendente'?c.email_inst:(c.email&&c.email!=='Pendente'?c.email:'');
+  if(!emailTo){ alert('E-mail não cadastrado para '+c.nome); return; }
+
+  // Group by category
+  const grupos={};
+  pends.forEach(p=>{
+    const g=p.cat==='certs'?'Certificações':p.cat==='equip'?'Equipamentos':
+      (p.label.includes('Termo')||p.label.includes('Declaração')||p.label.includes('Cadastro'))?'Documentos TCU':'Admissão';
+    if(!grupos[g]) grupos[g]=[];
+    grupos[g].push(p.label);
+  });
+  const gruposStr=Object.entries(grupos).map(([g,items])=>
+    g+':\n'+items.map(i=>'  • '+i).join('\n')
+  ).join('\n\n');
+
+  const assunto=encodeURIComponent('[TCU/T&S] Pendências de documentação — '+c.nome);
+  const corpo=encodeURIComponent(
+    'Prezado(a) '+c.nome+',\n\n'+
+    'Identificamos que os seguintes documentos ainda constam como PENDENTES em seu cadastro no Contrato T&S/TCU:\n\n'+
+    gruposStr+'\n\n'+
+    'Solicitamos que regularize a situação em até 5 (cinco) dias úteis, encaminhando os documentos ao gestor responsável.\n\n'+
+    'Em caso de dúvidas, entre em contato com a Central de Serviços de TI do TCU.\n\n'+
+    'Atenciosamente,\n'+
+    'Priscila Pamplona Torres\n'+
+    'Gestora do Service Desk — Central de Serviços de TI\n'+
+    'Tribunal de Contas da União | Contrato T&S'
+  );
+  window.location.href='mailto:'+emailTo+'?subject='+assunto+'&body='+corpo;
 }
 
 // ══════════════════════════════════════════
