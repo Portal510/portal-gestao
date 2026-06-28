@@ -148,6 +148,7 @@ tbody td.left{text-align:left}
 .badge-ok{background:var(--ok-bg);color:var(--ok-c)}
 .badge-no{background:var(--no-bg);color:var(--no-c)}
 .badge-na{background:var(--na-bg);color:var(--na-c);font-style:italic}
+.badge-sched{background:#E8F0FE;color:#1F4E79;border:1px solid #2E75B6;font-weight:600}
 .badge-sim{background:#D4EDDA;color:#155724}
 .badge-nao{background:#FFE0E0;color:#7A0000}
 .badge-cargo{background:#E8F0FE;color:#1A3A6B;font-size:10px;padding:2px 8px;border-radius:10px}
@@ -1395,13 +1396,19 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div class="modal">
     <h3 id="edit-title">Atualizar status</h3>
     <label>Status</label>
-    <select id="edit-val">
+    <select id="edit-val" onchange="onEditValChange()">
       <option value="Pendente">Pendente</option>
       <option value="Entregue">Entregue</option>
+      <option value="Agendado">Agendado</option>
       <option value="Sim">Sim</option>
       <option value="Não">Não</option>
       <option value="N/A">N/A</option>
     </select>
+    <div id="edit-agenda-wrap" style="display:none;margin-top:12px">
+      <label style="font-size:12px;color:#6c757d;display:block;margin-bottom:4px">📅 Data do agendamento da prova</label>
+      <input type="date" id="edit-agenda-date" style="width:100%;padding:8px 10px;border:1.5px solid #2E75B6;border-radius:6px;font-size:14px">
+      <div style="font-size:11px;color:#6c757d;margin-top:4px">A data será exibida na tabela de certificações.</div>
+    </div>
     <div class="modal-btns">
       <button class="btn-sec" onclick="closeModal('modal-edit')">Cancelar</button>
       <button class="btn-primary" onclick="saveEdit()">Salvar</button>
@@ -1570,7 +1577,23 @@ function badge(v){
   return `<span>${v}</span>`;
 }
 function editBadge(v,id,field){
-  return `<span class="badge ${v==='Entregue'||v==='Sim'?'badge-ok':v==='Não'?'badge-no':v==='N/A'?'badge-na':'badge-pend'} cell-edit" onclick="openEdit(${id},'${field}')">${v}</span>`;
+  // Check for Agendado date
+  const c=DATA.find(x=>x._id===id);
+  let label=v, cls='';
+  if(v==='Entregue'||v==='Sim') cls='badge-ok';
+  else if(v==='Não') cls='badge-no';
+  else if(v==='N/A') cls='badge-na';
+  else if(v==='Agendado'){
+    cls='badge-sched';
+    if(c&&c.certs_agenda&&field.startsWith('certs.')){
+      const certName=field.slice(6);
+      const dt=c.certs_agenda[certName];
+      if(dt){ const p=dt.split('-'); label='📅 '+p[2]+'/'+p[1]+'/'+p[0]; }
+      else label='📅 Agendado';
+    }
+  }
+  else cls='badge-pend';
+  return '<span class="badge '+cls+' cell-edit" onclick="openEdit('+id+',\''+field+'\')">'+label+'</span>';
 }
 
 function filterData(search,cargo){
@@ -1848,6 +1871,12 @@ function updateStatsCert(rows){
 }
 
 // EDIT MODAL
+function onEditValChange(){
+  const val=document.getElementById('edit-val').value;
+  const wrap=document.getElementById('edit-agenda-wrap');
+  if(wrap) wrap.style.display=val==='Agendado'?'block':'none';
+}
+
 function openEdit(id, field){
   editTarget={id,field};
   const c=DATA.find(x=>x._id===id);
@@ -1857,16 +1886,44 @@ function openEdit(id, field){
   else { cur=c[field]||'Pendente'; }
   document.getElementById('edit-title').textContent='Atualizar: '+field.replace(/^(docs\.|certs\.)/,'');
   document.getElementById('edit-val').value=cur;
+
+  // If Agendado, show date field with existing date
+  const wrap=document.getElementById('edit-agenda-wrap');
+  const dateInput=document.getElementById('edit-agenda-date');
+  if(cur==='Agendado' && field.startsWith('certs.')){
+    const certName=field.slice(6);
+    const existingDate=c.certs_agenda?.[certName]||'';
+    if(dateInput) dateInput.value=existingDate;
+    if(wrap) wrap.style.display='block';
+  } else {
+    if(wrap) wrap.style.display='none';
+    if(dateInput) dateInput.value='';
+  }
   document.getElementById('modal-edit').classList.add('open');
 }
+
 function saveEdit(){
   if(!editTarget) return;
   const {id,field}=editTarget;
   const val=document.getElementById('edit-val').value;
   const c=DATA.find(x=>x._id===id);
+
   if(field.startsWith('docs.')){ c.docs[field.slice(5)]=val; }
-  else if(field.startsWith('certs.')){ c.certs[field.slice(6)]=val; }
+  else if(field.startsWith('certs.')){
+    const certName=field.slice(6);
+    c.certs[certName]=val;
+    // Save agenda date if Agendado
+    if(val==='Agendado'){
+      const dt=document.getElementById('edit-agenda-date')?.value||'';
+      if(!c.certs_agenda) c.certs_agenda={};
+      c.certs_agenda[certName]=dt;
+    } else {
+      // Clear agenda date if changing away from Agendado
+      if(c.certs_agenda) delete c.certs_agenda[certName];
+    }
+  }
   else { c[field]=val; }
+
   saveData();
   closeModal('modal-edit');
   const active=document.querySelector('.tab.active');
