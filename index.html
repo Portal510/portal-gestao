@@ -5,90 +5,140 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portal T&S — Gestão de Terceirizados</title>
 
-<!-- Firebase REST API — mesmo projeto do Portal T&S -->
+<!-- Firebase REST API — Portal T&S + Portal Gestão -->
 <script>
 (function(){
-  var PROJECT = 'portal-ts';
+  var PROJECT  = 'portal-ts';
   var API_KEY  = 'AIzaSyB6gK-4UWyVnf0u7wQf-lge1LEXnoDmTz8';
-  // Documento separado para o Portal Gestão dentro do mesmo projeto
-  var DOC_URL  = 'https://firestore.googleapis.com/v1/projects/'+PROJECT+'/databases/(default)/documents/portal-ts/gestao';
+  var BASE     = 'https://firestore.googleapis.com/v1/projects/'+PROJECT+'/databases/(default)/documents/portal-ts/';
+  var DOC_TS   = BASE+'dados';   // portal-ts full data
+  var DOC_G    = BASE+'gestao';  // portal-gestao data
 
   function fbStatus(text, color){
-    var el = document.getElementById('fb-status-gestao');
+    var el=document.getElementById('fb-status-gestao');
     if(!el) return;
-    var colors = {ok:'#D4EDDA', err:'#FFE0E0', sync:'#E8F0FE', '':'#f0f2f5'};
-    var textColors = {ok:'#155724', err:'#7A0000', sync:'#1F4E79', '':'#6c757d'};
-    el.textContent = '🔥 ' + text;
-    el.style.background = colors[color]||colors[''];
-    el.style.color = textColors[color]||textColors[''];
+    var bg={ok:'#D4EDDA',err:'#FFE0E0',sync:'#E8F0FE','':'#f0f2f5'};
+    var tc={ok:'#155724',err:'#7A0000',sync:'#1F4E79','':'#6c757d'};
+    el.textContent='🔥 '+text;
+    el.style.background=bg[color]||bg[''];
+    el.style.color=tc[color]||tc[''];
   }
   window._fbGestaoStatus = fbStatus;
 
-  // Save gestao sync data to Firestore
+  // ── Save our data to portal-gestao doc ────────────────
   window._fbGestaoSave = function(payload){
     fbStatus('Salvando...','sync');
-    var ver = Date.now().toString();
-    var body = JSON.stringify({fields:{
-      payload:   {stringValue: JSON.stringify(payload)},
-      savedAt:   {stringValue: new Date().toISOString()},
-      ver:       {stringValue: ver},
-      source:    {stringValue: 'portal-gestao'}
+    var ver=Date.now().toString();
+    window._fbGestaoOwnVer=ver;
+    var body=JSON.stringify({fields:{
+      payload:   {stringValue:JSON.stringify(payload)},
+      savedAt:   {stringValue:new Date().toISOString()},
+      ver:       {stringValue:ver},
+      source:    {stringValue:'portal-gestao'}
     }});
-    window._fbGestaoOwnVer = ver;
-    return fetch(DOC_URL+'?key='+API_KEY+'&updateMask.fieldPaths=payload&updateMask.fieldPaths=savedAt&updateMask.fieldPaths=ver&updateMask.fieldPaths=source',{
-      method:'PATCH', headers:{'Content-Type':'application/json'}, body:body
-    }).then(function(r){
-      if(!r.ok) return r.text().then(function(t){ throw new Error(r.status+': '+t.slice(0,100)); });
-      fbStatus('Salvo ✓','ok');
-      setTimeout(function(){ fbStatus('Online ●','ok'); }, 2000);
-      return r.json();
-    }).catch(function(e){ fbStatus('Erro','err'); console.warn('[FB Gestao] save:',e); });
+    return fetch(DOC_G+'?key='+API_KEY+'&updateMask.fieldPaths=payload&updateMask.fieldPaths=savedAt&updateMask.fieldPaths=ver&updateMask.fieldPaths=source',
+      {method:'PATCH',headers:{'Content-Type':'application/json'},body:body})
+      .then(function(r){
+        if(!r.ok) return r.text().then(function(t){throw new Error(r.status+': '+t.slice(0,100));});
+        fbStatus('Salvo ✓','ok');
+        setTimeout(function(){fbStatus('Online ●','ok');},2000);
+        return r.json();
+      }).catch(function(e){fbStatus('Erro','err');console.warn('[FB gestao save]',e);});
   };
 
-  // Load gestao sync data from Firestore
+  // ── Load our data from portal-gestao doc ──────────────
   window._fbGestaoLoad = function(){
-    return fetch(DOC_URL+'?key='+API_KEY)
-      .then(function(r){ return r.ok?r.json():null; })
+    return fetch(DOC_G+'?key='+API_KEY)
+      .then(function(r){return r.ok?r.json():null;})
       .then(function(doc){
-        if(doc && doc.fields && doc.fields.payload){
-          fbStatus('Carregado','ok');
-          try{ return JSON.parse(doc.fields.payload.stringValue); }catch(e){ return null; }
+        if(doc&&doc.fields&&doc.fields.payload){
+          fbStatus('Online ●','ok');
+          try{return JSON.parse(doc.fields.payload.stringValue);}catch(e){return null;}
         }
         fbStatus('Online ●','ok');
         return null;
-      }).catch(function(e){ fbStatus('Offline','err'); return null; });
+      }).catch(function(e){fbStatus('Offline','err');return null;});
   };
 
-  // Poll Firestore every 5s for remote changes
-  var _lastVer = null;
-  window._fbGestaoListen = function(callback){
+  // ── Load portal-ts FULL data (COLL + all arrays) ──────
+  window._fbTsLoad = function(){
+    return fetch(DOC_TS+'?key='+API_KEY)
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(doc){
+        if(doc&&doc.fields&&doc.fields.payload){
+          try{return JSON.parse(doc.fields.payload.stringValue);}catch(e){return null;}
+        }
+        return null;
+      }).catch(function(){return null;});
+  };
+
+  // ── Save into portal-ts full data doc ─────────────────
+  window._fbTsSave = function(tsData){
+    var json=JSON.stringify(tsData);
+    var ver=Date.now().toString();
+    var body=JSON.stringify({fields:{
+      payload:   {stringValue:json},
+      savedAt:   {stringValue:new Date().toISOString()},
+      ver:       {stringValue:ver},
+      source:    {stringValue:'portal-gestao-sync'}
+    }});
+    return fetch(DOC_TS+'?key='+API_KEY+'&updateMask.fieldPaths=payload&updateMask.fieldPaths=savedAt&updateMask.fieldPaths=ver&updateMask.fieldPaths=source',
+      {method:'PATCH',headers:{'Content-Type':'application/json'},body:body})
+      .catch(function(e){console.warn('[FB ts save]',e);});
+  };
+
+  // ── Poll portal-ts for changes ─────────────────────────
+  var _lastTsVer=null;
+  window._fbTsListen = function(callback){
     function poll(){
-      fetch(DOC_URL+'?key='+API_KEY)
-        .then(function(r){ return r.ok?r.json():null; })
+      fetch(DOC_TS+'?key='+API_KEY)
+        .then(function(r){return r.ok?r.json():null;})
         .then(function(doc){
           if(!doc||!doc.fields) return;
-          var ver = (doc.fields.ver&&doc.fields.ver.stringValue)||'';
-          var src = (doc.fields.source&&doc.fields.source.stringValue)||'';
-          fbStatus('Online ●','ok');
-          if(_lastVer===null){ _lastVer=ver; return; }
-          if(ver && ver!==_lastVer){
-            var prev=_lastVer; _lastVer=ver;
-            // Skip if we just saved this version
-            if(window._fbGestaoOwnVer && ver===window._fbGestaoOwnVer){ window._fbGestaoOwnVer=null; return; }
-            fbStatus('Recebendo...','sync');
+          var ver=(doc.fields.ver&&doc.fields.ver.stringValue)||'';
+          var src=(doc.fields.source&&doc.fields.source.stringValue)||'';
+          if(src==='portal-gestao-sync') return; // our own write
+          if(_lastTsVer===null){_lastTsVer=ver;return;}
+          if(ver&&ver!==_lastTsVer){
+            _lastTsVer=ver;
             try{
               var payload=(doc.fields.payload&&doc.fields.payload.stringValue)||'';
-              if(payload){ var data=JSON.parse(payload); if(data) callback(data, src); }
-            }catch(e){ console.warn('[FB Gestao] parse:',e); }
+              if(payload){var data=JSON.parse(payload);if(data)callback(data,src);}
+            }catch(e){console.warn('[FB ts poll parse]',e);}
           }
-        }).catch(function(){ fbStatus('Offline','err'); });
+        }).catch(function(){});
     }
-    setTimeout(poll, 1500);
-    return setInterval(poll, 5000);
+    setTimeout(poll,2000);
+    return setInterval(poll,5000);
   };
 
-  window._fbGestaoReady = true;
-  setTimeout(function(){ window.dispatchEvent(new Event('fbgestao-ready')); }, 100);
+  // ── Poll portal-gestao for changes (other devices) ────
+  var _lastGestaoVer=null;
+  window._fbGestaoListen = function(callback){
+    function poll(){
+      fetch(DOC_G+'?key='+API_KEY)
+        .then(function(r){return r.ok?r.json():null;})
+        .then(function(doc){
+          if(!doc||!doc.fields) return;
+          var ver=(doc.fields.ver&&doc.fields.ver.stringValue)||'';
+          fbStatus('Online ●','ok');
+          if(_lastGestaoVer===null){_lastGestaoVer=ver;return;}
+          if(ver&&ver!==_lastGestaoVer){
+            _lastGestaoVer=ver;
+            if(window._fbGestaoOwnVer&&ver===window._fbGestaoOwnVer){window._fbGestaoOwnVer=null;return;}
+            try{
+              var payload=(doc.fields.payload&&doc.fields.payload.stringValue)||'';
+              if(payload){var data=JSON.parse(payload);if(data)callback(data,'firestore-gestao');}
+            }catch(e){}
+          }
+        }).catch(function(){fbStatus('Offline','err');});
+    }
+    setTimeout(poll,1500);
+    return setInterval(poll,5000);
+  };
+
+  window._fbGestaoReady=true;
+  setTimeout(function(){window.dispatchEvent(new Event('fbgestao-ready'));},100);
 })();
 </script>
 <style>
@@ -5099,132 +5149,173 @@ const _uniDat=document.getElementById('uni-data');
 if(_uniDat&&!_uniDat.value) _uniDat.value=new Date().toISOString().slice(0,10);
 
 // ══════════════════════════════════════════
-// SINCRONIZAÇÃO — Firebase Firestore + localStorage
-// Funciona entre dispositivos, navegadores e desktops diferentes
-// Mesmo projeto Firebase do Portal T&S (portal-ts)
+// SINCRONIZAÇÃO BIDIRECIONAL COMPLETA
+// Portal Gestão ↔ Firebase ↔ Portal T&S
 // ══════════════════════════════════════════
 
 const SYNC_KEY    = 'hepta_portal_data';
 const SYNC_TS_KEY = 'hepta_portal_data_sync';
 
-// Cargo map portal-ts abbreviation ↔ nome completo
+// ── Cargo abbreviation maps ───────────────
 const CARGO_FROM_TS = {
-  'TEL':'Analista de suporte telefônico (TEL)',
-  'BSB':'Analista de suporte (BSB)',
-  'EST':'Analista de suporte (EST)',
-  'AE' :'Analista de suporte especializado (AE)',
-  'AC' :'Analista de suporte especializado (AC)',
-  'AP' :'Administração de parque tecnológico (AP)',
-  'CE' :'Cabeamento estruturado (CE)',
-  'STEL':'Supervisor de suporte (STEL)',
-  'SBSB':'Supervisor de suporte (BSB)',
-  'SEST':'Supervisor de suporte (EST)',
-  'SAE' :'Supervisor de suporte (SAE)',
-  'SCHA':'Supervisor de suporte (SCHA)',
-  'GCON':'Gestor de conhecimento',
-  'GSD' :'Gestor de Service desk',
+  'TEL':'Analista de suporte telefônico (TEL)','BSB':'Analista de suporte (BSB)',
+  'EST':'Analista de suporte (EST)','AE':'Analista de suporte especializado (AE)',
+  'AC':'Analista de suporte especializado (AC)','AP':'Administração de parque tecnológico (AP)',
+  'CE':'Cabeamento estruturado (CE)','STEL':'Supervisor de suporte (STEL)',
+  'SBSB':'Supervisor de suporte (BSB)','SEST':'Supervisor de suporte (EST)',
+  'SAE':'Supervisor de suporte (SAE)','SCHA':'Supervisor de suporte (SCHA)',
+  'GCON':'Gestor de conhecimento','GSD':'Gestor de Service desk',
 };
+const CARGO_TO_TS = Object.fromEntries(Object.entries(CARGO_FROM_TS).map(([k,v])=>[v,k]));
 
-function tsDateToIso(d){ if(!d) return ''; const p=d.split('/'); return p.length===3?`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`:''; }
-function isoToTsDate(d){ if(!d) return ''; const p=d.split('-'); return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:''; }
+function tsDateToIso(d){ if(!d)return''; const p=d.split('/'); return p.length===3?p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0'):''; }
+function isoToTsDate(d){ if(!d)return''; const p=d.split('-'); return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:''; }
 
-// ── Serialize our DATA for sync ────────────
-function gestaoToSyncPayload(){
+// ── Our DATA → sync payload ───────────────
+function gestaoToPayload(){
   return {
-    source: 'portal-gestao',
-    ts: Date.now(),
+    source:'portal-gestao', ts:Date.now(),
     colaboradores: DATA.map(c=>({
-      nome:        c.nome,
-      status:      c.status==='inativo'?'desligado':'ativo',
-      email_inst:  c.email_inst||'',
-      email:       c.email||'',
-      data_admissao: c.data_admissao||'',
-      data_demissao: c.data_demissao||'',
-      cargo:       c.cargo||'',
-      uf:          c.uf||'',
+      cpf: c.cpf, nome: c.nome,
+      status: c.status==='inativo'?'desligado':'ativo',
+      email_inst: c.email_inst||'', email: c.email||'',
+      celular: c.celular||'', cargo: c.cargo||'', uf: c.uf||'',
+      data_admissao: c.data_admissao||'', data_demissao: c.data_demissao||'',
+      rg: c.rg||'', genero: c.genero||'', cor_raca: c.cor_raca||'',
+      tipo_vinculo: c.tipo_vinculo||'Efetivo',
+      docs: c.docs||{}, certs: c.certs||{}, certs_agenda: c.certs_agenda||{},
     }))
   };
 }
 
-// ── Apply incoming sync payload to DATA ────
-function applyIncomingSync(payload, source){
-  if(!payload||!payload.colaboradores) return 0;
-  let updated=0;
-  payload.colaboradores.forEach(incoming=>{
-    const normNome=(incoming.nome||'').trim().toLowerCase();
-    const local=DATA.find(c=>c.nome.trim().toLowerCase()===normNome);
+// ── Apply our payload → DATA ──────────────
+function applyGestaoPayload(payload){
+  if(!payload?.colaboradores) return 0;
+  let n=0;
+  payload.colaboradores.forEach(inc=>{
+    const local=DATA.find(c=>c.cpf===inc.cpf||c.nome.trim().toLowerCase()===inc.nome.trim().toLowerCase());
     if(!local) return;
-    if(incoming.email_inst && incoming.email_inst!==local.email_inst){ local.email_inst=incoming.email_inst; updated++; }
-    if(incoming.email && incoming.email!=='Pendente' && incoming.email!==local.email){ local.email=incoming.email; updated++; }
-    if(incoming.data_admissao && incoming.data_admissao!==local.data_admissao){ local.data_admissao=incoming.data_admissao; updated++; }
-    if(incoming.data_demissao && incoming.data_demissao!==local.data_demissao){ local.data_demissao=incoming.data_demissao; updated++; }
-    if(incoming.status){ const st=incoming.status==='desligado'?'inativo':incoming.status; if(st!==local.status){ local.status=st; updated++; } }
+    const apply=(key,val)=>{ if(val&&val!==local[key]){local[key]=val;n++;} };
+    apply('email_inst', inc.email_inst);
+    apply('email', inc.email!=='Pendente'?inc.email:'');
+    apply('celular', inc.celular!=='Pendente'?inc.celular:'');
+    if(inc.status){ const st=inc.status==='desligado'?'inativo':inc.status; if(st!==local.status){local.status=st;n++;} }
+    if(inc.data_admissao && inc.data_admissao!==local.data_admissao){local.data_admissao=inc.data_admissao;n++;}
+    if(inc.data_demissao && inc.data_demissao!==local.data_demissao){local.data_demissao=inc.data_demissao;n++;}
+    if(inc.rg && inc.rg!==local.rg){local.rg=inc.rg;n++;}
+    // Docs
+    if(inc.docs){ Object.entries(inc.docs).forEach(([k,v])=>{ if(v&&local.docs&&local.docs[k]!==undefined&&local.docs[k]!==v){local.docs[k]=v;n++;} }); }
+    // Certs
+    if(inc.certs){ Object.entries(inc.certs).forEach(([k,v])=>{ if(v&&local.certs&&local.certs[k]!==undefined&&local.certs[k]!==v){local.certs[k]=v;n++;} }); }
+    if(inc.certs_agenda&&Object.keys(inc.certs_agenda).length){local.certs_agenda=inc.certs_agenda;n++;}
   });
-  return updated;
+  return n;
 }
 
-// ── Apply portal-ts COLL to our DATA ──────
-function applyFromPortalTs(tsColl){
-  if(!tsColl||!tsColl.length) return 0;
-  let updated=0;
-  tsColl.forEach(ts=>{
-    const normNome=(ts.nome||'').trim().toLowerCase();
-    const local=DATA.find(c=>c.nome.trim().toLowerCase()===normNome);
+// ── Apply portal-ts COLL → our DATA ──────
+function applyTsData(tsData){
+  if(!tsData?.COLL?.length) return 0;
+  let n=0;
+  tsData.COLL.forEach(ts=>{
+    const local=DATA.find(c=>c.cpf===(ts.cpf_imp||'').replace(/\D/g,'').replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/,'$1.$2.$3-$4')
+      || c.nome.trim().toLowerCase()===(ts.nome||'').trim().toLowerCase());
     if(!local) return;
-    if(ts.email_imp && ts.email_imp!=='Pendente' && ts.email_imp!==local.email){ local.email=ts.email_imp; updated++; }
-    if(ts.email_tcu && ts.email_tcu!==local.email_inst){ local.email_inst=ts.email_tcu; updated++; }
-    if(ts.admissao){ const iso=tsDateToIso(ts.admissao); if(iso&&iso!==local.data_admissao){ local.data_admissao=iso; updated++; } }
-    if(ts.status){ const st=ts.status==='desligado'?'inativo':ts.status; if(st!==local.status){ local.status=st; updated++; } }
-    if(ts.cargo&&CARGO_FROM_TS[ts.cargo]&&CARGO_FROM_TS[ts.cargo]!==local.cargo){ local.cargo=CARGO_FROM_TS[ts.cargo]; updated++; }
+    if(ts.email_imp&&ts.email_imp!==local.email){local.email=ts.email_imp;n++;}
+    if(ts.email_tcu&&ts.email_tcu!==local.email_inst){local.email_inst=ts.email_tcu;n++;}
+    if(ts.cel_imp&&ts.cel_imp!==local.celular){local.celular=ts.cel_imp;n++;}
+    if(ts.admissao){const iso=tsDateToIso(ts.admissao);if(iso&&iso!==local.data_admissao){local.data_admissao=iso;n++;}}
+    if(ts.saida){const iso=tsDateToIso(ts.saida);if(iso&&iso!==local.data_demissao){local.data_demissao=iso;n++;}}
+    if(ts.status==='desligado'&&local.status!=='inativo'){local.status='inativo';n++;}
+    else if(ts.status==='ativo'&&local.status==='inativo'){local.status='ativo';n++;}
+    if(ts.cargo&&CARGO_FROM_TS[ts.cargo]&&CARGO_FROM_TS[ts.cargo]!==local.cargo){local.cargo=CARGO_FROM_TS[ts.cargo];n++;}
   });
-  return updated;
+  return n;
 }
 
-// ── localStorage sync (mesma aba/mesmo navegador) ─
+// ── Push our changes into portal-ts COLL ──
+function pushToTs(tsData){
+  if(!tsData?.COLL?.length) return 0;
+  let n=0;
+  DATA.forEach(local=>{
+    const ts=tsData.COLL.find(t=>t.nome.trim().toLowerCase()===local.nome.trim().toLowerCase());
+    if(!ts) return;
+    const st=local.status==='inativo'?'desligado':'ativo';
+    if(ts.status!==st){ts.status=st;n++;}
+    if(ts.saida===''&&local.data_demissao){ts.saida=isoToTsDate(local.data_demissao);n++;}
+    if(local.email_inst&&local.email_inst!=='Pendente'&&local.email_inst!==ts.email_tcu){ts.email_tcu=local.email_inst;n++;}
+    if(local.celular&&local.celular!=='Pendente'&&local.celular!==ts.cel_imp){ts.cel_imp=local.celular;n++;}
+    if(local.data_admissao){const td=isoToTsDate(local.data_admissao);if(td&&td!==ts.admissao){ts.admissao=td;n++;}}
+  });
+  return n;
+}
+
+// ── localStorage sync (same machine) ─────
 function syncFromLocalStorage(){
+  let n=0;
   try{
-    // From portal-gestao's own Firestore cache
-    const gRaw=localStorage.getItem('gestao_sync_cache');
-    let updated=0;
-    if(gRaw){ const d=JSON.parse(gRaw); updated+=applyIncomingSync(d,'cache'); }
-    // From portal-ts
-    const tsRaw=localStorage.getItem(SYNC_KEY);
-    if(tsRaw){ const d=JSON.parse(tsRaw); if(d&&d.COLL) updated+=applyFromPortalTs(d.COLL); }
-    return updated;
-  }catch(e){ return 0; }
+    const raw=localStorage.getItem(SYNC_KEY);
+    if(raw){ const d=JSON.parse(raw); if(d?.COLL) n+=applyTsData(d); }
+  }catch(e){}
+  try{
+    const raw=localStorage.getItem('gestao_sync_cache');
+    if(raw){ const d=JSON.parse(raw); n+=applyGestaoPayload(d); }
+  }catch(e){}
+  return n;
 }
 
-// ── Push to Firestore ──────────────────────
+// ── Push to Firestore (gestao doc) ────────
 function pushToFirestore(){
   if(!window._fbGestaoReady) return Promise.resolve(0);
-  const payload=gestaoToSyncPayload();
-  localStorage.setItem('gestao_sync_cache', JSON.stringify(payload));
+  const payload=gestaoToPayload();
+  localStorage.setItem('gestao_sync_cache',JSON.stringify(payload));
   return window._fbGestaoSave(payload).then(()=>payload.colaboradores.length);
 }
 
-// ── Pull from Firestore ────────────────────
+// ── Pull from Firestore (gestao doc) ──────
 function pullFromFirestore(){
   if(!window._fbGestaoReady) return Promise.resolve(0);
   return window._fbGestaoLoad().then(payload=>{
     if(!payload) return 0;
-    localStorage.setItem('gestao_sync_cache', JSON.stringify(payload));
-    const n=applyIncomingSync(payload,'firestore');
-    return n;
+    localStorage.setItem('gestao_sync_cache',JSON.stringify(payload));
+    return applyGestaoPayload(payload);
   });
 }
 
-// ── Full sync (button) ─────────────────────
-function runFullSync(){
-  return Promise.all([
-    pushToFirestore(),
-    pullFromFirestore(),
-  ]).then(([pushed, pulled])=>{
-    // Also sync localStorage (same browser different tabs)
-    const lsPulled=syncFromLocalStorage();
-    renderGeral();
-    showSyncToast(pulled+lsPulled, pushed);
-    return {pulled:pulled+lsPulled, pushed};
-  });
+// ── Full sync: gestao ↔ Firebase ↔ portal-ts ─
+async function runFullSync(){
+  let pushed=0, pulled=0, tsPulled=0, tsPushed=0;
+  try{
+    // 1. Pull portal-ts full data
+    const tsData = await window._fbTsLoad();
+    if(tsData){
+      // Apply portal-ts changes → our DATA
+      tsPulled = applyTsData(tsData);
+      // Push our changes → portal-ts COLL
+      tsPushed = pushToTs(tsData);
+      if(tsPushed>0) await window._fbTsSave(tsData);
+      // Update localStorage so portal-ts detects changes (same browser)
+      if(tsPushed>0){
+        localStorage.setItem(SYNC_KEY, JSON.stringify(tsData));
+        localStorage.setItem(SYNC_TS_KEY, Date.now().toString());
+      }
+    }
+    // 2. Push our full data to gestao doc
+    pushed = await pushToFirestore();
+    // 3. Pull from gestao doc (other devices running portal-gestao)
+    pulled = await pullFromFirestore();
+    // 4. localStorage (same machine, different tabs)
+    const lsPulled = syncFromLocalStorage();
+    pulled += lsPulled;
+
+    saveData();
+    try{renderGeral();}catch(e){}
+    showSyncToast(pulled+tsPulled, pushed+tsPushed);
+    return {pulled:pulled+tsPulled, pushed:pushed+tsPushed};
+  }catch(e){
+    console.error('[Sync]',e);
+    showSyncToast(0,0);
+    return {pulled:0,pushed:0};
+  }
 }
 
 function showSyncToast(pulled, pushed){
@@ -5236,58 +5327,61 @@ function showSyncToast(pulled, pushed){
     document.body.appendChild(t);
   }
   const total=pulled+pushed;
-  t.textContent=total>0?`🔄 Sync: ↓${pulled} recebidos · ↑${pushed} enviados`:'🔄 Portais já sincronizados';
+  t.textContent=total>0?`🔄 Sync: ↓${pulled} recebidos · ↑${pushed} enviados`:'🔄 Portais sincronizados';
   t.style.opacity='1';
   clearTimeout(t._timer);
-  t._timer=setTimeout(()=>t.style.opacity='0', 4000);
+  t._timer=setTimeout(()=>t.style.opacity='0',4000);
 }
 
-// ── Live poll: Firestore changes from other devices ──
+// ── Live listeners ────────────────────────
 window.addEventListener('fbgestao-ready', function(){
-  window._fbGestaoListen(function(payload, source){
-    const n=applyIncomingSync(payload, source);
-    if(n>0){
-      localStorage.setItem('gestao_sync_cache', JSON.stringify(payload));
-      renderGeral();
-      showSyncToast(n, 0);
-      console.log(`[Sync] ${n} campo(s) recebidos via Firestore (${source})`);
-    }
+  // Listen to portal-ts changes (5s polling)
+  window._fbTsListen(function(tsData){
+    const n=applyTsData(tsData);
+    if(n>0){ saveData(); try{renderGeral();}catch(e){} showSyncToast(n,0); }
   });
-  // Initial pull on load
-  pullFromFirestore().then(n=>{
-    if(n>0){ renderGeral(); console.log(`[Sync] Load: ${n} campo(s) sincronizados`); }
+  // Listen to portal-gestao changes from other devices
+  window._fbGestaoListen(function(payload){
+    const n=applyGestaoPayload(payload);
+    if(n>0){ saveData(); try{renderGeral();}catch(e){} showSyncToast(n,0); }
+  });
+  // Initial sync on load
+  runFullSync().then(({pulled})=>{
+    if(pulled>0) try{renderGeral();}catch(e){}
   });
 });
 
-// ── localStorage events (mesma máquina, abas diferentes) ─
-window.addEventListener('storage', e=>{
+// ── localStorage events (same machine, diff browsers) ─
+window.addEventListener('storage',e=>{
   if(e.key===SYNC_TS_KEY||e.key===SYNC_KEY){
     const n=syncFromLocalStorage();
-    if(n>0){ renderGeral(); showSyncToast(n,0); }
+    if(n>0){ saveData(); try{renderGeral();}catch(e){} showSyncToast(n,0); }
   }
 });
 
-// ── Sync button — added via _portalInit after DOM ready ──────────
+// ── Sync button ───────────────────────────
 function _addSyncBtn(){
   if(document.getElementById('btn-sync-ts')) return;
   const header=document.querySelector('.header');
   if(!header) return;
   const btn=document.createElement('button');
   btn.id='btn-sync-ts';
-  btn.title='Sincronizar com Portal T&S';
+  btn.title='Sincronizar bidirecional: Portal Gestão ↔ Firebase ↔ Portal T&S';
   btn.style.cssText='margin-left:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 14px;border-radius:16px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap';
   btn.innerHTML='🔄 Sync T&S';
   btn.onclick=()=>{
     btn.innerHTML='⏳...'; btn.disabled=true;
-    runFullSync().then(()=>{btn.innerHTML='🔄 Sync T&S';btn.disabled=false;})
-      .catch(()=>{btn.innerHTML='🔄 Sync T&S';btn.disabled=false;});
+    runFullSync().then(({pulled,pushed})=>{
+      btn.innerHTML='🔄 Sync T&S'; btn.disabled=false;
+      alert('Sincronização concluída!\n\n↓ Recebido: '+pulled+' campo(s)\n↑ Enviado: '+pushed+' campo(s)');
+    }).catch(()=>{btn.innerHTML='🔄 Sync T&S';btn.disabled=false;});
   };
   const stats=document.querySelector('.header-stats');
   if(stats) header.insertBefore(btn,stats); else header.appendChild(btn);
 }
 
-// Initial localStorage sync (silent)
-(function(){ try{ const n=syncFromLocalStorage(); if(n>0) console.log(`[Sync] localStorage: ${n} campo(s)`); }catch(e){} })();
+// ── Initial localStorage sync (silent) ───
+(function(){ try{const n=syncFromLocalStorage();if(n>0)console.log('[Sync] localStorage:',n);}catch(e){} })();
 
 function _portalInit(){
   try{ setupFieldFormatting(); }catch(e){}
