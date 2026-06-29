@@ -30,20 +30,59 @@
     fbStatus('Salvando...','sync');
     var ver=Date.now().toString();
     window._fbGestaoOwnVer=ver;
+
+    // Build slim payload — only changed fields to stay under Firestore 1MB limit
+    var slimPayload = {
+      source:'portal-gestao', ts:payload.ts||Date.now(),
+      colaboradores: (payload.colaboradores||[]).map(function(c){
+        var slim={cpf:c.cpf,nome:c.nome,status:c.status};
+        if(c.email_inst&&c.email_inst!=='Pendente') slim.email_inst=c.email_inst;
+        if(c.email&&c.email!=='Pendente') slim.email=c.email;
+        if(c.celular&&c.celular!=='Pendente') slim.celular=c.celular;
+        if(c.cargo) slim.cargo=c.cargo;
+        if(c.uf) slim.uf=c.uf;
+        if(c.data_admissao) slim.data_admissao=c.data_admissao;
+        if(c.data_demissao) slim.data_demissao=c.data_demissao;
+        if(c.rg) slim.rg=c.rg;
+        if(c.genero) slim.genero=c.genero;
+        if(c.tipo_vinculo&&c.tipo_vinculo!=='Efetivo') slim.tipo_vinculo=c.tipo_vinculo;
+        // Only include docs/certs if they have non-Pendente values
+        var docsChanged={}, certsChanged={};
+        Object.entries(c.docs||{}).forEach(function(e){ if(e[1]&&e[1]!=='Pendente') docsChanged[e[0]]=e[1]; });
+        Object.entries(c.certs||{}).forEach(function(e){ if(e[1]&&e[1]!=='Pendente'&&e[1]!=='N/A') certsChanged[e[0]]=e[1]; });
+        if(Object.keys(docsChanged).length) slim.docs=docsChanged;
+        if(Object.keys(certsChanged).length) slim.certs=certsChanged;
+        if(c.certs_agenda&&Object.keys(c.certs_agenda).length) slim.certs_agenda=c.certs_agenda;
+        return slim;
+      })
+    };
+
+    var json=JSON.stringify(slimPayload);
+    if(json.length > 900000){
+      // Still too big — strip docs/certs entirely
+      slimPayload.colaboradores.forEach(function(c){ delete c.docs; delete c.certs; delete c.certs_agenda; });
+      json=JSON.stringify(slimPayload);
+    }
+
     var body=JSON.stringify({fields:{
-      payload:   {stringValue:JSON.stringify(payload)},
+      payload:   {stringValue:json},
       savedAt:   {stringValue:new Date().toISOString()},
       ver:       {stringValue:ver},
       source:    {stringValue:'portal-gestao'}
     }});
-    return fetch(DOC_G+'?key='+API_KEY+'&updateMask.fieldPaths=payload&updateMask.fieldPaths=savedAt&updateMask.fieldPaths=ver&updateMask.fieldPaths=source',
+
+    return fetch(DOC_G+'?key='+API_KEY,
       {method:'PATCH',headers:{'Content-Type':'application/json'},body:body})
       .then(function(r){
         if(!r.ok) return r.text().then(function(t){throw new Error(r.status+': '+t.slice(0,100));});
         fbStatus('Salvo ✓','ok');
         setTimeout(function(){fbStatus('Online ●','ok');},2000);
         return r.json();
-      }).catch(function(e){fbStatus('Erro','err');console.warn('[FB gestao save]',e);});
+      }).catch(function(e){
+        fbStatus('Erro — verifique a conexão','err');
+        console.warn('[FB gestao save]',e.message||e);
+        return null;
+      });
   };
 
   // ── Load our data from portal-gestao doc ──────────────
@@ -75,6 +114,12 @@
   // ── Save into portal-ts full data doc ─────────────────
   window._fbTsSave = function(tsData){
     var json=JSON.stringify(tsData);
+    if(json.length > 900000){
+      // Too big — remove heavy optional arrays
+      var slim=Object.assign({},tsData);
+      delete slim.DOCS_DATA; delete slim._docsPainel;
+      json=JSON.stringify(slim);
+    }
     var ver=Date.now().toString();
     var body=JSON.stringify({fields:{
       payload:   {stringValue:json},
@@ -82,9 +127,9 @@
       ver:       {stringValue:ver},
       source:    {stringValue:'portal-gestao-sync'}
     }});
-    return fetch(DOC_TS+'?key='+API_KEY+'&updateMask.fieldPaths=payload&updateMask.fieldPaths=savedAt&updateMask.fieldPaths=ver&updateMask.fieldPaths=source',
+    return fetch(DOC_TS+'?key='+API_KEY,
       {method:'PATCH',headers:{'Content-Type':'application/json'},body:body})
-      .catch(function(e){console.warn('[FB ts save]',e);});
+      .catch(function(e){console.warn('[FB ts save]',e.message||e);});
   };
 
   // ── Poll portal-ts for changes ─────────────────────────
