@@ -368,7 +368,7 @@ tr:hover .edit-icon{opacity:1}
 /* ═══ Portal-T&S CSS vars bridged for Abono/Gerencial tabs ═══ */
 :root {
   --a50:#FAEEDA; --a600:#854F0B;
-  --b50:#E6F1FB; --b600:#185FA5;
+  --b50:#E6F1FB; --b600:#185FA5; --b900:#042C53;
   --brd:rgba(0,0,0,0.09);
   --g50:#EAF3DE; --g600:#3B6D11;
   --gy50:#F1EFE8; --gy600:#5F5E5A;
@@ -5660,6 +5660,9 @@ let COLL = [];          // colaboradores do portal-ts
 let GER_DATA = {};      // frequência gerencial
 let ABONO_DATA = {};    // abono por mês/colaborador
 
+// ── gerKey helper ─────────────────────────
+function gerKey(nome, mes, ano){ return nome+'|'+mes+'|'+ano; }
+
 // ── CD — definições de cargo (portal-ts) ─
 const CD={
   TEL:{label:'Analista de suporte telefônico (TEL)',vagas:11,sal:3830.17,docs:[
@@ -5871,6 +5874,13 @@ function abonoSetMesAtual(){
 
 function rAbono(){
   var tbody=document.getElementById('abono-tbody');if(!tbody)return;
+
+  // If COLL not loaded yet, load and retry
+  if(!COLL.length){
+    tbody.innerHTML='<tr><td colspan="8" style="padding:2rem;text-align:center;color:var(--muted);">⏳ Carregando dados do Portal T&S...</td></tr>';
+    loadTsDataForTabs().then(()=>{ if(COLL.length) rAbono(); });
+    return;
+  }
   // populate cargo filter
   var cargoSel=document.getElementById('abono-f-cargo');
   if(cargoSel&&cargoSel.options.length<=1){
@@ -6007,6 +6017,16 @@ function rGerencial() {
   const wrap = document.getElementById('ger-table-wrap');
   if (!wrap) return;
 
+  // If COLL not loaded yet, load from Firebase and retry
+  if (!COLL.length) {
+    wrap.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--muted);">⏳ Carregando dados do Portal T&S...</div>';
+    loadTsDataForTabs().then(() => {
+      if (COLL.length) rGerencial();
+      else wrap.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--r600);">❌ Não foi possível carregar os colaboradores. Clique em 🔄 Sync T&S no topo.</div>';
+    });
+    return;
+  }
+
   const mes  = document.getElementById('ger-mes')?.value   || 'Abril';
   const ano  = parseInt(document.getElementById('ger-ano')?.value || '2026');
   const fCargo = document.getElementById('ger-cargo')?.value || '';
@@ -6024,7 +6044,7 @@ function rGerencial() {
   // Filter active collaborators
   const colls = COLL.filter(c =>
     c.status === 'ativo' &&
-    (!fCargo || c.cargo === fCargo || (CD[fCargo]&&c.cargo===(CD[fCargo].label||fCargo)))
+    (!fCargo || c.cargo === fCargo || c.cargo === (CD[fCargo]?.label||''))
   );
 
   const dias = diasUteis(mes, ano);
