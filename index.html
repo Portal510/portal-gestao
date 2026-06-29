@@ -5813,6 +5813,30 @@ async function loadTsDataForTabs(){
 
 // ── Funções auxiliares do portal-ts ──────
 
+var FERIADOS_GER_2026 = {
+  '2026-01-01':{tipo:'feriado',  desc:'Confraternização Universal'},
+  '2026-01-02':{tipo:'facultativo',desc:'Ponto facultativo'},
+  '2026-02-16':{tipo:'facultativo',desc:'Carnaval'},
+  '2026-02-17':{tipo:'facultativo',desc:'Carnaval'},
+  '2026-02-18':{tipo:'facultativo',desc:'Quarta-feira de Cinzas'},
+  '2026-04-02':{tipo:'facultativo',desc:'Véspera da Paixão de Cristo'},
+  '2026-04-03':{tipo:'feriado',  desc:'Paixão de Cristo'},
+  '2026-04-20':{tipo:'facultativo',desc:'Ponto facultativo'},
+  '2026-04-21':{tipo:'feriado',  desc:'Tiradentes'},
+  '2026-05-01':{tipo:'feriado',  desc:'Dia Mundial do Trabalho'},
+  '2026-06-04':{tipo:'facultativo',desc:'Corpus Christi'},
+  '2026-06-05':{tipo:'facultativo',desc:'Ponto facultativo'},
+  '2026-09-07':{tipo:'feriado',  desc:'Independência do Brasil'},
+  '2026-10-12':{tipo:'feriado',  desc:'Nossa Senhora Aparecida'},
+  '2026-10-28':{tipo:'facultativo',desc:'Dia do Servidor Público'},
+  '2026-11-02':{tipo:'feriado',  desc:'Finados'},
+  '2026-11-15':{tipo:'feriado',  desc:'Proclamação da República'},
+  '2026-11-20':{tipo:'feriado',  desc:'Consciência Negra'},
+  '2026-12-24':{tipo:'facultativo',desc:'Véspera do Natal'},
+  '2026-12-25':{tipo:'feriado',  desc:'Natal'},
+  '2026-12-31':{tipo:'facultativo',desc:'Véspera do Ano Novo'}
+};
+
 function diasUteis(mesNome, ano) {
   const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
                  'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -5822,7 +5846,13 @@ function diasUteis(mesNome, ano) {
   const daysInMonth = new Date(ano, m + 1, 0).getDate();
   for (let d = 1; d <= daysInMonth; d++) {
     const dow = new Date(ano, m, d).getDay();
-    if (dow !== 0 && dow !== 6) dias.push(d);
+    if (dow === 0 || dow === 6) continue; // fim de semana
+    // Verificar feriado
+    const mm = String(m + 1).padStart(2, '0');
+    const dd = String(d).padStart(2, '0');
+    const key = `${ano}-${mm}-${dd}`;
+    if (FERIADOS_GER_2026[key]) continue; // feriado ou facultativo
+    dias.push(d);
   }
   return dias;
 }
