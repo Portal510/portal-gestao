@@ -402,6 +402,12 @@ tr:hover .edit-icon{opacity:1}
 .btn.bs{background:var(--gy50);color:var(--text);border:.5px solid var(--brd);padding:5px 12px;border-radius:var(--rad);cursor:pointer;font-size:11px;font-weight:600;}
 .btn.g-only{cursor:pointer;}
 #tab-abono .card, #tab-gerencial .card{box-shadow:0 1px 3px rgba(0,0,0,.06);}
+
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:#1a1a2e;color:#fff;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:600;z-index:99999;opacity:0;transition:transform .3s,opacity .3s;box-shadow:0 4px 16px rgba(0,0,0,.3);pointer-events:none}
+#toast.on{transform:translateX(-50%) translateY(0);opacity:1}
+#toast.ok{background:#2c5530}
+#toast.warn{background:#854F0B}
+#toast.err{background:#7A0000}
 </style>
 <script>/* JSZip 3.10.1 — inlined */
 /*!
@@ -1229,6 +1235,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         <button class="btn g-only" onclick="expAbono('xls')" style="font-size:10px;padding:4px 9px;border:1px solid var(--b600);background:#fff;color:var(--b600);border-right:.5px solid var(--b600);border-radius:0;cursor:pointer;font-weight:600;">⬇ XLSX</button>
         <button class="btn g-only" onclick="expAbono('pdf')" style="font-size:10px;padding:4px 9px;border:1px solid var(--b600);background:#fff;color:var(--b600);border-radius:0;cursor:pointer;font-weight:600;">📄 PDF</button>
       </span>
+      <button class="btn g-only" onclick="enviarAbonoEmail()" style="font-size:10px;padding:4px 12px;background:#1F4E79;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">📧 Enviar por E-mail</button>
     </div>
   </div>
 
@@ -1261,6 +1268,24 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <div class="sc"><div class="sl">Total Geral</div><div class="sv" style="color:var(--t600);font-size:16px;" id="abono-tot-geral">R$ 0,00</div></div>
   </div>
 
+  <!-- Barra de edição em série -->
+  <div id="abono-bulk-bar" style="display:none;background:#E8F0FE;border:1px solid #2E75B6;border-radius:8px;padding:10px 14px;margin-bottom:.875rem;align-items:center;gap:10px;flex-wrap:wrap">
+    <span style="font-size:12px;font-weight:600;color:#1F4E79"><span id="abono-bulk-count">0</span> selecionado(s)</span>
+    <select id="abono-bulk-campo" style="font-size:11px;padding:5px 9px;border:.5px solid var(--brd);border-radius:var(--rad)">
+      <option value="desktop">Desktop</option>
+      <option value="internet">Internet</option>
+      <option value="celular">Celular/Tablet</option>
+    </select>
+    <select id="abono-bulk-valor" style="font-size:11px;padding:5px 9px;border:.5px solid var(--brd);border-radius:var(--rad)">
+      <option value="R$ 112,07">R$ 112,07</option>
+      <option value="R$ 95,00">R$ 95,00</option>
+      <option value="R$ 0,00">R$ 0,00</option>
+      <option value="">— Sem abono —</option>
+    </select>
+    <button class="btn g-only" onclick="aplicarAbonoSerie()" style="font-size:11px;padding:6px 16px;background:#1F4E79;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600">Aplicar a todos selecionados</button>
+    <button class="btn bs" onclick="limparSelecaoAbono()" style="font-size:11px;padding:6px 12px">Limpar seleção</button>
+  </div>
+
   <!-- Tabela -->
   <div class="card">
     <div class="ctitle">Abono por Colaborador — <span id="abono-periodo-lbl">Todos os períodos</span></div>
@@ -1268,6 +1293,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <table>
         <thead>
           <tr>
+            <th style="width:30px"><input type="checkbox" id="abono-sel-all" onchange="toggleSelecaoTodosAbono(this)"></th>
             <th>Colaborador</th>
             <th>Cargo</th>
             <th>Mês/Ano</th>
@@ -3371,7 +3397,8 @@ function imprimirTermoUni(){
       td{padding:7px 10px;border:1px solid #dee2e6;text-align:center}
       tr:nth-child(even) td{background:#f8f9fa}
       @media print{@page{margin:20mm}}
-    </style></head><body>${content}</body></html>`);
+    </style></head><body>${content}<div id="toast"></div>
+</body></html>`);
   win.document.close();
   win.focus();
   setTimeout(()=>win.print(),400);
@@ -5866,6 +5893,72 @@ function diasUteis(mesNome, ano) {
   return dias;
 }
 
+// ── Helpers: toast, buildXLS, buildPDF ────
+function toast(msg,type){
+  const t=document.getElementById('toast');
+  if(!t) return;
+  t.textContent=msg;
+  t.className='on'+(type==='ok'?' ok':type==='warn'?' warn':type==='err'?' err':'');
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove('on'),3000);
+}
+
+function buildXLS(headers, rows, filename) {
+  var tHead = '<tr>' + headers.map(function(h){ return '<th style="background:#042C53;color:#fff;padding:6px 10px;font-weight:bold;">'+h+'</th>'; }).join('') + '</tr>';
+  var tBody = rows.map(function(row, ri){
+    var bg = ri%2===0?'#ffffff':'#F1EFE8';
+    return '<tr>' + row.map(function(cell){
+      return '<td style="padding:5px 10px;border:1px solid #ddd;background:'+bg+';">'+(cell==null?'':cell)+'</td>';
+    }).join('') + '</tr>';
+  }).join('');
+  var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">'
+    + '<head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>'
+    + '<x:Name>Dados</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>'
+    + '</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head>'
+    + '<body><table border="1">' + tHead + tBody + '</table></body></html>';
+  var blob = new Blob(['\ufeff'+html], {type:'application/vnd.ms-excel;charset=utf-8'});
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = (filename||'export').replace(/\.csv$/,'')+'.xls'; a.click();
+  toast('XLS exportado!','ok');
+  return blob;
+}
+
+function buildPDF(title, subtitle, headers, rows, filename) {
+  var tHead = '<tr>' + headers.map(function(h){ return '<th>'+h+'</th>'; }).join('') + '</tr>';
+  var tBody = rows.map(function(row, ri){
+    var cls = ri%2===0?'':'alt';
+    return '<tr class="'+cls+'">' + row.map(function(cell){ return '<td>'+(cell==null?'':cell)+'</td>'; }).join('') + '</tr>';
+  }).join('');
+  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">'
+    + '<title>'+title+'</title><style>'
+    + '*{box-sizing:border-box;margin:0;padding:0;}'
+    + 'body{font-family:Arial,sans-serif;font-size:10pt;color:#222;padding:1.5cm;}'
+    + '.header{display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:.75rem;border-bottom:2px solid #042C53;margin-bottom:1rem;}'
+    + '.title{font-size:16pt;font-weight:700;color:#042C53;}'
+    + '.sub{font-size:9pt;color:#666;margin-top:3px;}'
+    + '.meta{font-size:8pt;color:#888;text-align:right;}'
+    + 'table{width:100%;border-collapse:collapse;margin-top:.5rem;}'
+    + 'th{background:#042C53;color:#fff;padding:6px 8px;text-align:left;font-size:9pt;}'
+    + 'td{padding:5px 8px;font-size:9pt;border-bottom:.5px solid #ddd;}'
+    + 'tr.alt td{background:#F8F8F6;}'
+    + '.footer{margin-top:1.5rem;text-align:center;font-size:8pt;color:#aaa;border-top:.5px solid #eee;padding-top:.5rem;}'
+    + '@media print{body{padding:1cm;} .no-print{display:none!important;} @page{margin:1cm;}}'
+    + '</style></head><body>'
+    + '<div class="header"><div><div class="title">'+title+'</div><div class="sub">'+subtitle+'</div></div>'
+    + '<div class="meta">Portal de Gestão T&S — TCU<br>Gerado em: '+new Date().toLocaleString('pt-BR')+'<br>'+rows.length+' registro(s)</div></div>'
+    + '<table><thead>'+tHead+'</thead><tbody>'+tBody+'</tbody></table>'
+    + '<div class="footer">Tribunal de Contas da União · Contrato T&S · Documento gerado automaticamente.</div>'
+    + '<div class="no-print" style="position:fixed;bottom:20px;right:20px;display:flex;gap:8px;">'
+    + '<button onclick="window.print()" style="background:#042C53;color:#fff;border:none;padding:10px 22px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">🖨 Imprimir / Salvar PDF</button>'
+    + '<button onclick="window.close()" style="background:#eee;color:#333;border:1px solid #ccc;padding:10px 16px;border-radius:8px;cursor:pointer;font-size:12px;">✕ Fechar</button>'
+    + '</div>'
+    + '</body></html>';
+  var blob2 = new Blob([html], {type: 'text/html;charset=utf-8'});
+  var url2 = URL.createObjectURL(blob2);
+  var pw = window.open(url2, '_blank');
+  if (!pw){ toast('Popup bloqueado — permita popups para este site.','warn'); return; }
+}
+
 // ── Abono JS (portal-ts original) ─────────
 
 function abonoKey(nome, mes, ano){ return nome+'|'+mes+'|'+ano; }
@@ -5918,6 +6011,7 @@ function rAbono(){
 
   tbody.innerHTML='';
   var totDesk=0,totCel=0;
+  window._abonoSelecionados = window._abonoSelecionados || new Set();
 
   ativos.forEach(col=>{
     var key=abonoKey(col.nome,curMes,curAno);
@@ -5934,7 +6028,9 @@ function rAbono(){
     tr.setAttribute('data-nome',col.nome);
     tr.setAttribute('data-mes',curMes);
     tr.setAttribute('data-ano',curAno);
-    tr.innerHTML='<td style="font-weight:500;white-space:nowrap;">'+col.nome+'</td>'
+    var checked = window._abonoSelecionados.has(key) ? 'checked' : '';
+    tr.innerHTML='<td style="text-align:center"><input type="checkbox" class="abono-row-chk" data-key="'+key+'" '+checked+' onchange="toggleSelecaoAbono(this,\''+key+'\')"></td>'
+      +'<td style="font-weight:500;white-space:nowrap;">'+col.nome+'</td>'
       +'<td><span class="bdg bi">'+cargoShort+'</span></td>'
       +'<td style="white-space:nowrap;">'+curMes+'/'+curAno+'</td>'
       +'<td><select data-campo="desktop" class="abono-sel" style="font-size:11px;padding:3px 6px;border:.5px solid var(--brd);border-radius:4px;">'
@@ -5961,6 +6057,7 @@ function rAbono(){
     });
     tbody.appendChild(tr);
   });
+  updateAbonoBulkBar();
 
   // KPIs
   var sv=function(id,val){var el=document.getElementById(id);if(el)el.textContent=val;};
@@ -6015,6 +6112,118 @@ function expAbono(fmt){
   var sub='Abono · '+curMes+'/'+curAno+(fCargo?' · '+((CD[fCargo]||{}).label||fCargo):'');
   if(fmt==='pdf') buildPDF('Controle de Abono',sub,hdrs,rows,'abono_'+curMes+'_'+curAno);
   else buildXLS(hdrs,rows,'abono_'+curMes+'_'+curAno);
+}
+
+// ── Seleção múltipla / edição em série ────
+function toggleSelecaoAbono(chk, key){
+  window._abonoSelecionados = window._abonoSelecionados || new Set();
+  if(chk.checked) window._abonoSelecionados.add(key);
+  else window._abonoSelecionados.delete(key);
+  updateAbonoBulkBar();
+}
+
+function toggleSelecaoTodosAbono(masterChk){
+  window._abonoSelecionados = window._abonoSelecionados || new Set();
+  document.querySelectorAll('.abono-row-chk').forEach(function(chk){
+    chk.checked = masterChk.checked;
+    var key = chk.dataset.key;
+    if(masterChk.checked) window._abonoSelecionados.add(key);
+    else window._abonoSelecionados.delete(key);
+  });
+  updateAbonoBulkBar();
+}
+
+function updateAbonoBulkBar(){
+  window._abonoSelecionados = window._abonoSelecionados || new Set();
+  var n = window._abonoSelecionados.size;
+  var bar = document.getElementById('abono-bulk-bar');
+  var cnt = document.getElementById('abono-bulk-count');
+  if(cnt) cnt.textContent = n;
+  if(bar) bar.style.display = n > 0 ? 'flex' : 'none';
+}
+
+function limparSelecaoAbono(){
+  window._abonoSelecionados = new Set();
+  document.querySelectorAll('.abono-row-chk').forEach(function(chk){ chk.checked = false; });
+  var master = document.getElementById('abono-sel-all');
+  if(master) master.checked = false;
+  updateAbonoBulkBar();
+}
+
+function aplicarAbonoSerie(){
+  var keys = Array.from(window._abonoSelecionados || []);
+  if(!keys.length){ toast('Nenhum colaborador selecionado.','warn'); return; }
+  var campo = document.getElementById('abono-bulk-campo').value;
+  var valor = document.getElementById('abono-bulk-valor').value;
+
+  if(!confirm('Aplicar "'+(valor||'Sem abono')+'" no campo "'+campo+'" para '+keys.length+' colaborador(es) selecionado(s)?')) return;
+
+  keys.forEach(function(key){
+    if(!ABONO_DATA[key]) ABONO_DATA[key]={desktop:'R$ 112,07',internet:'R$ 112,07',celular:'R$ 95,00'};
+    ABONO_DATA[key][campo]=valor;
+  });
+  saveAll();
+  limparSelecaoAbono();
+  rAbono();
+  toast(keys.length+' registro(s) atualizado(s) com sucesso!','ok');
+}
+
+// ── Envio por e-mail (gera XLS + abre Outlook) ────
+function enviarAbonoEmail(){
+  var fMes=document.getElementById('abono-f-mes')?.value||'';
+  var fAno=document.getElementById('abono-f-ano')?.value||'';
+  var fCargo=document.getElementById('abono-f-cargo')?.value||'';
+  var fNome=(document.getElementById('abono-f-nome')?.value||'').toLowerCase();
+  var meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  var now=new Date();
+  var curMes=fMes||meses[now.getMonth()];
+  var curAno=fAno||String(now.getFullYear());
+
+  var rows=COLL.filter(c=>{
+    if(c.status==='inativo')return false;
+    if(fCargo&&c.cargo!==fCargo)return false;
+    if(fNome&&!c.nome.toLowerCase().includes(fNome))return false;
+    return true;
+  }).map(col=>{
+    var key=abonoKey(col.nome,curMes,curAno);
+    var d=ABONO_DATA[key]||{desktop:'R$ 112,07',internet:'R$ 112,07',celular:'R$ 95,00'};
+    var dVal=parseFloat((d.desktop||'0').replace('R$ ','').replace(',','.'))||0;
+    var iVal=parseFloat((d.internet||'0').replace('R$ ','').replace(',','.'))||0;
+    var cVal=parseFloat((d.celular||'0').replace('R$ ','').replace(',','.'))||0;
+    return [col.nome,(CD[col.cargo]||{}).label||col.cargo||'—',curMes+'/'+curAno,d.desktop,d.internet,d.celular||'—','R$ '+(dVal+iVal+cVal).toFixed(2).replace('.',',')];
+  });
+
+  if(!rows.length){ toast('Nenhum colaborador encontrado.','warn'); return; }
+
+  // 1. Gerar e baixar o XLS
+  var hdrs=['Colaborador','Cargo','Período','Desktop','Internet','Celular/Tablet','Total'];
+  buildXLS(hdrs, rows, 'Abono_'+curMes+'_'+curAno);
+
+  // 2. Calcular totais para o corpo do e-mail
+  var totGeral = rows.reduce(function(sum,r){
+    return sum + parseFloat(r[6].replace('R$ ','').replace(',','.'));
+  }, 0);
+
+  // 3. Abrir Outlook com corpo pré-formatado
+  var periodoTxt = curMes+'/'+curAno + (fCargo?' — '+((CD[fCargo]||{}).label||fCargo):'');
+  var assunto = encodeURIComponent('[T&S/TCU] Planilha de Abono — '+periodoTxt);
+  var corpo = encodeURIComponent(
+    'Prezado(a),\n\n'+
+    'Segue em anexo a planilha de controle de abono referente ao período '+periodoTxt+'.\n\n'+
+    'Resumo:\n'+
+    '  • Total de colaboradores: '+rows.length+'\n'+
+    '  • Valor total do período: R$ '+totGeral.toFixed(2).replace('.',',')+'\n\n'+
+    'IMPORTANTE: O arquivo Abono_'+curMes+'_'+curAno+'.xls foi baixado automaticamente nesta operação — '+
+    'anexe-o manualmente a este e-mail antes de enviar.\n\n'+
+    'Atenciosamente,\n'+
+    'Priscila Pamplona Torres\n'+
+    'Gestora do Service Desk — Central de Serviços de TI\n'+
+    'Tribunal de Contas da União | Contrato T&S'
+  );
+  setTimeout(function(){
+    window.location.href = 'mailto:?subject='+assunto+'&body='+corpo;
+    toast('Planilha baixada! Anexe o arquivo ao e-mail que foi aberto.','ok');
+  }, 600);
 }
 
 // ── Gerencial JS (portal-ts original) ────
