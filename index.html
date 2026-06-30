@@ -284,6 +284,7 @@ tbody td.left{text-align:left}
 .cal-grid>div#cal-days{display:contents}
 .cal-dow{background:#f8f9fa;padding:8px;text-align:center;font-size:11px;font-weight:700;color:#6c757d;border-bottom:1px solid #dee2e6}
 .cal-day{min-height:90px;padding:6px;border-right:1px solid #f0f0f0;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background .15s}
+.cal-day-feriado{background:#FFF8F0}
 .cal-day:nth-child(7n){border-right:none}
 .cal-day:hover{background:#f0f4ff}
 .cal-day.other{background:#fafafa}
@@ -1199,7 +1200,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <span style="font-size:10px;background:var(--r50);color:var(--r600);border-radius:4px;padding:2px 7px;font-weight:600;">F = Falta</span>
       <span style="font-size:10px;background:var(--a50);color:var(--a600);border-radius:4px;padding:2px 7px;font-weight:600;">A = Atestado</span>
       <span style="font-size:10px;background:var(--b50);color:var(--b600);border-radius:4px;padding:2px 7px;font-weight:600;">H = Home Office</span>
-      <span style="font-size:10px;background:var(--gy50);color:var(--gy600);border-radius:4px;padding:2px 7px;font-weight:600;">DS = Descanso</span>
+      <span style="font-size:10px;background:var(--gy50);color:var(--gy600);border-radius:4px;padding:2px 7px;font-weight:600;">FE = Feriado</span>
       <span style="font-size:10px;background:#FEF9C3;color:#854D0E;border-radius:4px;padding:2px 7px;font-weight:600;">PF = Ponto Facultativo</span>
       <span style="font-size:10px;background:var(--pu50);color:var(--pu600);border-radius:4px;padding:2px 7px;font-weight:600;">OC = Ocorrência</span>
     </div>
@@ -2353,8 +2354,13 @@ function renderCal(){
     const isToday=d===now.getDate()&&calMonth===now.getMonth()&&calYear===now.getFullYear();
     const notes=(calNotes[key]||[]).slice(0,3);
     const noteHtml=notes.map(n=>`<div class="cal-note ${n.color||''}" title="${n.text}">${n.text.substring(0,22)}</div>`).join('');
-    html+=`<div class="cal-day${isToday?' today':''}" onclick="openCalModal('${key}')">
-      <div class="cal-day-num">${isToday?`<span style="background:#1F4E79;color:#fff;width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px">${d}</span>`:d}</div>${noteHtml}
+    // Feriado / Ponto Facultativo
+    const feriado = (typeof FERIADOS_GER_2026!=='undefined') ? FERIADOS_GER_2026[key] : null;
+    const feriadoHtml = feriado
+      ? `<div class="cal-note" title="${feriado.desc}" style="background:${feriado.tipo==='feriado'?'#FCEBEB':'#FEF9C3'};color:${feriado.tipo==='feriado'?'#A32D2D':'#854D0E'};font-weight:600">${feriado.tipo==='feriado'?'🔴':'🟡'} ${feriado.desc}</div>`
+      : '';
+    html+=`<div class="cal-day${isToday?' today':''}${feriado?' cal-day-feriado':''}" onclick="openCalModal('${key}')">
+      <div class="cal-day-num">${isToday?`<span style="background:#1F4E79;color:#fff;width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px">${d}</span>`:d}</div>${feriadoHtml}${noteHtml}
     </div>`;
   });
 
@@ -6060,7 +6066,7 @@ function rGerencial() {
     'A':  'background:#FAEEDA;color:#854F0B',
     'H':  'background:#E6F4FF;color:#185FA5',
     'PF': 'background:#FEF9C3;color:#854D0E',
-    'DS': 'background:#F1EFE8;color:#5F5E5A',
+    'FE': 'background:#F1EFE8;color:#5F5E5A',
     'OC': 'background:#EEEDFE;color:#534AB7',
     '':   'background:#fff;color:#444'
   };
@@ -6099,7 +6105,12 @@ function rGerencial() {
 
     dias.forEach(d => {
       const dKey = String(d).padStart(2,'0');
-      const val  = (rec[dKey] || '').toUpperCase();
+      const mesIdx = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'].indexOf(mes);
+      const isoKey = ano+'-'+String(mesIdx+1).padStart(2,'0')+'-'+dKey;
+      const feriadoInfo = FERIADOS_GER_2026[isoKey];
+      let val  = (rec[dKey] || '').toUpperCase();
+      // Auto-suggest FE for holidays if not manually set
+      if(!val && feriadoInfo) val = 'FE';
       const st   = STATUS_STYLE[val] || STATUS_STYLE[''];
       if (val==='P') cP++;
       else if (val==='F') cF++;
@@ -6108,7 +6119,7 @@ function rGerencial() {
       html += '<td style="text-align:center;border-bottom:1px solid #eee;border-left:1px solid #f0f0f0;padding:2px;">';
       html += '<select onchange="setGerVal(\'' + key + '\',\'' + dKey + '\',this.value)" '
         + 'style="font-size:9px;padding:1px 2px;border:.5px solid #ddd;border-radius:3px;width:38px;text-align:center;cursor:pointer;background:inherit;' + st + '">';
-      ['','P','F','A','H','PF','DS','OC'].forEach(opt => {
+      ['','P','F','A','H','PF','FE','OC'].forEach(opt => {
         html += '<option value="' + opt + '" ' + (val===opt?'selected':'') + ' style="' + (STATUS_STYLE[opt]||'') + '">' + (opt||'—') + '</option>';
       });
       html += '</select></td>';
