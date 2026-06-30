@@ -26,7 +26,8 @@
   window._fbGestaoStatus = fbStatus;
 
   // ── Save our data to portal-gestao doc ────────────────
-  window._fbGestaoSave = function(payload){
+  window._fbGestaoSave = function(payload, _retryCount){
+    _retryCount = _retryCount || 0;
     fbStatus('Salvando...','sync');
     var ver=Date.now().toString();
     window._fbGestaoOwnVer=ver;
@@ -46,7 +47,6 @@
         if(c.rg) slim.rg=c.rg;
         if(c.genero) slim.genero=c.genero;
         if(c.tipo_vinculo&&c.tipo_vinculo!=='Efetivo') slim.tipo_vinculo=c.tipo_vinculo;
-        // Only include docs/certs if they have non-Pendente values
         var docsChanged={}, certsChanged={};
         Object.entries(c.docs||{}).forEach(function(e){ if(e[1]&&e[1]!=='Pendente') docsChanged[e[0]]=e[1]; });
         Object.entries(c.certs||{}).forEach(function(e){ if(e[1]&&e[1]!=='Pendente'&&e[1]!=='N/A') certsChanged[e[0]]=e[1]; });
@@ -59,7 +59,6 @@
 
     var json=JSON.stringify(slimPayload);
     if(json.length > 900000){
-      // Still too big — strip docs/certs entirely
       slimPayload.colaboradores.forEach(function(c){ delete c.docs; delete c.certs; delete c.certs_agenda; });
       json=JSON.stringify(slimPayload);
     }
@@ -71,6 +70,12 @@
       source:    {stringValue:'portal-gestao'}
     }});
 
+    // Skip entirely if browser reports offline — avoids guaranteed-fail fetch + console noise
+    if(typeof navigator!=='undefined' && navigator.onLine===false){
+      fbStatus('Offline — salvo localmente','warn');
+      return Promise.resolve(null);
+    }
+
     return fetch(DOC_G+'?key='+API_KEY,
       {method:'PATCH',headers:{'Content-Type':'application/json'},body:body})
       .then(function(r){
@@ -79,8 +84,18 @@
         setTimeout(function(){fbStatus('Online ●','ok');},2000);
         return r.json();
       }).catch(function(e){
-        fbStatus('Erro — verifique a conexão','err');
-        console.warn('[FB gestao save]',e.message||e);
+        var msg = (e&&e.message)||String(e);
+        var isNetworkError = msg.indexOf('Failed to fetch')>=0 || msg.indexOf('NetworkError')>=0 || msg.indexOf('network')>=0;
+        // Retry transient network errors up to 2 times with backoff
+        if(isNetworkError && _retryCount < 2){
+          var delay = (_retryCount+1) * 2000;
+          fbStatus('Reconectando...','sync');
+          return new Promise(function(resolve){
+            setTimeout(function(){ resolve(window._fbGestaoSave(payload, _retryCount+1)); }, delay);
+          });
+        }
+        fbStatus(isNetworkError?'Sem conexão — salvo localmente':'Erro ao salvar','err');
+        console.warn('[FB gestao save]', msg);
         return null;
       });
   };
