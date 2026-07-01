@@ -4388,7 +4388,15 @@ function upHandleFiles(files){
           });
           saveUploadDocs();
           pending--;
-          if(pending===0){ upFilterDocs(); showQuickUploadResult(rows); }
+          if(pending===0){
+            saveData();
+            try{ renderEquip(); }catch(e){}
+            try{ renderAdm(); }catch(e){}
+            try{ renderTermos(); }catch(e){}
+            try{ renderCert(); }catch(e){}
+            try{ renderPendencias(); }catch(e){}
+            upFilterDocs(); showQuickUploadResult(rows);
+          }
         };
         reader2.readAsDataURL(file);
         return;
@@ -4404,7 +4412,17 @@ function upHandleFiles(files){
         rows.push({fileName:file.name,status:'ok',msg:`✅ ${colab.nome}${resolvedTipo?' · '+resolvedTipo:''}`,colab,tipo:resolvedTipo});
       saveUploadDocs();
       pending--;
-      if(pending===0){ upFilterDocs(); showQuickUploadResult(rows); }
+      if(pending===0){
+        saveData();
+        // Atualizar automaticamente as abas de controle
+        try{ renderEquip(); }catch(e){}
+        try{ renderAdm(); }catch(e){}
+        try{ renderTermos(); }catch(e){}
+        try{ renderCert(); }catch(e){}
+        try{ renderPendencias(); }catch(e){}
+        upFilterDocs();
+        showQuickUploadResult(rows);
+      }
     };
     reader.readAsDataURL(file);
   });
