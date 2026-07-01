@@ -95,7 +95,7 @@
           });
         }
         fbStatus(isNetworkError?'Sem conexão — salvo localmente':'Erro ao salvar','err');
-        console.warn('[FB gestao save]', msg);
+        if(!isNetworkError) console.warn('[FB gestao save]', msg);
         return null;
       });
   };
@@ -5715,9 +5715,15 @@ function syncFromLocalStorage(){
 // ── Push to Firestore (gestao doc) ────────
 function pushToFirestore(){
   if(!window._fbGestaoReady) return Promise.resolve(0);
+  // Skip if offline
+  if(typeof navigator!=='undefined' && navigator.onLine===false) return Promise.resolve(0);
   const payload=gestaoToPayload();
+  const hash=_hashPayload(payload);
+  // Skip if payload hasn't changed since last push
+  if(hash && hash===_lastGestaoPayloadHash) return Promise.resolve(0);
+  _lastGestaoPayloadHash=hash;
   localStorage.setItem('gestao_sync_cache',JSON.stringify(payload));
-  return window._fbGestaoSave(payload).then(()=>payload.colaboradores.length);
+  return window._fbGestaoSave(payload).then(()=>payload.colaboradores.length).catch(()=>0);
 }
 
 // ── Pull from Firestore (gestao doc) ──────
@@ -5783,6 +5789,12 @@ function showSyncToast(pulled, pushed){
 }
 
 // ── Live listeners ────────────────────────
+var _lastGestaoPayloadHash = '';
+
+function _hashPayload(p){
+  try{ return JSON.stringify(p).length+'_'+((p.colaboradores||[]).length); }catch(e){return '';}
+}
+
 window.addEventListener('fbgestao-ready', function(){
   // Listen to portal-ts changes (5s polling)
   window._fbTsListen(function(tsData){
@@ -5796,10 +5808,10 @@ window.addEventListener('fbgestao-ready', function(){
   });
   // Load portal-ts data for abono/gerencial tabs
   loadTsDataForTabs();
-  // Initial sync on load
-  runFullSync().then(({pulled})=>{
-    if(pulled>0) try{renderGeral();}catch(e){}
-  });
+  // Initial pull only (no push on load — avoids Failed to fetch on startup)
+  pullFromFirestore().then(n=>{
+    if(n>0) try{renderGeral();}catch(e){}
+  }).catch(()=>{});
 });
 
 // ── localStorage events (same machine, diff browsers) ─
