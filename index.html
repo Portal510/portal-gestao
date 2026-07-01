@@ -4849,6 +4849,7 @@ function upAtualizarStatus(colabId, tipo){
     _declSave();
     return;
   }
+  if(field.cat==='equip' && c[field.key]!==undefined && c[field.key]!=='N/A'){
     const isTel = c.cargo && c.cargo.includes('(TEL)');
     if(isTel && (field.key==='maleta'||field.key==='uniforme')) return;
     c[field.key] = 'Sim';  // equipamentos usam Sim/Não
