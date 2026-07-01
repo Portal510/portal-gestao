@@ -3939,19 +3939,20 @@ function initUpload(){
 }
 
 function upSyncDocs(){
-  // Reaplicar todos os documentos importados nas abas (Admissão, Termos, Equipamentos, Certif)
+  // Reaplicar todos os documentos importados nas abas — inclusive duplicados
   let count = 0;
   uploadedDocs.forEach(doc=>{
-    if(doc.pending || doc.duplicate) return; // só docs confirmados
+    if(doc.pending) return; // só pula os pendentes (sem colaborador/tipo definido)
     if(!doc.tipo || doc.tipo==='—' || doc.tipo==='— Não identificado —') return;
     if(doc.colabId == null) return;
-    const before = JSON.stringify(DATA.find(x=>x._id===doc.colabId));
+    const c = DATA.find(x=>x._id===doc.colabId);
+    if(!c) return;
+    const before = JSON.stringify({docs:c.docs, certs:c.certs, maleta:c.maleta});
     upAtualizarStatus(doc.colabId, doc.tipo);
-    const after = JSON.stringify(DATA.find(x=>x._id===doc.colabId));
+    const after = JSON.stringify({docs:c.docs, certs:c.certs, maleta:c.maleta});
     if(before !== after) count++;
   });
   saveData();
-  // Refresh all control tabs
   try{ renderEquip(); }catch(e){}
   try{ renderAdm(); }catch(e){}
   try{ renderTermos(); }catch(e){}
