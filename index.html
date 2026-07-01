@@ -3883,6 +3883,8 @@ const TIPO_TO_FIELD = {
   'Decl. Não Parentesco':   {cat:'docs', key:'Decl. Não Parentesco'},
   'Termo Vale Transporte':  {cat:'docs', key:'Termo Vale Transporte'},
   'Termo de Conduta T&S':   {cat:'docs', key:'Termo de Conduta T&S'},
+  // equipamentos
+  'Termo Maleta':            {cat:'equip', key:'maleta'},
   // certs
   'HDI SCA':                {cat:'certs', key:'HDI SCA'},
   'HDI CSR':                {cat:'certs', key:'HDI CSR'},
@@ -3904,6 +3906,7 @@ const TIPO_CAT = {
   'Contrato de Trabalho':'Admissão','Termo TCU':'Documentos TCU','Cadastro TCU':'Documentos TCU',
   'Decl. Não Parentesco':'Documentos TCU','Termo Vale Transporte':'Termos T&S',
   'Termo de Conduta T&S':'Termos T&S',
+  'Termo Maleta':'Equipamentos',
   'HDI SCA':'Certificações','HDI CSR':'Certificações','M365 Fundamentals':'Certificações',
   'MD-100 ou MD-102':'Certificações','HDI DAST':'Certificações','AZ-900':'Certificações',
   'ITIL Foundations v4':'Certificações','HDI SCTL':'Certificações','HDI KCS':'Certificações',
@@ -4406,6 +4409,9 @@ function upAtualizarStatus(colabId, tipo){
   if(field.cat==='certs' && c.certs && c.certs[field.key]!==undefined && c.certs[field.key]!=='N/A'){
     c.certs[field.key] = 'Entregue';
   }
+  if(field.cat==='equip' && c[field.key]!==undefined && c[field.key]!=='N/A'){
+    c[field.key] = 'Sim';  // equipamentos usam Sim/Não
+  }
   saveData();
 }
 
@@ -4502,6 +4508,7 @@ function upRemover(id){
     if(c && field){
       if(field.cat==='docs' && c.docs[field.key]==='Entregue') c.docs[field.key]='Pendente';
       if(field.cat==='certs' && c.certs[field.key]==='Entregue') c.certs[field.key]='Pendente';
+      if(field.cat==='equip' && c[field.key]==='Sim') c[field.key]='Pendente';
       saveData();
     }
   }
