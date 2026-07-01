@@ -2067,9 +2067,9 @@ function renderEquip(){
     <td>${editBadge(c.docs?.['Termo TCU']||'Pendente',c._id,'docs.Termo TCU')}</td>
     <td>${editBadge(c.docs?.['Cadastro TCU']||'Pendente',c._id,'docs.Cadastro TCU')}</td>
     <td>${editBadge(c.cracha,c._id,'cracha')}</td>
-    <td>${editBadge(c.maleta,c._id,'maleta')}</td>
+    <td>${c.cargo.includes('(TEL)') ? badge('N/A') : editBadge(c.maleta,c._id,'maleta')}</td>
     <td>${badge('N/A')}</td>
-    <td>${editBadge(c.uniforme,c._id,'uniforme')}</td>
+    <td>${c.cargo.includes('(TEL)') ? badge('N/A') : editBadge(c.uniforme,c._id,'uniforme')}</td>
     <td style="font-size:11px;color:#999">—</td>
   </tr>`).join(''):`<tr><td colspan="13" class="empty">Nenhum resultado</td></tr>`;
   updateStatsEquip(rows);
@@ -4491,6 +4491,8 @@ function upAtualizarStatus(colabId, tipo){
     c.certs[field.key] = 'Entregue';
   }
   if(field.cat==='equip' && c[field.key]!==undefined && c[field.key]!=='N/A'){
+    const isTel = c.cargo && c.cargo.includes('(TEL)');
+    if(isTel && (field.key==='maleta'||field.key==='uniforme')) return;
     c[field.key] = 'Sim';  // equipamentos usam Sim/Não
   }
   saveData();
@@ -5241,8 +5243,10 @@ function getPendencias(c){
     if(v==='Pendente' && !certSatisfied(c, k))
       items.push({cat:'certs',label:k,tipo:'cert'});
   });
-  // Equipamentos
+  // Equipamentos — maleta e uniforme não se aplicam para TEL
+  const isTel = c.cargo && c.cargo.includes('(TEL)');
   ['celular_tablet','cracha','maleta','uniforme'].forEach(k=>{
+    if(isTel && (k==='maleta'||k==='uniforme')) return; // N/A para TEL
     if(c[k]==='Pendente') items.push({cat:'equip',label:k.replace('_',' '),tipo:'equip'});
   });
   return items;
