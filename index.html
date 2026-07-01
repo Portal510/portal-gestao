@@ -4335,9 +4335,34 @@ function upHandleFiles(files){
     const id  = Date.now().toString()+Math.random().toString(36).slice(2,6);
     const reader = new FileReader();
     reader.onload = (e)=>{
-      const dup = uploadedDocs.find(d=>d.colabId===resolvedColabId&&d.tipo===(resolvedTipo||'—')&&d.fileName===file.name);
+      const dup = uploadedDocs.find(d=>
+        d.colabId===resolvedColabId &&
+        d.tipo===(resolvedTipo||'—') &&
+        !d.pending
+      );
       if(dup){
-        rows.push({fileName:file.name,status:'dup',msg:'Duplicado — já existe',colab,tipo:resolvedTipo});
+        // File already exists for this colab+tipo — add with dup flag visible in list
+        rows.push({fileName:file.name,status:'dup',msg:`Duplicado — ${colab.nome} já possui "${resolvedTipo||'este tipo'}" importado`,colab,tipo:resolvedTipo});
+        // Still add to list but flagged as duplicate
+        const id2=Date.now().toString()+Math.random().toString(36).slice(2,6);
+        const ext2=file.name.split('.').pop().toLowerCase();
+        const reader2=new FileReader();
+        reader2.onload=(e2)=>{
+          uploadedDocs.unshift({
+            id:id2,colabId:resolvedColabId,colabNome:colab.nome,colabUf:colab.uf,
+            tipo:resolvedTipo||'—',cat:TIPO_CAT[resolvedTipo]||'Outros',
+            fileName:file.name,ext:ext2,size:file.size,
+            dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+            dataUrl:e2.target.result,
+            duplicate:true,
+          });
+          saveUploadDocs();
+          pending--;
+          if(pending===0){ upFilterDocs(); showQuickUploadResult(rows); }
+        };
+        reader2.readAsDataURL(file);
+        return;
+      }
       } else {
         uploadedDocs.unshift({
           id, colabId:resolvedColabId, colabNome:colab.nome, colabUf:colab.uf,
@@ -4480,10 +4505,11 @@ function upFilterDocs(){
     const icon = FILE_ICONS[d.ext]||FILE_ICONS.default;
     const sizeStr = d.size>1048576 ? (d.size/1048576).toFixed(1)+'MB' : Math.round(d.size/1024)+'KB';
     const isPending = d.pending === true;
-    return `<div class="up-card" style="${isPending?'border-left:3px solid #C55A11;background:#FFF8F0;':''}">
+    const isDup = d.duplicate === true;
+    return `<div class="up-card" style="${isPending?'border-left:3px solid #C55A11;background:#FFF8F0;':isDup?'border-left:3px solid #a32d2d;background:#FFF5F5;':''}">
       <div class="up-card-icon">${icon}</div>
       <div class="up-card-info">
-        <div class="up-card-nome" title="${d.fileName}">${d.fileName}</div>
+        <div class="up-card-nome" title="${d.fileName}">${d.fileName}${isDup?' <span style="background:#FFE0E0;color:#a32d2d;font-size:10px;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:6px">⚠️ DUPLICADO</span>':''}</div>
         <div class="up-card-meta" style="margin-top:4px">
           <span class="up-badge up-badge-tipo" style="${isPending?'background:#FFE0C0;color:#7A3000':''}">${d.tipo}</span>
           <span style="margin-left:8px;color:${isPending?'#C55A11':'#58a6ff'};font-weight:600">${d.colabNome}</span>
@@ -4504,7 +4530,9 @@ function upFilterDocs(){
       <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0">
         ${isPending
           ? `<span class="up-badge" style="background:#FFE0C0;color:#7A3000;font-weight:600">⏳ Pendente</span>`
-          : `<span class="up-badge up-badge-ok">✅ Entregue</span>`}
+          : isDup
+            ? `<span class="up-badge" style="background:#FFE0E0;color:#a32d2d;font-weight:600">⚠️ Duplicado</span>`
+            : `<span class="up-badge up-badge-ok">✅ Entregue</span>`}
         <div style="display:flex;gap:6px;margin-top:4px">
           ${d.dataUrl?`<button class="up-btn" onclick="upDownloadFile('${d.id}')" title="Baixar com nome padronizado">⬇</button>`:''}
           ${d.dataUrl?`<button class="up-btn" onclick="upVisualizar('${d.id}')" title="Visualizar">👁</button>`:''}
@@ -5146,15 +5174,44 @@ const PEND_CAT_MAP = {
   termos: ['Termo Vale Transporte','Termo de Conduta T&S'],
 };
 
+// ── Grupos de certificações alternativas (OR) ─────────────────
+// Se qualquer uma do grupo estiver Entregue/Agendado, as outras não são pendência
+const CERT_OR_GROUPS = {
+  // TEL: HDI SCA OU HDI CSR (precisa de pelo menos uma)
+  'Analista de suporte telefônico (TEL)': [['HDI SCA','HDI CSR']],
+  // EST: HDI DAST OU HDI CSR
+  'Analista de suporte (EST)':            [['HDI DAST','HDI CSR']],
+  // AE: HDI DAST OU HDI CSR
+  'Analista de suporte especializado (AE)':[['HDI DAST','HDI CSR']],
+  // AP: HDI DAST OU HDI SCA OU HDI CSR
+  'Administração de parque tecnológico (AP)':[['HDI DAST','HDI SCA','HDI CSR']],
+  // Gestor de SD: precisa de 2 entre SCTL, SCM, SCD, XLA Foundation
+  'Gestor de Service desk':               [['HDI SCTL','HDI SCM','HDI SCD','XLA Foundation']],
+};
+
+function certSatisfied(c, certName){
+  // Returns true if this cert is already covered by an OR group
+  const groups = CERT_OR_GROUPS[c.cargo] || [];
+  for(const group of groups){
+    if(!group.includes(certName)) continue;
+    // Check if any other member of this group is Entregue or Agendado
+    const satisfied = group.some(other => other !== certName &&
+      (c.certs[other]==='Entregue' || c.certs[other]==='Agendado'));
+    if(satisfied) return true;
+  }
+  return false;
+}
+
 function getPendencias(c){
   const items = [];
   // Docs
   Object.entries(c.docs||{}).forEach(([k,v])=>{
     if(v==='Pendente') items.push({cat:'docs',label:k,tipo:'doc'});
   });
-  // Certs
+  // Certs — respeita grupos OR
   Object.entries(c.certs||{}).forEach(([k,v])=>{
-    if(v==='Pendente') items.push({cat:'certs',label:k,tipo:'cert'});
+    if(v==='Pendente' && !certSatisfied(c, k))
+      items.push({cat:'certs',label:k,tipo:'cert'});
   });
   // Equipamentos
   ['celular_tablet','cracha','maleta','uniforme'].forEach(k=>{
