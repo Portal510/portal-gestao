@@ -4363,35 +4363,63 @@ function showQuickUploadResult(rows){
   const ok  = rows.filter(r=>r.status==='ok').length;
   const dup = rows.filter(r=>r.status==='dup').length;
   const noid= rows.filter(r=>['manual','no-colab','no-tipo'].includes(r.status)).length;
-  if(ok>0 || dup>0){
-    // Show brief toast
-    showSyncToast && showSyncToast(ok,0);
-  }
+
+  if(ok>0) try{ showSyncToast && showSyncToast(ok,0); }catch(e){}
+
   if(noid>0){
-    // Show result panel for unidentified files
+    // Save unidentified files as "pending" entries in uploadedDocs so they appear in the list
+    rows.filter(r=>['manual','no-colab','no-tipo'].includes(r.status)).forEach(r=>{
+      if(!r._fileObj && !r.dataUrl) return; // nothing to store
+      const id = Date.now().toString()+Math.random().toString(36).slice(2,6);
+      const ext = r.fileName.split('.').pop().toLowerCase();
+      const pendingEntry = {
+        id,
+        colabId:   r.colab?._id ?? null,
+        colabNome: r.colab?.nome  ?? '— Não identificado —',
+        colabUf:   r.colab?.uf   ?? '—',
+        tipo:      r.tipo  ?? '— Não identificado —',
+        cat:       r.tipo ? (TIPO_CAT[r.tipo]||'Outros') : 'Pendente',
+        fileName:  r.fileName,
+        ext,
+        size:      r._fileObj?.size ?? 0,
+        dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+        dataUrl:   r.dataUrl || null,
+        pending:   true,   // flag: precisa de preenchimento manual
+        _fileObj:  undefined,
+      };
+      // If we have a File object, read it as dataUrl
+      if(r._fileObj && !r.dataUrl){
+        const fr = new FileReader();
+        fr.onload = e2 => {
+          pendingEntry.dataUrl = e2.target.result;
+          // Update existing entry
+          const idx = uploadedDocs.findIndex(d=>d.id===id);
+          if(idx>=0) uploadedDocs[idx].dataUrl = e2.target.result;
+          saveUploadDocs();
+          upFilterDocs();
+        };
+        fr.readAsDataURL(r._fileObj);
+      }
+      // Avoid duplicates
+      if(!uploadedDocs.find(d=>d.fileName===r.fileName&&d.pending)){
+        uploadedDocs.unshift(pendingEntry);
+      }
+    });
+    saveUploadDocs();
+    upFilterDocs();
+
+    // Show brief info panel (not blocking)
     const resultDiv=document.getElementById('up-batch-result');
-    resultDiv.style.display='block';
-    resultDiv.innerHTML=`
-      <div style="font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:10px">
-        ✅ ${ok} importado(s) &nbsp;·&nbsp; ⏩ ${dup} duplicado(s) &nbsp;·&nbsp; <span style="color:#7A5000">⚠️ ${noid} não identificado(s)</span>
-      </div>`+
-      rows.filter(r=>['manual','no-colab','no-tipo'].includes(r.status)).map(r=>`
-        <div style="padding:6px 0;border-bottom:1px solid #dee2e6;font-size:12px">
-          <span style="color:#7A5000">⚠️</span>
-          <span style="color:#1a1a2e;font-weight:500;margin-left:6px">${r.fileName}</span>
-          <span style="color:#6c757d;margin-left:8px">${r.msg}</span>
-          <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap">
-            ${!r.colab?`<select class="up-select" style="font-size:11px;padding:3px 6px" onchange="upBatchSetColab(this,'${r.fileName}')">
-              <option value="">Selecionar colaborador…</option>
-              ${[...DATA].sort((a,b)=>a.nome.localeCompare(b.nome)).map(c=>`<option value="${c._id}">${c.nome} (${c.uf})</option>`).join('')}
-            </select>`:''}
-            ${!r.tipo?`<select class="up-select" style="font-size:11px;padding:3px 6px" onchange="upBatchSetTipo(this,'${r.fileName}')">
-              <option value="">Selecionar tipo…</option>
-              ${Object.keys(TIPO_TO_FIELD).map(t=>`<option value="${t}">${t}</option>`).join('')}
-            </select>`:''}
-            <button class="btn-primary" style="font-size:12px;padding:4px 12px" onclick="upBatchConfirmRow('${r.fileName}')">✓ Confirmar</button>
-          </div>
-        </div>`).join('');
+    if(resultDiv){
+      resultDiv.style.display='block';
+      resultDiv.innerHTML=`
+        <div style="font-size:13px;font-weight:600;color:#7A5000;margin-bottom:6px">
+          ⚠️ ${noid} arquivo(s) não identificado(s) automaticamente foram adicionados à lista como <b>Pendente</b>.
+        </div>
+        <div style="font-size:12px;color:#6c757d">
+          Clique no ícone ✏️ em cada linha para definir o colaborador e tipo manualmente, ou em 🗑 para excluir.
+        </div>`;
+    }
     window._batchPendingRows = rows;
     window._batchPendingFiles = {};
     rows.forEach(r=>{ if(r._fileObj) window._batchPendingFiles[r.fileName]=r._fileObj; });
@@ -4451,18 +4479,32 @@ function upFilterDocs(){
   lista.innerHTML = docs.map(d=>{
     const icon = FILE_ICONS[d.ext]||FILE_ICONS.default;
     const sizeStr = d.size>1048576 ? (d.size/1048576).toFixed(1)+'MB' : Math.round(d.size/1024)+'KB';
-    return `<div class="up-card">
+    const isPending = d.pending === true;
+    return `<div class="up-card" style="${isPending?'border-left:3px solid #C55A11;background:#FFF8F0;':''}">
       <div class="up-card-icon">${icon}</div>
       <div class="up-card-info">
         <div class="up-card-nome" title="${d.fileName}">${d.fileName}</div>
         <div class="up-card-meta" style="margin-top:4px">
-          <span class="up-badge up-badge-tipo">${d.tipo}</span>
-          <span style="margin-left:8px;color:#58a6ff;font-weight:600">${d.colabNome}</span>
+          <span class="up-badge up-badge-tipo" style="${isPending?'background:#FFE0C0;color:#7A3000':''}">${d.tipo}</span>
+          <span style="margin-left:8px;color:${isPending?'#C55A11':'#58a6ff'};font-weight:600">${d.colabNome}</span>
           <span style="margin-left:6px;color:#6c757d">· ${d.colabUf} · ${sizeStr} · ${d.dataUpload}</span>
         </div>
+        ${isPending?`<div style="display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;align-items:center">
+          <select class="up-select" style="font-size:11px;padding:3px 7px;max-width:230px" onchange="upPendingSetColab('${d.id}',this.value)">
+            <option value="">${d.colabId!=null?'Alterar colaborador…':'— Selecionar colaborador —'}</option>
+            ${[...DATA].sort((a,b)=>a.nome.localeCompare(b.nome)).map(c=>`<option value="${c._id}" ${c._id===d.colabId?'selected':''}>${c.nome} (${c.uf})</option>`).join('')}
+          </select>
+          <select class="up-select" style="font-size:11px;padding:3px 7px;max-width:200px" onchange="upPendingSetTipo('${d.id}',this.value)">
+            <option value="">${d.tipo!=='— Não identificado —'?'Alterar tipo…':'— Selecionar tipo —'}</option>
+            ${Object.keys(TIPO_TO_FIELD).map(t=>`<option value="${t}" ${t===d.tipo?'selected':''}>${t}</option>`).join('')}
+          </select>
+          <button class="btn-primary" style="font-size:11px;padding:4px 12px;background:#375623;border-color:#375623" onclick="upPendingConfirmar('${d.id}')">✓ Confirmar</button>
+        </div>`:''}
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0">
-        <span class="up-badge up-badge-ok">✅ Entregue</span>
+        ${isPending
+          ? `<span class="up-badge" style="background:#FFE0C0;color:#7A3000;font-weight:600">⏳ Pendente</span>`
+          : `<span class="up-badge up-badge-ok">✅ Entregue</span>`}
         <div style="display:flex;gap:6px;margin-top:4px">
           ${d.dataUrl?`<button class="up-btn" onclick="upDownloadFile('${d.id}')" title="Baixar com nome padronizado">⬇</button>`:''}
           ${d.dataUrl?`<button class="up-btn" onclick="upVisualizar('${d.id}')" title="Visualizar">👁</button>`:''}
@@ -4471,6 +4513,39 @@ function upFilterDocs(){
       </div>
     </div>`;
   }).join('');
+}
+
+// ── Pending doc manual fill ───────────────
+function upPendingSetColab(id, colabId){
+  const d = uploadedDocs.find(x=>x.id===id);
+  if(!d) return;
+  const c = DATA.find(x=>x._id===parseInt(colabId));
+  if(!c) return;
+  d.colabId = c._id; d.colabNome = c.nome; d.colabUf = c.uf;
+  saveUploadDocs(); upFilterDocs();
+}
+
+function upPendingSetTipo(id, tipo){
+  const d = uploadedDocs.find(x=>x.id===id);
+  if(!d) return;
+  d.tipo = tipo; d.cat = TIPO_CAT[tipo]||'Outros';
+  saveUploadDocs(); upFilterDocs();
+}
+
+function upPendingConfirmar(id){
+  const d = uploadedDocs.find(x=>x.id===id);
+  if(!d) return;
+  if(!d.colabId && d.colabNome==='— Não identificado —'){
+    alert('Selecione o colaborador antes de confirmar.'); return;
+  }
+  if(!d.tipo || d.tipo==='— Não identificado —'){
+    alert('Selecione o tipo do documento antes de confirmar.'); return;
+  }
+  // Mark as confirmed — apply status
+  d.pending = false;
+  upAtualizarStatus(d.colabId, d.tipo);
+  saveUploadDocs(); upFilterDocs();
+  toast('Documento confirmado e marcado como Entregue!','ok');
 }
 
 function upVisualizar(id){
