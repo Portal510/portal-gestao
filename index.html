@@ -1084,6 +1084,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   </div>
   <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
     <button class="up-btn" onclick="upAtualizar()" style="background:#E8F0FE;border-color:#2E75B6;color:#1F4E79;font-weight:600">🔄 Atualizar</button>
+    <button class="up-btn" onclick="upSyncDocs()" style="background:#1F4E79;color:#fff;border-color:#1F4E79;font-weight:600" title="Sincronizar status dos documentos com as demais abas">🔗 Sincronizar</button>
     <button class="up-btn" onclick="toggleConfigDownload()" style="font-weight:600">⚙️ Config. Download</button>
     <button class="up-btn" onclick="upBaixarZip()" style="background:#375623;color:#fff;border-color:#375623;font-weight:600">📥 Baixar ZIP</button>
     <button class="up-btn" onclick="upSincronizarBaixar()" style="background:#1F4E79;color:#fff;border-color:#1F4E79;font-weight:600">⬆ Sincronizar + Baixar ZIP</button>
@@ -3935,6 +3936,31 @@ function initUpload(){
     if(currentVal) sel.value = currentVal;
   });
   upFilterDocs();
+}
+
+function upSyncDocs(){
+  // Reaplicar todos os documentos importados nas abas (Admissão, Termos, Equipamentos, Certif)
+  let count = 0;
+  uploadedDocs.forEach(doc=>{
+    if(doc.pending || doc.duplicate) return; // só docs confirmados
+    if(!doc.tipo || doc.tipo==='—' || doc.tipo==='— Não identificado —') return;
+    if(doc.colabId == null) return;
+    const before = JSON.stringify(DATA.find(x=>x._id===doc.colabId));
+    upAtualizarStatus(doc.colabId, doc.tipo);
+    const after = JSON.stringify(DATA.find(x=>x._id===doc.colabId));
+    if(before !== after) count++;
+  });
+  saveData();
+  // Refresh all control tabs
+  try{ renderEquip(); }catch(e){}
+  try{ renderAdm(); }catch(e){}
+  try{ renderTermos(); }catch(e){}
+  try{ renderCert(); }catch(e){}
+  upFilterDocs();
+  toast(count > 0
+    ? `✅ Sincronizado! ${count} campo(s) atualizado(s) nas abas de controle.`
+    : `✅ Documentos já sincronizados — nenhuma alteração necessária.`,
+    'ok');
 }
 
 function upAtualizar(){
