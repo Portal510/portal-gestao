@@ -4363,8 +4363,7 @@ function upHandleFiles(files){
         reader2.readAsDataURL(file);
         return;
       }
-      } else {
-        uploadedDocs.unshift({
+      uploadedDocs.unshift({
           id, colabId:resolvedColabId, colabNome:colab.nome, colabUf:colab.uf,
           tipo:resolvedTipo||'—', cat:TIPO_CAT[resolvedTipo]||'Outros',
           fileName:file.name, ext, size:file.size,
@@ -4373,7 +4372,6 @@ function upHandleFiles(files){
         });
         if(resolvedTipo) upAtualizarStatus(resolvedColabId, resolvedTipo);
         rows.push({fileName:file.name,status:'ok',msg:`✅ ${colab.nome}${resolvedTipo?' · '+resolvedTipo:''}`,colab,tipo:resolvedTipo});
-      }
       saveUploadDocs();
       pending--;
       if(pending===0){ upFilterDocs(); showQuickUploadResult(rows); }
