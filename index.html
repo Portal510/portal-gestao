@@ -488,6 +488,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <div class="tab" onclick="showTab('certif',this)"><span class="tab-icon">🏆</span><span class="tab-label">Certificações</span></div>
     <div class="tab" onclick="showTab('uniforme',this)"><span class="tab-icon">👔</span><span class="tab-label">Uniforme</span></div>
     <div class="tab" onclick="showTab('upload',this)"><span class="tab-icon">📎</span><span class="tab-label">Documentos</span></div>
+    <div class="tab" onclick="showTab('declaracoes',this)"><span class="tab-icon">📋</span><span class="tab-label">Declarações</span></div>
 
     <div class="sidebar-section">Comunicação</div>
     <div class="tab" onclick="showTab('comunicados',this)"><span class="tab-icon">📧</span><span class="tab-label">Comunicados</span></div>
@@ -993,6 +994,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           <optgroup label="── Equipamentos">
             <option value="Termo Maleta">Termo Maleta</option>
           </optgroup>
+          <optgroup label="── Declarações Mensais">
+            <option value="Decl. Desktop/Internet">Decl. Desktop/Internet</option>
+            <option value="Decl. Locação Equipamento">Decl. Locação Equipamento</option>
+          </optgroup>
         </select>
       </div>
       <div style="flex:1;min-width:220px" id="up-field-colab">
@@ -1074,7 +1079,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </div>
     <select id="up-fil-tipo" class="up-select" onchange="upFilterDocs()">
       <option value="">Todos os tipos</option>
-      <option>Admissão</option><option>Documentos TCU</option><option>Termos T&S</option><option>Certificações</option><option>Equipamentos</option><option>Termo Maleta</option>
+      <option>Admissão</option><option>Documentos TCU</option><option>Termos T&S</option><option>Certificações</option><option>Equipamentos</option><option>Termo Maleta</option><option>Declarações</option>
     </select>
     <select id="up-fil-colab" class="up-select" onchange="upFilterDocs()">
       <option value="">Todos os colaboradores</option>
@@ -1331,6 +1336,79 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </div>
   </div>
 </div>
+</div>
+</div>
+
+<!-- ═══════════════════ DECLARAÇÕES ═══════════════════ -->
+<div id="tab-declaracoes" style="display:none">
+<div style="padding:20px 24px">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+    <div>
+      <div style="font-size:18px;font-weight:700;color:#1F4E79">📋 Controle de Declarações — Equipamentos e Internet</div>
+      <div style="font-size:12px;color:#6c757d;margin-top:3px">Declaração de ajuste de custo (Desktop/Internet) e Declaração de locação de equipamentos · Preenchimento mensal</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <select id="decl-mes" onchange="renderDeclaracoes()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
+        <option>Janeiro</option><option>Fevereiro</option><option>Março</option><option>Abril</option>
+        <option>Maio</option><option>Junho</option><option>Julho</option><option>Agosto</option>
+        <option>Setembro</option><option>Outubro</option><option>Novembro</option><option>Dezembro</option>
+      </select>
+      <select id="decl-ano" onchange="renderDeclaracoes()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
+        <option>2025</option><option selected>2026</option><option>2027</option><option>2028</option><option>2029</option><option>2030</option>
+      </select>
+      <select id="decl-uf" onchange="renderDeclaracoes()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
+        <option value="">Todos os estados</option>
+      </select>
+      <button onclick="exportDeclaracoes()" style="padding:6px 14px;background:#1F4E79;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">⬇ Exportar XLSX</button>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
+    <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:12px 16px">
+      <div style="font-size:11px;color:#6c757d;margin-bottom:4px">Colaboradores</div>
+      <div id="decl-kpi-total" style="font-size:22px;font-weight:700;color:#1F4E79">0</div>
+    </div>
+    <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:12px 16px">
+      <div style="font-size:11px;color:#6c757d;margin-bottom:4px">Desktop/Internet entregues</div>
+      <div id="decl-kpi-desk" style="font-size:22px;font-weight:700;color:#375623">0</div>
+    </div>
+    <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:12px 16px">
+      <div style="font-size:11px;color:#6c757d;margin-bottom:4px">Locação Equip. entregues</div>
+      <div id="decl-kpi-cel" style="font-size:22px;font-weight:700;color:#185FA5">0</div>
+    </div>
+    <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:12px 16px">
+      <div style="font-size:11px;color:#6c757d;margin-bottom:4px">Pendentes</div>
+      <div id="decl-kpi-pend" style="font-size:22px;font-weight:700;color:#A32D2D">0</div>
+    </div>
+  </div>
+
+  <!-- Legenda das nomenclaturas -->
+  <div style="background:#E8F0FE;border:1px solid #2E75B6;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#1F4E79">
+    <b>📌 Nomenclatura dos arquivos:</b> UF – Nome – Mês<br>
+    <span style="color:#6c757d">Exemplos: <code>GO – João da Silva – Junho.pdf</code> &nbsp;·&nbsp; <code>DF – Maria Souza – Março.pdf</code></span>
+  </div>
+
+  <!-- Tabela -->
+  <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;overflow:hidden">
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr>
+            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left;white-space:nowrap">#</th>
+            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left;white-space:nowrap">Colaborador</th>
+            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left;white-space:nowrap">UF</th>
+            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left;white-space:nowrap">Cargo</th>
+            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:center;white-space:nowrap">Decl. Desktop/Internet</th>
+            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:center;white-space:nowrap">Decl. Locação Equipamento</th>
+          </tr>
+        </thead>
+        <tbody id="decl-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
 </div>
 </div>
 
@@ -2054,6 +2132,53 @@ function escQ(s){ return (s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
 function inativoStyle(c){ return c.status==='inativo'?'opacity:.5;background:#f8f8f8;':''; }
 function inativoBadge(c){ return c.status==='inativo'?`<span style="font-size:10px;font-weight:600;background:#FFE0E0;color:#7A0000;padding:1px 6px;border-radius:8px;margin-left:5px">Inativo</span>`:''; }
 
+
+// ── N/A por cargo (equipamentos) ─────────────────────
+const CARGO_NA_EQUIP = {
+  // Cargos que NÃO recebem celular/tablet
+  sem_celular: [
+    'Analista de suporte telefônico (TEL)',
+    'Cabeamento estruturado (CE)',
+    'Analista de suporte especializado (AC)',
+    'Supervisor de suporte (STEL)',
+    'Supervisor de suporte (BSB)',
+    'Supervisor de suporte (EST)',
+    'Supervisor de suporte (SAE)',
+    'Supervisor de suporte (SCHA)',
+    'Gestor de conhecimento',
+    'Gestor de Service desk',
+    'Administração de parque tecnológico (AP)',
+  ],
+  // Cargos que NÃO recebem maleta
+  sem_maleta: [
+    'Analista de suporte telefônico (TEL)',
+    'Analista de suporte especializado (AC)',
+    'Supervisor de suporte (STEL)',
+    'Supervisor de suporte (BSB)',
+    'Supervisor de suporte (EST)',
+    'Supervisor de suporte (SAE)',
+    'Supervisor de suporte (SCHA)',
+    'Gestor de conhecimento',
+    'Gestor de Service desk',
+  ],
+  // Cargos que NÃO usam uniforme
+  sem_uniforme: [
+    'Analista de suporte telefônico (TEL)',
+    'Cabeamento estruturado (CE)',
+    'Analista de suporte especializado (AC)',
+    'Administração de parque tecnológico (AP)',
+    'Supervisor de suporte (STEL)',
+    'Supervisor de suporte (EST)',
+    'Supervisor de suporte (SCHA)',
+    'Gestor de conhecimento',
+    'Gestor de Service desk',
+  ],
+};
+function cargoNa(cargo, campo){
+  if(!CARGO_NA_EQUIP[campo]) return false;
+  return CARGO_NA_EQUIP[campo].includes(cargo);
+}
+
 function renderEquip(){
   populateCargoFilter('filter-cargo-equip');
   const rows=filterData(document.getElementById('search-equip').value,document.getElementById('filter-cargo-equip').value);
@@ -2062,14 +2187,14 @@ function renderEquip(){
     <td class="left" style="cursor:pointer;color:#1F4E79;font-weight:600" onclick="openDetail(${c._id})">${c.nome}${inativoBadge(c)}</td>
     <td><b>${c.uf}</b></td>
     <td class="left" style="font-size:11px"><span class="badge-cargo">${c.cargo}</span></td>
-    <td>${editBadge(c.celular_tablet,c._id,'celular_tablet')}</td>
+    <td>${cargoNa(c.cargo,'sem_celular')?badge('N/A'):editBadge(c.celular_tablet,c._id,'celular_tablet')}</td>
     <td style="font-size:11px">${c.celular!=='Pendente'?c.celular:badge('Pendente')}</td>
     <td>${editBadge(c.docs?.['Termo TCU']||'Pendente',c._id,'docs.Termo TCU')}</td>
     <td>${editBadge(c.docs?.['Cadastro TCU']||'Pendente',c._id,'docs.Cadastro TCU')}</td>
     <td>${editBadge(c.cracha,c._id,'cracha')}</td>
-    <td>${c.cargo.includes('(TEL)') ? badge('N/A') : editBadge(c.maleta,c._id,'maleta')}</td>
+    <td>${cargoNa(c.cargo,'sem_maleta')?badge('N/A'):editBadge(c.maleta,c._id,'maleta')}</td>
     <td>${badge('N/A')}</td>
-    <td>${c.cargo.includes('(TEL)') ? badge('N/A') : editBadge(c.uniforme,c._id,'uniforme')}</td>
+    <td>${cargoNa(c.cargo,'sem_uniforme')?badge('N/A'):editBadge(c.uniforme,c._id,'uniforme')}</td>
     <td style="font-size:11px;color:#999">—</td>
   </tr>`).join(''):`<tr><td colspan="13" class="empty">Nenhum resultado</td></tr>`;
   updateStatsEquip(rows);
@@ -2347,7 +2472,7 @@ function clearFilters(tab){
 }
 
 // TAB SWITCHING
-const tabIds=['geral','equipamentos','admissao','termos','certif','calendario','comunicados','predef','uniforme','upload','requisitos','pendencias','contrata','abono','gerencial'];
+const tabIds=['geral','equipamentos','admissao','termos','certif','calendario','comunicados','predef','uniforme','upload','declaracoes','requisitos','pendencias','contrata','abono','gerencial'];
 // ── Sidebar toggle ────────────────────────
 function toggleSidebar(){
   const sidebar=document.getElementById('sidebar');
@@ -2367,7 +2492,7 @@ function showTab(id,el){
   });
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,requisitos:renderRequisitos,pendencias:renderPendencias,contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){}},gerencial:()=>{try{rGerencial();}catch(e){}}};
+  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:renderDeclaracoes,requisitos:renderRequisitos,pendencias:renderPendencias,contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){}},gerencial:()=>{try{rGerencial();}catch(e){}}};
   if(renders[id]) renders[id]();
 }
 
@@ -3912,6 +4037,9 @@ const TIPO_TO_FIELD = {
   'Termo de Conduta T&S':   {cat:'docs', key:'Termo de Conduta T&S'},
   // equipamentos
   'Termo Maleta':            {cat:'equip', key:'maleta'},
+  // declarações mensais
+  'Decl. Desktop/Internet':  {cat:'decl', key:'desk'},
+  'Decl. Locação Equipamento':{cat:'decl', key:'cel'},
   // certs
   'HDI SCA':                {cat:'certs', key:'HDI SCA'},
   'HDI CSR':                {cat:'certs', key:'HDI CSR'},
@@ -3934,6 +4062,8 @@ const TIPO_CAT = {
   'Decl. Não Parentesco':'Documentos TCU','Termo Vale Transporte':'Termos T&S',
   'Termo de Conduta T&S':'Termos T&S',
   'Termo Maleta':'Equipamentos',
+  'Decl. Desktop/Internet':'Declarações',
+  'Decl. Locação Equipamento':'Declarações',
   'HDI SCA':'Certificações','HDI CSR':'Certificações','M365 Fundamentals':'Certificações',
   'MD-100 ou MD-102':'Certificações','HDI DAST':'Certificações','AZ-900':'Certificações',
   'ITIL Foundations v4':'Certificações','HDI SCTL':'Certificações','HDI KCS':'Certificações',
@@ -4019,6 +4149,167 @@ function upAtualizar(){
     <div class="up-stat"><div class="n" style="color:#f85149">${DATA.length}</div><div class="l">Sem upload</div></div>
   `;
   try{ initUpload(); }catch(e){}
+}
+
+// ══════════════════════════════════════════
+// DECLARAÇÕES — Equipamentos e Internet
+// ══════════════════════════════════════════
+
+// Cargos que recebem Desktop/Internet (rubrica conectividade)
+const CARGO_DESKTOP_INTERNET = [
+  'Analista de suporte (BSB)',
+  'Analista de suporte (EST)',
+  'Analista de suporte especializado (AE)',
+];
+// Cargos que recebem Locação de Equipamento (celular/tablet)
+const CARGO_LOCACAO_EQUIP = [
+  'Analista de suporte (BSB)',
+  'Analista de suporte (EST)',
+  'Analista de suporte especializado (AE)',
+];
+
+function declKey(nome, mes, ano){ return 'decl|'+nome+'|'+mes+'|'+ano; }
+
+var DECL_DATA = {}; // { 'decl|nome|mes|ano': {desk:'Entregue'|'Pendente'|'N/A', cel:'Entregue'|'Pendente'|'N/A'} }
+
+function _declLoad(){
+  try{ var r=localStorage.getItem('ts_decl_data'); if(r) DECL_DATA=JSON.parse(r); }catch(e){}
+}
+function _declSave(){
+  try{ localStorage.setItem('ts_decl_data', JSON.stringify(DECL_DATA)); }catch(e){}
+}
+_declLoad();
+
+// Determina N/A vs Pendente para cada coluna por cargo e por valores de abono
+function declStatus(c, mes, ano){
+  const key = declKey(c.nome, mes, ano);
+  const saved = DECL_DATA[key] || {};
+
+  // Verificar valores de abono para decidir N/A
+  const abonoKey_fn = (typeof abonoKey==='function') ? abonoKey : (n,m,a)=>n+'|'+m+'|'+a;
+  const ab = ABONO_DATA[abonoKey_fn(c.nome, mes, ano)] || {};
+  const deskVal = parseFloat((ab.desktop||'0').replace('R$ ','').replace(',','.'))||0;
+  const intVal  = parseFloat((ab.internet||'0').replace('R$ ','').replace(',','.'))||0;
+  const celVal  = parseFloat((ab.celular||'0').replace('R$ ','').replace(',','.'))||0;
+
+  // Desktop/Internet: N/A se cargo não elegível OU valor zerado
+  let desk = 'N/A';
+  if(CARGO_DESKTOP_INTERNET.includes(c.cargo)){
+    if(deskVal+intVal > 0) desk = saved.desk || 'Pendente';
+    else desk = 'N/A'; // zero = não recebe este mês
+  }
+
+  // Locação Equipamento: N/A se cargo não elegível OU celular zerado
+  let cel = 'N/A';
+  if(CARGO_LOCACAO_EQUIP.includes(c.cargo)){
+    if(celVal > 0) cel = saved.cel || 'Pendente';
+    else cel = 'N/A';
+  }
+
+  // Se ambos zero -> ambos N/A
+  return {desk, cel};
+}
+
+function renderDeclaracoes(){
+  const mes  = document.getElementById('decl-mes')?.value  || 'Junho';
+  const ano  = document.getElementById('decl-ano')?.value  || '2026';
+  const fUf  = document.getElementById('decl-uf')?.value   || '';
+  const tbody = document.getElementById('decl-tbody');
+  if(!tbody) return;
+
+  // Populate UF filter
+  const ufSel = document.getElementById('decl-uf');
+  if(ufSel && ufSel.options.length<=1){
+    [...new Set(DATA.filter(c=>c.status!=='inativo').map(c=>c.uf))].sort()
+      .forEach(uf=>{ const o=document.createElement('option');o.value=uf;o.textContent=uf;ufSel.appendChild(o); });
+  }
+
+  // Set current month
+  const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const mesEl = document.getElementById('decl-mes');
+  if(mesEl && mesEl.selectedIndex===0 && !mesEl._init){
+    mesEl.value = meses[new Date().getMonth()];
+    mesEl._init = true;
+  }
+
+  const ativos = DATA.filter(c=>c.status!=='inativo' && (!fUf||c.uf===fUf));
+
+  let totDesk=0, totCel=0, totPend=0;
+
+  tbody.innerHTML = ativos.map((c,i)=>{
+    const {desk,cel} = declStatus(c, mes, ano);
+    if(desk==='Entregue') totDesk++;
+    if(cel==='Entregue') totCel++;
+    if(desk==='Pendente'||cel==='Pendente') totPend++;
+
+    const deskBadge = desk==='Entregue'
+      ? `<span style="background:#E1F5EE;color:#3B6D11;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">✅ Entregue</span>`
+      : desk==='N/A'
+        ? `<span style="background:#f1efe8;color:#6c757d;padding:3px 10px;border-radius:12px;font-size:11px;font-style:italic">N/A</span>`
+        : `<span style="background:#FCEBEB;color:#A32D2D;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer" onclick="declMarcarEntregue('${c.nome}','${mes}','${ano}','desk')">⏳ Pendente</span>`;
+
+    const celBadge = cel==='Entregue'
+      ? `<span style="background:#E1F5EE;color:#3B6D11;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">✅ Entregue</span>`
+      : cel==='N/A'
+        ? `<span style="background:#f1efe8;color:#6c757d;padding:3px 10px;border-radius:12px;font-size:11px;font-style:italic">N/A</span>`
+        : `<span style="background:#FCEBEB;color:#A32D2D;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer" onclick="declMarcarEntregue('${c.nome}','${mes}','${ano}','cel')">⏳ Pendente</span>`;
+
+    const bg = i%2===0?'':'background:#f8f9fb';
+    return `<tr style="${bg}">
+      <td style="padding:8px 12px;color:#999;font-size:11px">${i+1}</td>
+      <td style="padding:8px 12px;font-weight:600;color:#1F4E79">${c.nome}</td>
+      <td style="padding:8px 12px;font-weight:600">${c.uf}</td>
+      <td style="padding:8px 12px;font-size:11px">${c.cargo}</td>
+      <td style="padding:8px 12px;text-align:center">${deskBadge}</td>
+      <td style="padding:8px 12px;text-align:center">${celBadge}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" style="padding:2rem;text-align:center;color:#6c757d">Nenhum colaborador encontrado.</td></tr>';
+
+  // KPIs
+  document.getElementById('decl-kpi-total').textContent = ativos.length;
+  document.getElementById('decl-kpi-desk').textContent  = totDesk;
+  document.getElementById('decl-kpi-cel').textContent   = totCel;
+  document.getElementById('decl-kpi-pend').textContent  = totPend;
+}
+
+function declMarcarEntregue(nome, mes, ano, campo){
+  const key = declKey(nome, mes, ano);
+  if(!DECL_DATA[key]) DECL_DATA[key]={};
+  DECL_DATA[key][campo]='Entregue';
+  _declSave();
+  renderDeclaracoes();
+  toast('Declaração marcada como Entregue!','ok');
+}
+
+function exportDeclaracoes(){
+  const mes = document.getElementById('decl-mes')?.value || 'Junho';
+  const ano = document.getElementById('decl-ano')?.value || '2026';
+  const fUf = document.getElementById('decl-uf')?.value  || '';
+  const ativos = DATA.filter(c=>c.status!=='inativo' && (!fUf||c.uf===fUf));
+  const hdrs = ['Nome','UF','Cargo','Decl. Desktop/Internet','Decl. Locação Equipamento'];
+  const rows = ativos.map(c=>{
+    const {desk,cel} = declStatus(c,mes,ano);
+    return [c.nome, c.uf, c.cargo, desk, cel];
+  });
+  _exportXlsXML(hdrs, rows, 'Declaracoes_'+mes+'_'+ano);
+}
+
+// ── Auto-update declarações ao importar documento ─────
+function _declAutoUpdate(colabId, tipo, mes, ano){
+  if(!mes||!ano) return;
+  const c = DATA.find(x=>x._id===colabId);
+  if(!c) return;
+  const key = declKey(c.nome, mes, ano);
+  if(!DECL_DATA[key]) DECL_DATA[key]={};
+
+  // Mapear tipo de documento → campo da declaração
+  if(/desktop|internet|conectividade|equip.*internet|internet.*equip/i.test(tipo)){
+    DECL_DATA[key].desk='Entregue';
+    _declSave();
+  } else if(/celular|tablet|locaç|locac|equipament/i.test(tipo)){
+    DECL_DATA[key].cel='Entregue';
+    _declSave();
+  }
 }
 
 // ══════════════════════════════════════════
@@ -4536,7 +4827,28 @@ function upAtualizarStatus(colabId, tipo){
   if(field.cat==='certs' && c.certs && c.certs[field.key]!==undefined && c.certs[field.key]!=='N/A'){
     c.certs[field.key] = 'Entregue';
   }
-  if(field.cat==='equip' && c[field.key]!==undefined && c[field.key]!=='N/A'){
+  if(field.cat==='decl'){
+    // Extract month/year from the document filename or use current month
+    // Pattern: GO – João da Silva – Junho.pdf
+    const c = DATA.find(x=>x._id===colabId);
+    if(!c) return;
+    const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    // Try to find month in uploaded docs
+    const doc = uploadedDocs.find(d=>d.colabId===colabId && d.tipo===tipo);
+    let mes = new Date().toLocaleDateString('pt-BR',{month:'long'});
+    mes = mes.charAt(0).toUpperCase()+mes.slice(1);
+    let ano = String(new Date().getFullYear());
+    if(doc && doc.fileName){
+      meses.forEach(m=>{ if(doc.fileName.includes(m)){ mes=m; } });
+      const yearMatch = doc.fileName.match(/20\d\d/);
+      if(yearMatch) ano = yearMatch[0];
+    }
+    const key = declKey(c.nome, mes, ano);
+    if(!DECL_DATA[key]) DECL_DATA[key]={};
+    DECL_DATA[key][field.key]='Entregue';
+    _declSave();
+    return;
+  }
     const isTel = c.cargo && c.cargo.includes('(TEL)');
     if(isTel && (field.key==='maleta'||field.key==='uniforme')) return;
     c[field.key] = 'Sim';  // equipamentos usam Sim/Não
@@ -4747,6 +5059,9 @@ const TIPO_KEYWORDS = {
   'HDI KCS':                ['kcs','knowledge centered'],
   'HDI SCM':                ['scm','support center manager'],
   'HDI SCD':                ['scd','support center director'],
+  'Termo Maleta':              ['maleta','termo maleta','ferramenta'],
+  'Decl. Desktop/Internet':    ['desktop internet','internet desktop','conectividade','ajuste custo','custo desktop','custo internet','decl desktop','decl internet'],
+  'Decl. Locação Equipamento': ['locacao equip','locação equip','equipamento locacao','decl locacao','decl celular','celular locacao'],
   'XLA Foundation':         ['xla','xla foundation'],
 };
 
@@ -5315,10 +5630,13 @@ function getPendencias(c){
     if(v==='Pendente' && !certSatisfied(c, k))
       items.push({cat:'certs',label:k,tipo:'cert'});
   });
-  // Equipamentos — maleta e uniforme não se aplicam para TEL
-  const isTel = c.cargo && c.cargo.includes('(TEL)');
+  // Equipamentos — respeitar N/A por cargo (planilha edital)
+  const _naMap = {
+    celular_tablet:'sem_celular', maleta:'sem_maleta', uniforme:'sem_uniforme'
+  };
   ['celular_tablet','cracha','maleta','uniforme'].forEach(k=>{
-    if(isTel && (k==='maleta'||k==='uniforme')) return; // N/A para TEL
+    const naKey = _naMap[k];
+    if(naKey && cargoNa(c.cargo, naKey)) return; // N/A para este cargo
     if(c[k]==='Pendente') items.push({cat:'equip',label:k.replace('_',' '),tipo:'equip'});
   });
   return items;
