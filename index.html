@@ -4182,20 +4182,15 @@ function _declSave(){
 }
 _declLoad();
 
-// Determina N/A vs Pendente para cada coluna — baseado no CARGO (não nos valores de abono)
+// Todos os colaboradores devem entregar ambas as declarações mensalmente
+// N/A não se aplica — todos ficam Pendente até a entrega
 function declStatus(c, mes, ano){
   const key = declKey(c.nome, mes, ano);
   const saved = DECL_DATA[key] || {};
-
-  // Desktop/Internet: só para cargos elegíveis
-  const temDesk = CARGO_DESKTOP_INTERNET.includes(c.cargo);
-  let desk = temDesk ? (saved.desk || 'Pendente') : 'N/A';
-
-  // Locação Equipamento (celular/tablet): só para cargos elegíveis
-  const temCel  = CARGO_LOCACAO_EQUIP.includes(c.cargo);
-  let cel  = temCel  ? (saved.cel  || 'Pendente') : 'N/A';
-
-  return {desk, cel};
+  return {
+    desk: saved.desk || 'Pendente',
+    cel:  saved.cel  || 'Pendente',
+  };
 }
 
 function renderDeclaracoes(){
@@ -4816,18 +4811,12 @@ function upAtualizarStatus(colabId, tipo, fileName){
     c.certs[field.key] = 'Entregue';
   }
   if(field.cat==='decl'){
-    // Check if cargo is eligible for this declaration type
-    if(field.key==='desk' && !CARGO_DESKTOP_INTERNET.includes(c.cargo)){
-      console.warn('[Decl] Cargo não elegível para Desktop/Internet:', c.cargo);
-      return;
-    }
-    if(field.key==='cel' && !CARGO_LOCACAO_EQUIP.includes(c.cargo)){
-      console.warn('[Decl] Cargo não elegível para Locação Equipamento:', c.cargo);
-      return;
-    }
     const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-    // Extract month from fileName (pattern: UF – Nome – Mês.pdf  or  Nome – Mês.pdf)
-    const src = (fileName||'').replace(/\.[^.]+$/,'');
+    // Extract month from fileName
+    // Handles: "DF – Lucas Sena – Junho.pdf"  and  "DF - Lucas - Junho_Lucas.pdf"
+    // Take only the part before the first underscore (in case of composite names)
+    const rawName = (fileName||'').replace(/\.[^.]+$/,'');
+    const src = rawName.split('_')[0]; // ignore suffix after _
     let mes = meses[new Date().getMonth()]; // default: current month
     let ano = String(new Date().getFullYear());
     meses.forEach(m=>{ if(src.toLowerCase().includes(m.toLowerCase())) mes=m; });
@@ -4837,8 +4826,8 @@ function upAtualizarStatus(colabId, tipo, fileName){
     if(!DECL_DATA[key]) DECL_DATA[key]={};
     DECL_DATA[key][field.key]='Entregue';
     _declSave();
-    // Refresh declarações tab if visible
-    try{ const tab=document.getElementById('tab-declaracoes'); if(tab&&tab.style.display!=='none') renderDeclaracoes(); }catch(e){}
+    // Always refresh declarações tab
+    try{ renderDeclaracoes(); }catch(e){}
     return;
   }
   if(field.cat==='equip' && c[field.key]!==undefined && c[field.key]!=='N/A'){
