@@ -4181,33 +4181,19 @@ function _declSave(){
 }
 _declLoad();
 
-// Determina N/A vs Pendente para cada coluna por cargo e por valores de abono
+// Determina N/A vs Pendente para cada coluna — baseado no CARGO (não nos valores de abono)
 function declStatus(c, mes, ano){
   const key = declKey(c.nome, mes, ano);
   const saved = DECL_DATA[key] || {};
 
-  // Verificar valores de abono para decidir N/A
-  const abonoKey_fn = (typeof abonoKey==='function') ? abonoKey : (n,m,a)=>n+'|'+m+'|'+a;
-  const ab = ABONO_DATA[abonoKey_fn(c.nome, mes, ano)] || {};
-  const deskVal = parseFloat((ab.desktop||'0').replace('R$ ','').replace(',','.'))||0;
-  const intVal  = parseFloat((ab.internet||'0').replace('R$ ','').replace(',','.'))||0;
-  const celVal  = parseFloat((ab.celular||'0').replace('R$ ','').replace(',','.'))||0;
+  // Desktop/Internet: só para cargos elegíveis
+  const temDesk = CARGO_DESKTOP_INTERNET.includes(c.cargo);
+  let desk = temDesk ? (saved.desk || 'Pendente') : 'N/A';
 
-  // Desktop/Internet: N/A se cargo não elegível OU valor zerado
-  let desk = 'N/A';
-  if(CARGO_DESKTOP_INTERNET.includes(c.cargo)){
-    if(deskVal+intVal > 0) desk = saved.desk || 'Pendente';
-    else desk = 'N/A'; // zero = não recebe este mês
-  }
+  // Locação Equipamento (celular/tablet): só para cargos elegíveis
+  const temCel  = CARGO_LOCACAO_EQUIP.includes(c.cargo);
+  let cel  = temCel  ? (saved.cel  || 'Pendente') : 'N/A';
 
-  // Locação Equipamento: N/A se cargo não elegível OU celular zerado
-  let cel = 'N/A';
-  if(CARGO_LOCACAO_EQUIP.includes(c.cargo)){
-    if(celVal > 0) cel = saved.cel || 'Pendente';
-    else cel = 'N/A';
-  }
-
-  // Se ambos zero -> ambos N/A
   return {desk, cel};
 }
 
@@ -4829,6 +4815,15 @@ function upAtualizarStatus(colabId, tipo, fileName){
     c.certs[field.key] = 'Entregue';
   }
   if(field.cat==='decl'){
+    // Check if cargo is eligible for this declaration type
+    if(field.key==='desk' && !CARGO_DESKTOP_INTERNET.includes(c.cargo)){
+      console.warn('[Decl] Cargo não elegível para Desktop/Internet:', c.cargo);
+      return;
+    }
+    if(field.key==='cel' && !CARGO_LOCACAO_EQUIP.includes(c.cargo)){
+      console.warn('[Decl] Cargo não elegível para Locação Equipamento:', c.cargo);
+      return;
+    }
     const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
     // Extract month from fileName (pattern: UF – Nome – Mês.pdf  or  Nome – Mês.pdf)
     const src = (fileName||'').replace(/\.[^.]+$/,'');
