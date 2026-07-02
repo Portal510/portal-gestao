@@ -4104,7 +4104,7 @@ function upSyncDocs(){
     const c = DATA.find(x=>x._id===doc.colabId);
     if(!c) return;
     const before = JSON.stringify({docs:c.docs, certs:c.certs, maleta:c.maleta});
-    upAtualizarStatus(doc.colabId, doc.tipo);
+    upAtualizarStatus(doc.colabId, doc.tipo, doc.fileName);
     const after = JSON.stringify({docs:c.docs, certs:c.certs, maleta:c.maleta});
     if(before !== after) count++;
   });
@@ -4113,6 +4113,7 @@ function upSyncDocs(){
   try{ renderAdm(); }catch(e){}
   try{ renderTermos(); }catch(e){}
   try{ renderCert(); }catch(e){}
+  try{ renderDeclaracoes(); }catch(e){}
   upFilterDocs();
   toast(count > 0
     ? `✅ Sincronizado! ${count} campo(s) atualizado(s) nas abas de controle.`
@@ -4547,7 +4548,7 @@ function upImportZip(file){
                 dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
                 dataUrl,batchImported:true,fromZip:true,
               });
-              upAtualizarStatus(colab._id,tipo);
+              upAtualizarStatus(colab._id, tipo, fname);
               rows.push({fileName,colab,tipo,status:'ok',msg:`✅ ${colab.nome} · ${tipo}`});
             }
           } else {
@@ -4727,7 +4728,7 @@ function upHandleFiles(files){
           dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
           dataUrl:e.target.result,
         });
-        if(resolvedTipo) upAtualizarStatus(resolvedColabId, resolvedTipo);
+        if(resolvedTipo) upAtualizarStatus(resolvedColabId, resolvedTipo, file.name);
         rows.push({fileName:file.name,status:'ok',msg:`✅ ${colab.nome}${resolvedTipo?' · '+resolvedTipo:''}`,colab,tipo:resolvedTipo});
       saveUploadDocs();
       pending--;
@@ -4816,7 +4817,7 @@ function showQuickUploadResult(rows){
   }
 }
 
-function upAtualizarStatus(colabId, tipo){
+function upAtualizarStatus(colabId, tipo, fileName){
   const c = DATA.find(x=>x._id===colabId);
   if(!c) return;
   const field = TIPO_TO_FIELD[tipo];
@@ -4828,31 +4829,26 @@ function upAtualizarStatus(colabId, tipo){
     c.certs[field.key] = 'Entregue';
   }
   if(field.cat==='decl'){
-    // Extract month/year from the document filename or use current month
-    // Pattern: GO – João da Silva – Junho.pdf
-    const c = DATA.find(x=>x._id===colabId);
-    if(!c) return;
     const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-    // Try to find month in uploaded docs
-    const doc = uploadedDocs.find(d=>d.colabId===colabId && d.tipo===tipo);
-    let mes = new Date().toLocaleDateString('pt-BR',{month:'long'});
-    mes = mes.charAt(0).toUpperCase()+mes.slice(1);
+    // Extract month from fileName (pattern: UF – Nome – Mês.pdf  or  Nome – Mês.pdf)
+    const src = (fileName||'').replace(/\.[^.]+$/,'');
+    let mes = meses[new Date().getMonth()]; // default: current month
     let ano = String(new Date().getFullYear());
-    if(doc && doc.fileName){
-      meses.forEach(m=>{ if(doc.fileName.includes(m)){ mes=m; } });
-      const yearMatch = doc.fileName.match(/20\d\d/);
-      if(yearMatch) ano = yearMatch[0];
-    }
+    meses.forEach(m=>{ if(src.toLowerCase().includes(m.toLowerCase())) mes=m; });
+    const yearMatch = src.match(/20\d\d/);
+    if(yearMatch) ano = yearMatch[0];
     const key = declKey(c.nome, mes, ano);
     if(!DECL_DATA[key]) DECL_DATA[key]={};
     DECL_DATA[key][field.key]='Entregue';
     _declSave();
+    // Refresh declarações tab if visible
+    try{ const tab=document.getElementById('tab-declaracoes'); if(tab&&tab.style.display!=='none') renderDeclaracoes(); }catch(e){}
     return;
   }
   if(field.cat==='equip' && c[field.key]!==undefined && c[field.key]!=='N/A'){
     const isTel = c.cargo && c.cargo.includes('(TEL)');
     if(isTel && (field.key==='maleta'||field.key==='uniforme')) return;
-    c[field.key] = 'Sim';  // equipamentos usam Sim/Não
+    c[field.key] = 'Sim';
   }
   saveData();
 }
@@ -4960,7 +4956,7 @@ function upPendingConfirmar(id){
   }
   // Mark as confirmed — apply status
   d.pending = false;
-  upAtualizarStatus(d.colabId, d.tipo);
+  upAtualizarStatus(d.colabId, d.tipo, d.fileName);
   saveUploadDocs(); upFilterDocs();
   toast('Documento confirmado e marcado como Entregue!','ok');
 }
@@ -5133,7 +5129,7 @@ function upBatchImport(files){
         dataUrl:e.target.result,
         batchImported:true,
       });
-      upAtualizarStatus(colab._id, tipo);
+      upAtualizarStatus(colab._id, tipo, file.name);
       rows.push({file, colab, tipo, status:'ok', msg:`✅ ${colab.nome} · ${tipo}`});
       matched++;
       pending--; if(pending===0){ saveUploadDocs(); showBatchResult(rows, matched, skipped, noColab, noTipo, arr.length); upFilterDocs(); }
@@ -5312,7 +5308,7 @@ function upLimparTudo(){
 
 // Re-apply all stored uploads to DATA on page load (restore statuses)
 (function reapplyUploadStatuses(){
-  uploadedDocs.forEach(doc=>upAtualizarStatus(doc.colabId, doc.tipo));
+  uploadedDocs.forEach(doc=>upAtualizarStatus(doc.colabId, doc.tipo, doc.fileName));
 })();
 
 
@@ -7208,7 +7204,7 @@ function _portalInit(){
   }catch(e){}
   try{ renderGeral(); }catch(e){ console.warn('renderGeral:',e); }
   try{ _addSyncBtn(); }catch(e){}
-  try{ uploadedDocs.forEach(doc=>upAtualizarStatus(doc.colabId,doc.tipo)); }catch(e){}
+  try{ uploadedDocs.forEach(doc=>upAtualizarStatus(doc.colabId,doc.tipo,doc.fileName)); }catch(e){}
 }
 
 if(document.readyState==='loading'){
