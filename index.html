@@ -4542,9 +4542,12 @@ function ferFmtDate(iso){
 
 // Detect overlaps: returns array of {a, b} pairs that conflict
 function ferGetCargo(nome){
-  // Find cargo from DATA (portal collaborators) by name match
-  const c = DATA.find(x=>x.nome.toLowerCase().trim()===nome.toLowerCase().trim());
-  return c ? c.cargo : (FERIAS_DATA.find(x=>x.nome===nome)?.cargo||'Outros');
+  // Exact match first
+  let c = DATA.find(x=>x.nome.toLowerCase().trim()===nome.toLowerCase().trim());
+  // Partial match fallback (for names that may differ slightly)
+  if(!c) c = DATA.find(x=>x.nome.toLowerCase().includes(nome.toLowerCase().split(' ')[0]) &&
+    nome.toLowerCase().includes(x.nome.toLowerCase().split(' ')[0]));
+  return c ? c.cargo : '—';
 }
 
 function ferGetConflitos(){
@@ -4861,6 +4864,9 @@ function ferCtrlRender(){
   if(filStatus) rows=rows.filter(r=>r.status===filStatus);
   if(filConf==='sim') rows=rows.filter(r=>confIds.has(r.id));
   if(filConf==='nao') rows=rows.filter(r=>!confIds.has(r.id));
+
+  // Ordenar alfabeticamente por nome (igual à aba Colaboradores)
+  rows.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
 
   if(!rows.length){
     tbody.innerHTML='<tr><td colspan="11" style="padding:2rem;text-align:center;color:#6c757d">Nenhum registro encontrado.</td></tr>';
