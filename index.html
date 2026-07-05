@@ -1458,6 +1458,57 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <!-- Cards grid -->
   <div id="fer-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:14px"></div>
 
+  <!-- ── CONTROLE GERAL ── -->
+  <div style="margin-top:32px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;padding-top:20px;border-top:2px solid #dee2e6">
+      <div>
+        <div style="font-size:17px;font-weight:700;color:#1F4E79">📋 Controle Geral de Férias</div>
+        <div style="font-size:12px;color:#6c757d;margin-top:2px">Visão tabular completa de todas as pretensões</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <input id="fer-ctrl-busca" type="text" placeholder="🔍 Nome..." oninput="ferCtrlRender()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px;width:180px">
+        <select id="fer-ctrl-cargo" onchange="ferCtrlRender()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px;max-width:260px">
+          <option value="">Todos os cargos</option>
+        </select>
+        <select id="fer-ctrl-status" onchange="ferCtrlRender()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
+          <option value="">Todos os status</option>
+          <option value="pendente">⏳ Pendente</option>
+          <option value="aprovado">✅ Aprovado</option>
+          <option value="reprovado">❌ Conflito</option>
+        </select>
+        <select id="fer-ctrl-conflito" onchange="ferCtrlRender()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
+          <option value="">Com/sem conflito</option>
+          <option value="sim">⚠️ Com conflito</option>
+          <option value="nao">✅ Sem conflito</option>
+        </select>
+        <button onclick="ferCtrlExport()" style="padding:6px 14px;background:#375623;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">⬇ XLSX</button>
+      </div>
+    </div>
+    <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;overflow:hidden">
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr>
+              <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left;white-space:nowrap">#</th>
+              <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left;white-space:nowrap">Nome</th>
+              <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left;white-space:nowrap">Cargo</th>
+              <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:center;white-space:nowrap">Dias</th>
+              <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:center;white-space:nowrap">Início</th>
+              <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:center;white-space:nowrap">Fim</th>
+              <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:center;white-space:nowrap">Vender 10d</th>
+              <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:center;white-space:nowrap">Conflito</th>
+              <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:center;white-space:nowrap">Status</th>
+              <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left;white-space:nowrap">Observação</th>
+              <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:center;white-space:nowrap">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="fer-ctrl-tbody"></tbody>
+        </table>
+      </div>
+      <div id="fer-ctrl-count" style="padding:8px 14px;font-size:11px;color:#6c757d;border-top:1px solid #dee2e6;background:#f8f9fb"></div>
+    </div>
+  </div>
+
   <!-- Modal edição -->
   <div id="fer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9990;align-items:center;justify-content:center">
     <div style="background:#fff;border-radius:12px;padding:28px;max-width:520px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto">
@@ -4631,7 +4682,8 @@ function ferRender(){
     </div>`;
   };
 
-  // Build sections by cargo
+  };
+
   const cargoIcons = {
     'Analista de suporte telefônico (TEL)':'📞',
     'Analista de suporte (BSB)':'🖥️',
@@ -4664,6 +4716,9 @@ function ferRender(){
       </div>
     </div>`;
   }).join('');
+
+  // Also refresh control table
+  try{ ferCtrlRender(); }catch(e){}
 }
 
 function ferEditar(id){
@@ -4772,13 +4827,109 @@ function _ferEnviarEmail(r){
 }
 
 function ferExportXls(){
-  const hdrs=['Nome','E-mail','Dias','Início','Fim','Vender 10d','Observação','Status','Conflito'];
+  const hdrs=['Nome','Cargo','E-mail','Dias','Início','Fim','Vender 10d','Observação','Status','Conflito'];
   const confIds=new Set(ferGetConflitos().flatMap(({a,b})=>[a.id,b.id]));
   const rows=FERIAS_DATA.map(r=>[
-    r.nome, r.email, r.dias, ferFmtDate(r.ini), ferFmtDate(r.fim),
+    r.nome, ferGetCargo(r.nome), r.email, r.dias,
+    ferFmtDate(r.ini), ferFmtDate(r.fim),
     r.vender10, r.obs, r.status, confIds.has(r.id)?'Sim':'Não'
   ]);
   _exportXlsXML(hdrs, rows, 'Ferias_Pretensao');
+}
+
+// ── Controle Geral ────────────────────────
+function ferCtrlRender(){
+  const tbody = document.getElementById('fer-ctrl-tbody');
+  const countEl = document.getElementById('fer-ctrl-count');
+  if(!tbody) return;
+
+  // Populate cargo select if needed
+  const cargoSel = document.getElementById('fer-ctrl-cargo');
+  if(cargoSel && cargoSel.options.length<=1){
+    [...new Set(FERIAS_DATA.map(r=>ferGetCargo(r.nome)))].sort()
+      .forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;cargoSel.appendChild(o);});
+  }
+
+  const busca   = (document.getElementById('fer-ctrl-busca')?.value||'').toLowerCase();
+  const filCargo  = document.getElementById('fer-ctrl-cargo')?.value||'';
+  const filStatus = document.getElementById('fer-ctrl-status')?.value||'';
+  const filConf   = document.getElementById('fer-ctrl-conflito')?.value||'';
+
+  const confIds = new Set(ferGetConflitos().flatMap(({a,b})=>[a.id,b.id]));
+
+  let rows=[...FERIAS_DATA];
+  if(busca)     rows=rows.filter(r=>r.nome.toLowerCase().includes(busca));
+  if(filCargo)  rows=rows.filter(r=>ferGetCargo(r.nome)===filCargo);
+  if(filStatus) rows=rows.filter(r=>r.status===filStatus);
+  if(filConf==='sim') rows=rows.filter(r=>confIds.has(r.id));
+  if(filConf==='nao') rows=rows.filter(r=>!confIds.has(r.id));
+
+  if(!rows.length){
+    tbody.innerHTML='<tr><td colspan="11" style="padding:2rem;text-align:center;color:#6c757d">Nenhum registro encontrado.</td></tr>';
+    if(countEl) countEl.textContent='';
+    return;
+  }
+
+  tbody.innerHTML = rows.map((r,i)=>{
+    const cargo = ferGetCargo(r.nome);
+    const hasConf = confIds.has(r.id);
+    const confPares = ferGetConflitos().filter(({a,b})=>a.id===r.id||b.id===r.id);
+    const confNames = confPares.map(({a,b})=>{ const o=a.id===r.id?b:a; return o.nome+'<br><small style="color:#6c757d">'+ferFmtDate(o.ini)+' → '+ferFmtDate(o.fim)+'</small>'; }).join('<br>');
+
+    const statusBadge = r.status==='aprovado'
+      ? '<span style="background:#E1F5EE;color:#375623;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;white-space:nowrap">✅ Aprovado</span>'
+      : r.status==='reprovado'
+        ? '<span style="background:#FCEBEB;color:#7A0000;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;white-space:nowrap">❌ Conflito</span>'
+        : '<span style="background:#FEF9C3;color:#854D0E;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;white-space:nowrap">⏳ Pendente</span>';
+
+    const confBadge = hasConf
+      ? `<span style="color:#C55A11;font-size:11px;font-weight:600" title="${confNames.replace(/"/g,'\'').replace(/<[^>]+>/g,' ')}">⚠️ Sim</span>`
+      : '<span style="color:#375623;font-size:11px">✅ Não</span>';
+
+    const bg = hasConf?'#FFF8F0':r.status==='aprovado'?'#F6FFF6':i%2===0?'#fff':'#f8f9fb';
+
+    return `<tr style="background:${bg}">
+      <td style="padding:8px 12px;color:#999;font-size:11px">${i+1}</td>
+      <td style="padding:8px 12px;font-weight:600;color:#1F4E79;white-space:nowrap">${r.nome}</td>
+      <td style="padding:8px 12px;font-size:11px;color:#495057">${cargo}</td>
+      <td style="padding:8px 12px;text-align:center;font-weight:600">${r.dias}</td>
+      <td style="padding:8px 12px;text-align:center;white-space:nowrap">${ferFmtDate(r.ini)}</td>
+      <td style="padding:8px 12px;text-align:center;white-space:nowrap">${ferFmtDate(r.fim)}</td>
+      <td style="padding:8px 12px;text-align:center">${r.vender10==='Sim'?'<span style="color:#375623;font-weight:600">Sim</span>':'Não'}</td>
+      <td style="padding:8px 12px;text-align:center">${confBadge}</td>
+      <td style="padding:8px 12px;text-align:center">${statusBadge}</td>
+      <td style="padding:8px 12px;font-size:11px;color:#495057;max-width:200px">${r.obs||'—'}</td>
+      <td style="padding:8px 12px;text-align:center;white-space:nowrap">
+        <button onclick="ferEditar(${r.id})" style="padding:3px 10px;background:#E8F0FE;color:#1F4E79;border:none;border-radius:5px;cursor:pointer;font-size:11px;font-weight:600;margin-right:4px">✏️</button>
+        <button onclick="ferEnviarEmailDireto(${r.id})" style="padding:3px 10px;background:#FFF3E8;color:#C55A11;border:none;border-radius:5px;cursor:pointer;font-size:11px;font-weight:600">📧</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  if(countEl) countEl.textContent=`${rows.length} registro(s) exibido(s) de ${FERIAS_DATA.length} total`;
+}
+
+function ferCtrlExport(){
+  const busca   = (document.getElementById('fer-ctrl-busca')?.value||'').toLowerCase();
+  const filCargo  = document.getElementById('fer-ctrl-cargo')?.value||'';
+  const filStatus = document.getElementById('fer-ctrl-status')?.value||'';
+  const filConf   = document.getElementById('fer-ctrl-conflito')?.value||'';
+  const confIds = new Set(ferGetConflitos().flatMap(({a,b})=>[a.id,b.id]));
+
+  let rows=[...FERIAS_DATA];
+  if(busca)     rows=rows.filter(r=>r.nome.toLowerCase().includes(busca));
+  if(filCargo)  rows=rows.filter(r=>ferGetCargo(r.nome)===filCargo);
+  if(filStatus) rows=rows.filter(r=>r.status===filStatus);
+  if(filConf==='sim') rows=rows.filter(r=>confIds.has(r.id));
+  if(filConf==='nao') rows=rows.filter(r=>!confIds.has(r.id));
+
+  const hdrs=['#','Nome','Cargo','E-mail','Dias','Início','Fim','Vender 10d','Conflito','Status','Observação'];
+  const data=rows.map((r,i)=>[
+    i+1, r.nome, ferGetCargo(r.nome), r.email, r.dias,
+    ferFmtDate(r.ini), ferFmtDate(r.fim), r.vender10,
+    confIds.has(r.id)?'Sim':'Não', r.status, r.obs||''
+  ]);
+  _exportXlsXML(hdrs, data, 'Ferias_Controle_Geral');
 }
 
 // ══════════════════════════════════════════
