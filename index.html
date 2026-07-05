@@ -497,6 +497,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <div class="sidebar-section">Monitoramento</div>
     <div class="tab" onclick="showTab('abono',this)"><span class="tab-icon">💰</span><span class="tab-label">Abono</span></div>
     <div class="tab" onclick="showTab('gerencial',this)"><span class="tab-icon">📊</span><span class="tab-label">Gerencial</span></div>
+    <div class="tab" onclick="showTab('ferias',this)"><span class="tab-icon">🏖️</span><span class="tab-label">Férias</span></div>
     <div class="tab" onclick="showTab('calendario',this)"><span class="tab-icon">📅</span><span class="tab-label">Calendário</span></div>
 
   </div>
@@ -1406,6 +1407,113 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         </thead>
         <tbody id="decl-tbody"></tbody>
       </table>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ═══════════════════ FÉRIAS ═══════════════════ -->
+<div id="tab-ferias" style="display:none">
+<div style="padding:20px 24px">
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+    <div>
+      <div style="font-size:20px;font-weight:700;color:#1F4E79">🏖️ Pretensão de Férias</div>
+      <div style="font-size:12px;color:#6c757d;margin-top:3px">Controle de períodos solicitados · Detecção automática de conflitos</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="ferExportXls()" style="padding:6px 14px;background:#1F4E79;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">⬇ Exportar XLSX</button>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px" id="fer-kpis"></div>
+
+  <!-- Filtros -->
+  <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:14px 18px;margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+    <input id="fer-busca" type="text" placeholder="🔍 Buscar por nome..." oninput="ferRender()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px;width:220px">
+    <select id="fer-status" onchange="ferRender()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
+      <option value="">Todos os status</option>
+      <option value="pendente">⏳ Pendente</option>
+      <option value="aprovado">✅ Aprovado</option>
+      <option value="reprovado">❌ Com conflito</option>
+    </select>
+    <select id="fer-conflito" onchange="ferRender()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
+      <option value="">Todos</option>
+      <option value="sim">⚠️ Com conflito</option>
+      <option value="nao">✅ Sem conflito</option>
+    </select>
+    <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+      <input type="checkbox" id="fer-chk-conflito" onchange="ferRender()"> Mostrar apenas conflitos
+    </label>
+    <button onclick="ferDetectarConflitos()" style="padding:6px 14px;background:#C55A11;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">🔍 Detectar Conflitos</button>
+    <button onclick="ferAprovarTodos()" style="padding:6px 14px;background:#375623;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">✅ Aprovar sem conflito</button>
+  </div>
+
+  <!-- Cards grid -->
+  <div id="fer-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:14px"></div>
+
+  <!-- Modal edição -->
+  <div id="fer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9990;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:12px;padding:28px;max-width:520px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto">
+      <h3 id="fer-modal-title" style="margin:0 0 18px;color:#1F4E79;font-size:16px">✏️ Editar Pretensão</h3>
+      <input type="hidden" id="fer-modal-id">
+      <div style="display:grid;gap:12px">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:#6c757d;display:block;margin-bottom:4px">NOME</label>
+          <input id="fer-nome" type="text" style="width:100%;padding:8px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:13px;box-sizing:border-box">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#6c757d;display:block;margin-bottom:4px">INÍCIO</label>
+            <input id="fer-ini" type="date" style="width:100%;padding:8px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:13px;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#6c757d;display:block;margin-bottom:4px">FIM</label>
+            <input id="fer-fim" type="date" style="width:100%;padding:8px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:13px;box-sizing:border-box">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#6c757d;display:block;margin-bottom:4px">DIAS</label>
+            <input id="fer-dias" type="number" style="width:100%;padding:8px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:13px;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#6c757d;display:block;margin-bottom:4px">VENDER 10 DIAS</label>
+            <select id="fer-vender" style="width:100%;padding:8px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:13px">
+              <option value="Não">Não</option>
+              <option value="Sim">Sim</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:#6c757d;display:block;margin-bottom:4px">OBSERVAÇÃO</label>
+          <textarea id="fer-obs" rows="2" style="width:100%;padding:8px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:13px;resize:vertical;box-sizing:border-box"></textarea>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:#6c757d;display:block;margin-bottom:4px">STATUS</label>
+          <select id="fer-status-sel" onchange="ferModalStatusChange()" style="width:100%;padding:8px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:13px">
+            <option value="pendente">⏳ Pendente análise</option>
+            <option value="aprovado">✅ Aprovado</option>
+            <option value="reprovado">❌ Com conflito / Reprovado</option>
+          </select>
+        </div>
+        <div id="fer-status-obs-wrap" style="display:none">
+          <label style="font-size:11px;font-weight:600;color:#6c757d;display:block;margin-bottom:4px">JUSTIFICATIVA (aparecerá no e-mail)</label>
+          <textarea id="fer-status-obs" rows="2" style="width:100%;padding:8px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:13px;resize:vertical;box-sizing:border-box" placeholder="Ex: conflito com João Silva de 01/03 a 15/03..."></textarea>
+        </div>
+        <div id="fer-email-wrap" style="display:none">
+          <label style="font-size:11px;font-weight:600;color:#6c757d;display:block;margin-bottom:4px">E-MAIL DO COLABORADOR</label>
+          <input id="fer-email" type="email" style="width:100%;padding:8px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:13px;box-sizing:border-box">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end">
+        <button onclick="document.getElementById('fer-modal').style.display='none'" style="padding:8px 18px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;cursor:pointer;font-size:13px">Cancelar</button>
+        <button onclick="ferEnviarEmail()" style="padding:8px 18px;background:#C55A11;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600">📧 Enviar E-mail</button>
+        <button onclick="ferSalvar()" style="padding:8px 18px;background:#1F4E79;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600">💾 Salvar</button>
+      </div>
     </div>
   </div>
 
@@ -2472,7 +2580,7 @@ function clearFilters(tab){
 }
 
 // TAB SWITCHING
-const tabIds=['geral','equipamentos','admissao','termos','certif','calendario','comunicados','predef','uniforme','upload','declaracoes','requisitos','pendencias','contrata','abono','gerencial'];
+const tabIds=['geral','equipamentos','admissao','termos','certif','calendario','comunicados','predef','uniforme','upload','declaracoes','requisitos','pendencias','contrata','abono','gerencial','ferias'];
 // ── Sidebar toggle ────────────────────────
 function toggleSidebar(){
   const sidebar=document.getElementById('sidebar');
@@ -2492,7 +2600,7 @@ function showTab(id,el){
   });
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:renderDeclaracoes,requisitos:renderRequisitos,pendencias:renderPendencias,contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){}},gerencial:()=>{try{rGerencial();}catch(e){}}};
+  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:renderDeclaracoes,requisitos:renderRequisitos,pendencias:renderPendencias,contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){}},gerencial:()=>{try{rGerencial();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}}};
   if(renders[id]) renders[id]();
 }
 
@@ -4293,6 +4401,324 @@ function _declAutoUpdate(colabId, tipo, mes, ano){
     DECL_DATA[key].cel='Entregue';
     _declSave();
   }
+}
+
+
+// ══════════════════════════════════════════
+// FÉRIAS — Pretensão e controle de conflitos
+// ══════════════════════════════════════════
+
+const FERIAS_PRETENÇÃO = [
+  {id:1,nome:'Marcus Vinicius M. O. Pereira',email:'x00149492103@tcu.gov.br',dias:21,ini:'2026-05-06',fim:'2026-05-26',vender10:'Não',obs:'',status:'pendente',statusObs:''},
+  {id:2,nome:'Jefferson Lucas da Conceição',email:'x59514914287@tcu.gov.br',dias:30,ini:'2027-12-20',fim:'2028-01-20',vender10:'Não',obs:'',status:'pendente',statusObs:''},
+  {id:3,nome:'Raphael Diógenes Pereira Lima dos Santos',email:'x00628388225@tcu.gov.br',dias:15,ini:'2027-12-15',fim:'2027-12-30',vender10:'Não',obs:'Gostaria de visitar minha família em Rondônia',status:'pendente',statusObs:''},
+  {id:4,nome:'Daniel Pereira Rocha Neto',email:'x08731129463@tcu.gov.br',dias:20,ini:'2027-05-03',fim:'2027-05-28',vender10:'Sim',obs:'Mês de aniversário do filho',status:'pendente',statusObs:''},
+  {id:5,nome:'Filipe Augusto Dias Carvalho',email:'x00537335170@tcu.gov.br',dias:20,ini:'2028-01-03',fim:'2028-01-24',vender10:'Sim',obs:'',status:'pendente',statusObs:''},
+  {id:6,nome:'Thiago da Silva Senna',email:'x05505759106@tcu.gov.br',dias:20,ini:'2028-01-03',fim:'2028-01-23',vender10:'Sim',obs:'',status:'pendente',statusObs:''},
+  {id:7,nome:'Josue Lauro de Moraes Neves',email:'x39383768134@tcu.gov.br',dias:30,ini:'2027-12-01',fim:'2027-12-31',vender10:'Sim',obs:'Venda de 10 dias de 01/12 a 10/12/2027',status:'pendente',statusObs:''},
+  {id:8,nome:'Daniel Pereira Rocha Neto',email:'x08731129463@tcu.gov.br',dias:20,ini:'2027-07-05',fim:'2027-07-30',vender10:'Sim',obs:'Segunda opção de período',status:'pendente',statusObs:''},
+  {id:9,nome:'Hudson Alencar Saldanha de Oliveira',email:'x03675067696@tcu.gov.br',dias:20,ini:'2027-12-20',fim:'2028-01-08',vender10:'Sim',obs:'',status:'pendente',statusObs:''},
+  {id:10,nome:'Emerson Anselmo de Sousa',email:'x04927678156@tcu.gov.br',dias:30,ini:'2027-07-01',fim:'2027-07-31',vender10:'Não',obs:'',status:'pendente',statusObs:''},
+  {id:11,nome:'William de Souza Aguiar',email:'x87428148200@tcu.gov.br',dias:30,ini:'2028-01-03',fim:'2028-02-01',vender10:'Não',obs:'',status:'pendente',statusObs:''},
+  {id:12,nome:'Welton Macedo Santos Durão',email:'x02873773189@tcu.gov.br',dias:20,ini:'2027-07-12',fim:'2027-07-31',vender10:'Sim',obs:'',status:'pendente',statusObs:''},
+  {id:13,nome:'Francisco Rabelo de Souza',email:'x65700481200@tcu.gov.br',dias:30,ini:'2027-12-22',fim:'2028-01-21',vender10:'Não',obs:'Filha entra de férias da escola',status:'pendente',statusObs:''},
+  {id:14,nome:'Cleovansostenes Abud Freire',email:'x58847383587@tcu.gov.br',dias:20,ini:'2027-07-11',fim:'2027-07-31',vender10:'Sim',obs:'',status:'pendente',statusObs:''},
+  {id:15,nome:'Alexander Duarte Rodrigues',email:'x81367783020@tcu.gov.br',dias:20,ini:'2027-07-05',fim:'2027-07-25',vender10:'Não',obs:'',status:'pendente',statusObs:''},
+  {id:16,nome:'Ana Clara Santos Veloso',email:'x03807599185@tcu.gov.br',dias:20,ini:'2027-07-08',fim:'2027-07-27',vender10:'Não',obs:'',status:'pendente',statusObs:''},
+  {id:17,nome:'Thiago Dantas Prado',email:'x05751737180@tcu.gov.br',dias:20,ini:'2027-07-12',fim:'2027-07-31',vender10:'Sim',obs:'',status:'pendente',statusObs:''},
+  {id:18,nome:'Matheus de Queiroz Alves',email:'x03165674183@tcu.gov.br',dias:20,ini:'2028-01-03',fim:'2028-01-23',vender10:'Sim',obs:'',status:'pendente',statusObs:''},
+  {id:19,nome:'Sarah Mendes Ribeiro',email:'x04843563137@tcu.gov.br',dias:30,ini:'2027-09-08',fim:'2027-10-07',vender10:'Não',obs:'',status:'pendente',statusObs:''},
+  {id:20,nome:'Lucas Sena de Souza',email:'x00583623123@tcu.gov.br',dias:20,ini:'2027-07-05',fim:'2027-07-24',vender10:'Sim',obs:'',status:'pendente',statusObs:''},
+  {id:21,nome:'Edilene Alves de Moraes',email:'x81854021168@tcu.gov.br',dias:20,ini:'2027-07-12',fim:'2027-07-31',vender10:'Sim',obs:'',status:'pendente',statusObs:''},
+  {id:22,nome:'William Cássio da Rocha Duarte',email:'x00055184154@tcu.gov.br',dias:15,ini:'2027-07-05',fim:'2027-07-19',vender10:'Não',obs:'15 dias 14/02/2028 até 28/02/2028',status:'pendente',statusObs:''},
+  {id:23,nome:'Rayanne Pereira da Silva',email:'x09224369324@tcu.gov.br',dias:30,ini:'2027-12-01',fim:'2027-12-30',vender10:'Não',obs:'Pode haver mudança de data',status:'pendente',statusObs:''},
+  {id:24,nome:'Laélia Tayane Freitas Marques Souza',email:'x00802669247@tcu.gov.br',dias:15,ini:'2027-07-19',fim:'2027-08-02',vender10:'Não',obs:'15 dias Jul/2027 e 15 dias Jan/2028',status:'pendente',statusObs:''},
+  {id:25,nome:'Rodrigo Henrique Maranhão Santana',email:'x04456140488@tcu.gov.br',dias:15,ini:'2028-01-10',fim:'',vender10:'Não',obs:'Jul dia 3 a 21 / Jan dia 10 até 25',status:'pendente',statusObs:''},
+  {id:26,nome:'Adriano Pereira da Silva',email:'x01705347150@tcu.gov.br',dias:15,ini:'2027-07-05',fim:'2026-05-20',vender10:'Não',obs:'Dividindo em dois períodos',status:'pendente',statusObs:''},
+  {id:27,nome:'Adriano Portela Pantoja',email:'x85407119234@tcu.gov.br',dias:20,ini:'2027-07-19',fim:'2027-08-07',vender10:'Sim',obs:'',status:'pendente',statusObs:''},
+  {id:28,nome:'Alexsandro Barbosa de Lima',email:'x09166760488@tcu.gov.br',dias:30,ini:'2027-07-05',fim:'2027-08-04',vender10:'Não',obs:'',status:'pendente',statusObs:''},
+  {id:29,nome:'Renato Gomes Lemos',email:'x02283223164@tcu.gov.br',dias:15,ini:'2028-01-17',fim:'2028-01-31',vender10:'Sim',obs:'Outros 5 dias em Agosto',status:'pendente',statusObs:''},
+  {id:30,nome:'Caio dos Santos Silva',email:'x07773685100@tcu.gov.br',dias:15,ini:'2027-07-19',fim:'2027-08-02',vender10:'Sim',obs:'15 dias + 5 dias Jan/2028',status:'pendente',statusObs:''},
+  {id:31,nome:'Renato Gomes Lemos',email:'x02283223164@tcu.gov.br',dias:5,ini:'2027-10-04',fim:'2027-10-08',vender10:'Não',obs:'',status:'pendente',statusObs:''},
+  {id:32,nome:'Alexandre Ferreira Bottino',email:'x05138471112@tcu.gov.br',dias:15,ini:'2027-07-07',fim:'2027-07-21',vender10:'Não',obs:'',status:'pendente',statusObs:''},
+  {id:33,nome:'Michel Machado',email:'x00008120994@tcu.gov.br',dias:20,ini:'2026-12-21',fim:'2027-01-09',vender10:'Sim',obs:'Secretária em recesso',status:'pendente',statusObs:''},
+  {id:34,nome:'Robson Alves Medeiros',email:'x03315138117@tcu.gov.br',dias:20,ini:'2027-07-12',fim:'2027-07-30',vender10:'Sim',obs:'',status:'pendente',statusObs:''},
+  {id:35,nome:'Deise Cristina Barbosa Sales',email:'x97089117200@tcu.gov.br',dias:30,ini:'2027-12-21',fim:'2028-01-20',vender10:'Não',obs:'',status:'pendente',statusObs:''},
+  {id:36,nome:'Marcus Vinicius M. O. Pereira',email:'x00149492103@tcu.gov.br',dias:22,ini:'2027-05-05',fim:'2027-05-26',vender10:'Não',obs:'',status:'pendente',statusObs:''},
+  {id:37,nome:'Osvaldo Mendes de Amorim Júnior',email:'x64233367334@tcu.gov.br',dias:30,ini:'2027-06-01',fim:'2027-07-01',vender10:'Não',obs:'Verificar possibilidade',status:'pendente',statusObs:''},
+  {id:38,nome:'Alberto Marques das Mercês Junior',email:'x01322263248@tcu.gov.br',dias:20,ini:'2027-09-01',fim:'2027-09-20',vender10:'Sim',obs:'',status:'pendente',statusObs:''},
+  {id:39,nome:'Carolina Gonçalves Rocha',email:'x05175987100@tcu.gov.br',dias:15,ini:'2027-05-17',fim:'2027-05-31',vender10:'Não',obs:'',status:'pendente',statusObs:''},
+  {id:40,nome:'Carolina Gonçalves Rocha',email:'x05175987100@tcu.gov.br',dias:15,ini:'2027-12-27',fim:'2028-01-10',vender10:'Não',obs:'',status:'pendente',statusObs:''},
+  {id:41,nome:'Elimar dos Santos Vieira',email:'x64200728320@tcu.gov.br',dias:30,ini:'2027-07-05',fim:'2027-08-04',vender10:'Não',obs:'',status:'pendente',statusObs:''},
+  {id:42,nome:'Carlos Silva Gomes',email:'x85216445153@tcu.gov.br',dias:30,ini:'2028-01-03',fim:'2028-02-01',vender10:'Não',obs:'',status:'pendente',statusObs:''},
+  {id:43,nome:'Klisman Silva Sousa',email:'x04503695100@tcu.gov.br',dias:15,ini:'2027-08-02',fim:'2027-08-16',vender10:'Não',obs:'',status:'pendente',statusObs:''},
+  {id:44,nome:'Osvaldo Mendes de Amorim Júnior',email:'x64233367334@tcu.gov.br',dias:30,ini:'2027-06-01',fim:'2027-07-01',vender10:'Não',obs:'Segunda solicitação',status:'pendente',statusObs:''},
+  {id:45,nome:'Suene da Silva Pinho',email:'x05103645351@tcu.gov.br',dias:30,ini:'2027-07-01',fim:'2027-07-30',vender10:'Não',obs:'',status:'pendente',statusObs:''},
+  {id:46,nome:'Merilene Martins de Sousa',email:'x01238797105@tcu.gov.br',dias:15,ini:'2027-06-14',fim:'2027-06-28',vender10:'Não',obs:'15 dias Jun e 15 dias Ago',status:'pendente',statusObs:''},
+  {id:47,nome:'Diego Gonçalves de Azevedo',email:'x05772713779@tcu.gov.br',dias:30,ini:'2028-06-01',fim:'2028-06-30',vender10:'Não',obs:'',status:'pendente',statusObs:''},
+  {id:48,nome:'Brunna do Nascimento Ruas',email:'x04169501160@tcu.gov.br',dias:30,ini:'2027-07-01',fim:'2027-08-02',vender10:'Não',obs:'',status:'pendente',statusObs:''},
+  {id:49,nome:'Hermano Marques Fernandes',email:'x73603759168@tcu.gov.br',dias:20,ini:'2027-08-02',fim:'2027-08-20',vender10:'Sim',obs:'',status:'pendente',statusObs:''},
+  {id:50,nome:'Rafael José Pires',email:'x50401262120@tcu.gov.br',dias:20,ini:'2027-07-05',fim:'2027-07-24',vender10:'Sim',obs:'',status:'pendente',statusObs:''},
+  {id:51,nome:'Ricardo Conceição dos Santos',email:'x50584057172@tcu.gov.br',dias:20,ini:'2027-09-15',fim:'2027-10-04',vender10:'Sim',obs:'',status:'pendente',statusObs:''},
+  {id:52,nome:'Thiago Soares Carneiro',email:'x01562131176@tcu.gov.br',dias:30,ini:'2027-07-01',fim:'2027-07-30',vender10:'Não',obs:'',status:'pendente',statusObs:''},
+  {id:53,nome:'Franciele Cristina dos Santos',email:'x06637296961@tcu.gov.br',dias:30,ini:'2027-10-04',fim:'2027-11-02',vender10:'Não',obs:'',status:'pendente',statusObs:''},
+];
+
+
+// FERIAS_DATA: estado editável (carregado do localStorage ou da pretensão original)
+var FERIAS_DATA = [];
+
+function _feriasLoad(){
+  try{
+    const saved = localStorage.getItem('ts_ferias_data');
+    if(saved){ FERIAS_DATA = JSON.parse(saved); return; }
+  }catch(e){}
+  // Inicializa com os dados da pretensão
+  FERIAS_DATA = FERIAS_PRETENÇÃO.map(r=>Object.assign({},r));
+}
+function _feriasSave(){
+  try{ localStorage.setItem('ts_ferias_data', JSON.stringify(FERIAS_DATA)); }catch(e){}
+}
+_feriasLoad();
+
+function ferFmtDate(iso){
+  if(!iso) return '—';
+  const p=iso.split('-'); return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:'—';
+}
+
+// Detect overlaps: returns array of {a, b} pairs that conflict
+function ferGetConflitos(){
+  const conflitos = [];
+  const ativos = FERIAS_DATA.filter(r=>r.ini&&r.fim);
+  for(let i=0;i<ativos.length;i++){
+    for(let j=i+1;j<ativos.length;j++){
+      const a=ativos[i], b=ativos[j];
+      if(a.nome===b.nome) continue; // mesmo colaborador, períodos diferentes = ok
+      const aIni=new Date(a.ini), aFim=new Date(a.fim);
+      const bIni=new Date(b.ini), bFim=new Date(b.fim);
+      if(aIni<=bFim && aFim>=bIni){
+        conflitos.push({a,b});
+      }
+    }
+  }
+  return conflitos;
+}
+
+function ferDetectarConflitos(){
+  const conflitos = ferGetConflitos();
+  const ids = new Set();
+  conflitos.forEach(({a,b})=>{ ids.add(a.id); ids.add(b.id); });
+  FERIAS_DATA.forEach(r=>{
+    if(ids.has(r.id)) r._conflito=true;
+    else r._conflito=false;
+  });
+  _feriasSave();
+  ferRender();
+  toast(conflitos.length>0?`⚠️ ${conflitos.length} conflito(s) detectado(s)!`:'✅ Nenhum conflito encontrado!', conflitos.length>0?'warn':'ok');
+}
+
+function ferAprovarTodos(){
+  if(!confirm('Aprovar automaticamente todos os registros SEM conflito detectado?')) return;
+  const ids = new Set(ferGetConflitos().flatMap(({a,b})=>[a.id,b.id]));
+  let n=0;
+  FERIAS_DATA.forEach(r=>{
+    if(!ids.has(r.id) && r.status==='pendente'){ r.status='aprovado'; n++; }
+  });
+  _feriasSave(); ferRender();
+  toast(`✅ ${n} registro(s) aprovado(s)!`,'ok');
+}
+
+function ferRender(){
+  const busca=(document.getElementById('fer-busca')?.value||'').toLowerCase();
+  const filStatus=document.getElementById('fer-status')?.value||'';
+  const filConflito=document.getElementById('fer-conflito')?.value||'';
+  const soCon=document.getElementById('fer-chk-conflito')?.checked||false;
+  const grid=document.getElementById('fer-grid');
+  const kpis=document.getElementById('fer-kpis');
+  if(!grid) return;
+
+  // Detect conflicts first
+  const conflitoPares = ferGetConflitos();
+  const conflitoIds = new Set(conflitoPares.flatMap(({a,b})=>[a.id,b.id]));
+
+  // KPIs
+  const total=FERIAS_DATA.length;
+  const aprov=FERIAS_DATA.filter(r=>r.status==='aprovado').length;
+  const reprov=FERIAS_DATA.filter(r=>r.status==='reprovado').length;
+  const pend=FERIAS_DATA.filter(r=>r.status==='pendente').length;
+  const conf=conflitoIds.size;
+
+  if(kpis) kpis.innerHTML=[
+    ['Total',total,'#1F4E79'],['✅ Aprovados',aprov,'#375623'],
+    ['❌ Conflito/Reprov.',reprov,'#7A0000'],['⏳ Pendentes',pend,'#854F0B'],
+    ['⚠️ Com conflito',conf,'#C55A11'],
+  ].map(([l,v,c])=>`<div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:12px 16px">
+    <div style="font-size:11px;color:#6c757d;margin-bottom:4px">${l}</div>
+    <div style="font-size:24px;font-weight:700;color:${c}">${v}</div>
+  </div>`).join('');
+
+  let rows=[...FERIAS_DATA];
+  if(busca) rows=rows.filter(r=>r.nome.toLowerCase().includes(busca)||r.obs.toLowerCase().includes(busca));
+  if(filStatus) rows=rows.filter(r=>r.status===filStatus);
+  if(filConflito==='sim') rows=rows.filter(r=>conflitoIds.has(r.id));
+  if(filConflito==='nao') rows=rows.filter(r=>!conflitoIds.has(r.id));
+  if(soCon) rows=rows.filter(r=>conflitoIds.has(r.id));
+
+  if(!rows.length){ grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:#6c757d;padding:3rem">Nenhum registro encontrado.</div>'; return; }
+
+  grid.innerHTML = rows.map(r=>{
+    const hasConf = conflitoIds.has(r.id);
+    const confPares = conflitoPares.filter(({a,b})=>a.id===r.id||b.id===r.id);
+    const confInfo = confPares.map(({a,b})=>{
+      const outro = a.id===r.id?b:a;
+      return `<div style="font-size:11px;background:#FFE8D6;border-left:3px solid #C55A11;padding:5px 8px;border-radius:0 4px 4px 0;margin-top:4px">
+        ⚠️ Conflito com <b>${outro.nome}</b>: ${ferFmtDate(outro.ini)} → ${ferFmtDate(outro.fim)}
+      </div>`;
+    }).join('');
+
+    const statusBadge = r.status==='aprovado'
+      ? '<span style="background:#E1F5EE;color:#375623;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700">✅ APROVADO</span>'
+      : r.status==='reprovado'
+        ? '<span style="background:#FCEBEB;color:#7A0000;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700">❌ CONFLITO</span>'
+        : '<span style="background:#FEF9C3;color:#854D0E;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700">⏳ PENDENTE</span>';
+
+    const borderColor = hasConf?'#C55A11':r.status==='aprovado'?'#375623':'#dee2e6';
+    const bgColor = hasConf?'#FFF8F0':r.status==='aprovado'?'#F6FFF6':'#fff';
+
+    return `<div style="background:${bgColor};border:1.5px solid ${borderColor};border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div style="font-size:13px;font-weight:700;color:#1F4E79;line-height:1.3">${r.nome}</div>
+        ${statusBadge}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
+        <div><span style="color:#6c757d">📅 Início:</span> <b>${ferFmtDate(r.ini)}</b></div>
+        <div><span style="color:#6c757d">📅 Fim:</span> <b>${ferFmtDate(r.fim)}</b></div>
+        <div><span style="color:#6c757d">📆 Dias:</span> <b>${r.dias}</b></div>
+        <div><span style="color:#6c757d">💰 Vender 10d:</span> <b>${r.vender10}</b></div>
+      </div>
+      ${r.obs?`<div style="font-size:11px;color:#495057;background:#f8f9fb;border-radius:4px;padding:5px 8px">💬 ${r.obs}</div>`:''}
+      ${confInfo}
+      <div style="display:flex;gap:6px;margin-top:4px">
+        <button onclick="ferEditar(${r.id})" style="flex:1;padding:5px 0;background:#E8F0FE;color:#1F4E79;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600">✏️ Editar</button>
+        <button onclick="ferEnviarEmailDireto(${r.id})" style="flex:1;padding:5px 0;background:#FFF3E8;color:#C55A11;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600">📧 E-mail</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function ferEditar(id){
+  const r=FERIAS_DATA.find(x=>x.id===id);
+  if(!r) return;
+  document.getElementById('fer-modal-id').value=id;
+  document.getElementById('fer-modal-title').textContent='✏️ '+r.nome;
+  document.getElementById('fer-nome').value=r.nome;
+  document.getElementById('fer-ini').value=r.ini;
+  document.getElementById('fer-fim').value=r.fim;
+  document.getElementById('fer-dias').value=r.dias;
+  document.getElementById('fer-vender').value=r.vender10;
+  document.getElementById('fer-obs').value=r.obs||'';
+  document.getElementById('fer-status-sel').value=r.status||'pendente';
+  document.getElementById('fer-status-obs').value=r.statusObs||'';
+  document.getElementById('fer-email').value=r.email||'';
+  ferModalStatusChange();
+  document.getElementById('fer-modal').style.display='flex';
+}
+
+function ferModalStatusChange(){
+  const s=document.getElementById('fer-status-sel').value;
+  document.getElementById('fer-status-obs-wrap').style.display=s==='reprovado'?'block':'none';
+  document.getElementById('fer-email-wrap').style.display='block';
+}
+
+function ferSalvar(){
+  const id=parseInt(document.getElementById('fer-modal-id').value);
+  const r=FERIAS_DATA.find(x=>x.id===id);
+  if(!r) return;
+  r.nome=document.getElementById('fer-nome').value;
+  r.ini=document.getElementById('fer-ini').value;
+  r.fim=document.getElementById('fer-fim').value;
+  r.dias=parseInt(document.getElementById('fer-dias').value)||r.dias;
+  r.vender10=document.getElementById('fer-vender').value;
+  r.obs=document.getElementById('fer-obs').value;
+  r.status=document.getElementById('fer-status-sel').value;
+  r.statusObs=document.getElementById('fer-status-obs').value;
+  r.email=document.getElementById('fer-email').value;
+  _feriasSave();
+  document.getElementById('fer-modal').style.display='none';
+  ferRender();
+  toast('Registro salvo!','ok');
+}
+
+function ferEnviarEmailDireto(id){
+  const r=FERIAS_DATA.find(x=>x.id===id);
+  if(!r) return;
+  _ferEnviarEmail(r);
+}
+
+function ferEnviarEmail(){
+  const id=parseInt(document.getElementById('fer-modal-id').value);
+  const r=FERIAS_DATA.find(x=>x.id===id);
+  if(!r) return;
+  // Save first
+  ferSalvar();
+  _ferEnviarEmail(FERIAS_DATA.find(x=>x.id===id));
+}
+
+function _ferEnviarEmail(r){
+  const email=r.email||'';
+  const nome=r.nome;
+  const ini=ferFmtDate(r.ini);
+  const fim=ferFmtDate(r.fim);
+
+  // Build conflito pairs for this record
+  const confPares=ferGetConflitos().filter(({a,b})=>a.id===r.id||b.id===r.id);
+  const confList=confPares.map(({a,b})=>{ const o=a.id===r.id?b:a; return `${o.nome} no período de ${ferFmtDate(o.ini)} a ${ferFmtDate(o.fim)}`; });
+
+  let assunto, corpo;
+  if(r.status==='aprovado'){
+    assunto=encodeURIComponent(`[T&S/TCU] Férias Aprovadas — ${nome}`);
+    corpo=encodeURIComponent(
+      `Prezado(a) ${nome},\n\n`+
+      `Informamos que o seu período de férias foi APROVADO conforme pretensão informada:\n\n`+
+      `  📅 Início: ${ini}\n`+
+      `  📅 Término: ${fim}\n`+
+      `  📆 Total de dias: ${r.dias}\n`+
+      (r.vender10==='Sim'?`  💰 Venda de 10 dias: Sim\n`:'')+
+      `\nFavor marcar o período no sistema ePays para o registro formal das suas férias.\n\n`+
+      `Em caso de dúvidas, entre em contato com a gestão do contrato.\n\n`+
+      `Atenciosamente,\nPriscila Pamplona Torres\nGestora do Service Desk — Central de Serviços de TI\nTribunal de Contas da União | Contrato T&S`
+    );
+  } else if(r.status==='reprovado' && confList.length>0){
+    const confTexto=confList.map(c=>`  • ${c}`).join('\n');
+    assunto=encodeURIComponent(`[T&S/TCU] Férias — Conflito de Período — ${nome}`);
+    corpo=encodeURIComponent(
+      `Prezado(a) ${nome},\n\n`+
+      `Informamos que as férias solicitadas para o período de ${ini} a ${fim} estão chocando com o(s) seguinte(s) colaborador(es):\n\n`+
+      confTexto+`\n\n`+
+      `Solicitamos que verifique a possibilidade de troca do período ou alinhe diretamente com o(s) colega(s) citado(s) acima, buscando uma data alternativa.\n\n`+
+      (r.statusObs?`Observação adicional: ${r.statusObs}\n\n`:'')+
+      `Após alinhamento, favor retornar com nova pretensão para análise.\n\n`+
+      `Atenciosamente,\nPriscila Pamplona Torres\nGestora do Service Desk — Central de Serviços de TI\nTribunal de Contas da União | Contrato T&S`
+    );
+  } else {
+    assunto=encodeURIComponent(`[T&S/TCU] Férias — Resultado da Análise — ${nome}`);
+    corpo=encodeURIComponent(
+      `Prezado(a) ${nome},\n\nSegue retorno referente à pretensão de férias solicitada para ${ini} a ${fim}.\n\n`+
+      (r.statusObs||'Em análise.')+`\n\n`+
+      `Atenciosamente,\nPriscila Pamplona Torres\nGestora do Service Desk\nTCU | Contrato T&S`
+    );
+  }
+  window.location.href=`mailto:${email}?subject=${assunto}&body=${corpo}`;
+}
+
+function ferExportXls(){
+  const hdrs=['Nome','E-mail','Dias','Início','Fim','Vender 10d','Observação','Status','Conflito'];
+  const confIds=new Set(ferGetConflitos().flatMap(({a,b})=>[a.id,b.id]));
+  const rows=FERIAS_DATA.map(r=>[
+    r.nome, r.email, r.dias, ferFmtDate(r.ini), ferFmtDate(r.fim),
+    r.vender10, r.obs, r.status, confIds.has(r.id)?'Sim':'Não'
+  ]);
+  _exportXlsXML(hdrs, rows, 'Ferias_Pretensao');
 }
 
 // ══════════════════════════════════════════
