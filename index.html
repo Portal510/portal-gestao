@@ -495,6 +495,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <div class="tab" onclick="showTab('predef',this)"><span class="tab-icon">📄</span><span class="tab-label">E-mails Pré-definidos</span></div>
 
     <div class="sidebar-section">Monitoramento</div>
+    <div class="tab" onclick="showTab('produtividade',this)"><span class="tab-icon">💬</span><span class="tab-label">Produtividade Chat</span></div>
     <div class="tab" onclick="showTab('abono',this)"><span class="tab-icon">💰</span><span class="tab-label">Abono</span></div>
     <div class="tab" onclick="showTab('gerencial',this)"><span class="tab-icon">📊</span><span class="tab-label">Gerencial</span></div>
     <div class="tab" onclick="showTab('ferias',this)"><span class="tab-icon">🏖️</span><span class="tab-label">Férias</span></div>
@@ -1573,6 +1574,89 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
 </div>
 </div>
+<!-- ═══════════════════ PRODUTIVIDADE CHAT ═══════════════════ -->
+<div id="tab-produtividade" style="display:none">
+<div style="padding:20px 24px">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px">
+    <div>
+      <div style="font-size:20px;font-weight:700;color:#1F4E79">💬 Produtividade — Atendimento via Chat</div>
+      <div style="font-size:12px;color:#6c757d;margin-top:3px">BSB-01 · Índice de início de atendimento remoto · Meta: ≥ 90%</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <select id="prod-mes" onchange="prodFiltrar()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
+        <option>Janeiro</option><option>Fevereiro</option><option>Março</option><option>Abril</option>
+        <option selected>Maio</option><option>Junho</option><option>Julho</option><option>Agosto</option>
+        <option>Setembro</option><option>Outubro</option><option>Novembro</option><option>Dezembro</option>
+      </select>
+      <select id="prod-ano" onchange="prodFiltrar()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
+        <option>2025</option><option selected>2026</option><option>2027</option>
+      </select>
+      <label style="background:#1F4E79;color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">
+        📂 Importar XLSX
+        <input type="file" id="prod-file-input" accept=".xlsx,.xls" style="display:none" onchange="prodImportXlsx(this)">
+      </label>
+      <button onclick="prodExportXls()" style="padding:6px 14px;background:#375623;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">⬇ Exportar</button>
+    </div>
+  </div>
+
+  <!-- KPIs indicador -->
+  <div id="prod-kpis" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px"></div>
+
+  <!-- Aviso quando sem dados -->
+  <div id="prod-empty" style="background:#E8F0FE;border:1px solid #2E75B6;border-radius:8px;padding:20px;text-align:center;color:#1F4E79;font-size:13px;margin-bottom:18px">
+    📂 Importe a planilha de atendimento remoto para visualizar os dados.<br>
+    <span style="font-size:11px;color:#6c757d">Formato esperado: colunas <b>Atendente</b>, <b>Fora expediente</b>, <b>TempoInicio</b></span>
+  </div>
+
+  <!-- Cards em grid -->
+  <div id="prod-cards-wrap" style="display:none">
+
+    <!-- Card 1 — Atendimentos por atendente -->
+    <div style="background:#fff;border:1px solid #dee2e6;border-radius:10px;padding:18px;margin-bottom:18px">
+      <div style="font-size:15px;font-weight:700;color:#1F4E79;margin-bottom:14px">📊 Atendimentos por Atendente <span style="font-size:11px;font-weight:400;color:#6c757d">(apenas em expediente · alerta < 3)</span></div>
+      <div id="prod-chart-atend" style="width:100%;overflow-x:auto"></div>
+    </div>
+
+    <!-- Card 2 — Avaliação dos atendentes -->
+    <div style="background:#fff;border:1px solid #dee2e6;border-radius:10px;padding:18px;margin-bottom:18px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-size:15px;font-weight:700;color:#1F4E79">⭐ Avaliação dos Atendentes</div>
+        <div style="font-size:11px;color:#6c757d">1=Péssimo · 2=Ruim · 3=Regular · 4=Bom · 5=Ótimo</div>
+      </div>
+      <div id="prod-aval-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px"></div>
+    </div>
+
+    <!-- Card 3 — Evolução do indicador BSB-01 -->
+    <div style="background:#fff;border:1px solid #dee2e6;border-radius:10px;padding:18px;margin-bottom:18px">
+      <div style="font-size:15px;font-weight:700;color:#1F4E79;margin-bottom:14px">📈 Evolução do Indicador BSB-01 <span style="font-size:11px;font-weight:400;color:#6c757d">% atendidos em ≤ 60s · Meta 90%</span></div>
+      <div id="prod-chart-evolucao" style="width:100%;overflow-x:auto"></div>
+    </div>
+
+    <!-- Tabela detalhe -->
+    <div style="background:#fff;border:1px solid #dee2e6;border-radius:10px;padding:18px">
+      <div style="font-size:15px;font-weight:700;color:#1F4E79;margin-bottom:14px">🔍 Detalhamento por Atendente</div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr>
+              <th style="background:#1F4E79;color:#fff;padding:9px 12px;text-align:left">Atendente</th>
+              <th style="background:#1F4E79;color:#fff;padding:9px 12px;text-align:center">Total (expediente)</th>
+              <th style="background:#1F4E79;color:#fff;padding:9px 12px;text-align:center">Atendidos ≤ 60s</th>
+              <th style="background:#1F4E79;color:#fff;padding:9px 12px;text-align:center">% ≤ 60s</th>
+              <th style="background:#1F4E79;color:#fff;padding:9px 12px;text-align:center">Avaliação</th>
+              <th style="background:#1F4E79;color:#fff;padding:9px 12px;text-align:center">Status</th>
+            </tr>
+          </thead>
+          <tbody id="prod-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /prod-cards-wrap -->
+
+</div>
+</div>
 
 </div><!-- /content -->
 </div><!-- /portal-layout -->
@@ -2634,7 +2718,7 @@ function clearFilters(tab){
 }
 
 // TAB SWITCHING
-const tabIds=['geral','equipamentos','admissao','termos','certif','calendario','comunicados','predef','uniforme','upload','declaracoes','requisitos','pendencias','contrata','abono','gerencial','ferias'];
+const tabIds=['geral','equipamentos','admissao','termos','certif','calendario','comunicados','predef','uniforme','upload','declaracoes','requisitos','pendencias','contrata','abono','gerencial','ferias','produtividade'];
 // ── Sidebar toggle ────────────────────────
 function toggleSidebar(){
   const sidebar=document.getElementById('sidebar');
@@ -2654,7 +2738,7 @@ function showTab(id,el){
   });
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:renderDeclaracoes,requisitos:renderRequisitos,pendencias:renderPendencias,contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){}},gerencial:()=>{try{rGerencial();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}}};
+  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:renderDeclaracoes,requisitos:renderRequisitos,pendencias:renderPendencias,contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){}},gerencial:()=>{try{rGerencial();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}},produtividade:()=>{try{prodRender();}catch(e){}}};
   if(renders[id]) renders[id]();
 }
 
@@ -7810,6 +7894,278 @@ function _ensureTsData(tab){
       });
     }
   }
+}
+
+// ══════════════════════════════════════════
+// PRODUTIVIDADE — Atendimento via Chat
+// BSB-01: Índice de início de atendimento remoto
+// ══════════════════════════════════════════
+
+var PROD_DATA = [];      // rows imported from XLSX
+var PROD_AVAL = {};      // {atendente: {nota: 1-5, obs: ''}} persisted in localStorage
+var PROD_HISTORICO = []; // [{mes,ano,total,atendidos60s,pct}] evolução
+
+function _prodLoad(){
+  try{ const r=localStorage.getItem('ts_prod_aval'); if(r) PROD_AVAL=JSON.parse(r); }catch(e){}
+  try{ const r=localStorage.getItem('ts_prod_hist'); if(r) PROD_HISTORICO=JSON.parse(r); }catch(e){}
+}
+function _prodSave(){
+  try{ localStorage.setItem('ts_prod_aval',JSON.stringify(PROD_AVAL)); }catch(e){}
+  try{ localStorage.setItem('ts_prod_hist',JSON.stringify(PROD_HISTORICO)); }catch(e){}
+}
+_prodLoad();
+
+// ── Importar XLSX via SheetJS ──────────────
+function prodImportXlsx(input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array', cellDates:true});
+      // Find sheet with "Chamadas" or use first sheet
+      const sheetName = wb.SheetNames.find(s=>s.toLowerCase().includes('chamada')) || wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(ws, {raw:false});
+      if(!rows.length){ toast('Planilha vazia ou sem dados reconhecíveis.','warn'); return; }
+      // Validate required columns
+      const required=['Atendente','Fora expediente','TempoInicio'];
+      const cols=Object.keys(rows[0]);
+      const missing=required.filter(c=>!cols.includes(c));
+      if(missing.length){ toast('Colunas não encontradas: '+missing.join(', '),'err'); return; }
+
+      PROD_DATA = rows;
+      // Save month/year to historico
+      prodSaveToHistorico();
+      toast('✅ '+rows.length+' registros importados!','ok');
+      prodRender();
+    }catch(err){ toast('Erro ao ler XLSX: '+err.message,'err'); }
+  };
+  reader.readAsArrayBuffer(file);
+  input.value='';
+}
+
+function timeToSec(t){
+  // t can be "HH:MM:SS", "H:MM:SS", or a decimal number (Excel serial fraction)
+  if(!t) return null;
+  if(typeof t==='number') return Math.round(t*86400);
+  const s=String(t).trim();
+  const m=s.match(/^(\d+):(\d{2}):(\d{2})/);
+  if(m) return parseInt(m[1])*3600+parseInt(m[2])*60+parseInt(m[3]);
+  // Try as decimal
+  const n=parseFloat(s);
+  if(!isNaN(n)) return Math.round(n*86400);
+  return null;
+}
+
+function prodCalc(){
+  const inExp = PROD_DATA.filter(r=>(r['Fora expediente']||'').toLowerCase().trim()==='não');
+  const total  = inExp.length;
+  const atend60 = inExp.filter(r=>{
+    const sec = timeToSec(r['TempoInicio']);
+    return sec!==null && sec<=60;
+  }).length;
+  const pct = total>0 ? (atend60/total*100) : 0;
+
+  // Per atendente
+  const atendMap={};
+  inExp.forEach(r=>{
+    const a=r['Atendente']||'Desconhecido';
+    if(!atendMap[a]) atendMap[a]={total:0,atend60:0};
+    atendMap[a].total++;
+    const sec=timeToSec(r['TempoInicio']);
+    if(sec!==null&&sec<=60) atendMap[a].atend60++;
+  });
+
+  return {total, atend60, pct, atendMap, inExp};
+}
+
+function prodSaveToHistorico(){
+  const mes=document.getElementById('prod-mes')?.value||'Maio';
+  const ano=document.getElementById('prod-ano')?.value||'2026';
+  const {total,atend60,pct}=prodCalc();
+  const key=mes+'|'+ano;
+  const existing=PROD_HISTORICO.findIndex(h=>h.mes===mes&&h.ano===ano);
+  const entry={mes,ano,total,atend60,pct:parseFloat(pct.toFixed(1))};
+  if(existing>=0) PROD_HISTORICO[existing]=entry;
+  else PROD_HISTORICO.push(entry);
+  PROD_HISTORICO.sort((a,b)=>{
+    const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    return (parseInt(a.ano)*12+meses.indexOf(a.mes))-(parseInt(b.ano)*12+meses.indexOf(b.mes));
+  });
+  _prodSave();
+}
+
+function prodFiltrar(){ if(PROD_DATA.length) prodRender(); }
+
+function prodRender(){
+  const empty=document.getElementById('prod-empty');
+  const wrap=document.getElementById('prod-cards-wrap');
+  if(!PROD_DATA.length){ if(empty) empty.style.display='block'; if(wrap) wrap.style.display='none'; return; }
+  if(empty) empty.style.display='none';
+  if(wrap) wrap.style.display='block';
+
+  const {total,atend60,pct,atendMap}=prodCalc();
+  const meta=90;
+  const atingiu=pct>=meta;
+
+  // ── KPIs ─────────────────────────────
+  const kpis=document.getElementById('prod-kpis');
+  if(kpis) kpis.innerHTML=[
+    ['Total chamadas',total,'#1F4E79'],
+    ['Em expediente',total,'#375623'],
+    ['Atendidos ≤ 60s',atend60,'#185FA5'],
+    ['Fora expediente (excluídas)', PROD_DATA.length-total,'#6c757d'],
+    [atingiu?'✅ Indicador':'❌ Indicador',pct.toFixed(1)+'%',atingiu?'#375623':'#A32D2D'],
+  ].map(([l,v,c])=>`<div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:12px 14px">
+    <div style="font-size:11px;color:#6c757d;margin-bottom:4px">${l}</div>
+    <div style="font-size:22px;font-weight:700;color:${c}">${v}</div>
+    ${l.includes('Indicador')?`<div style="font-size:10px;color:#6c757d;margin-top:2px">Meta: ≥ ${meta}%</div>`:''}
+  </div>`).join('');
+
+  // ── Chart: Atendimentos por atendente ─
+  const sorted=Object.entries(atendMap).sort((a,b)=>b[1].total-a[1].total);
+  const BAR_H=28, GAP=6, PAD=200, CHART_W=600;
+  const svgH=sorted.length*(BAR_H+GAP)+20;
+  const maxV=Math.max(...sorted.map(([,v])=>v.total),1);
+
+  let svgBars=`<svg viewBox="0 0 ${PAD+CHART_W+80} ${svgH}" style="width:100%;min-width:${PAD+CHART_W+80}px;font-family:inherit">`;
+  sorted.forEach(([name,d],i)=>{
+    const y=i*(BAR_H+GAP)+10;
+    const pctBar=Math.round(d.total/maxV*CHART_W);
+    const pct60=d.total>0?(d.atend60/d.total*100):0;
+    const alert=d.total<3;
+    const barColor=alert?'#C55A11':pct60>=90?'#375623':pct60>=70?'#854F0B':'#A32D2D';
+    const bgColor=alert?'rgba(197,90,17,.08)':'transparent';
+    svgBars+=`<rect x="0" y="${y-2}" width="${PAD+CHART_W+80}" height="${BAR_H+4}" fill="${bgColor}" rx="4"/>`;
+    svgBars+=`<text x="${PAD-8}" y="${y+BAR_H/2+4}" text-anchor="end" font-size="11" fill="${alert?'#C55A11':'#1F4E79'}" font-weight="${alert?700:400}">${name.split(' ').slice(0,2).join(' ')}${alert?' ⚠️':''}</text>`;
+    svgBars+=`<rect x="${PAD}" y="${y}" width="${pctBar}" height="${BAR_H}" fill="${barColor}" rx="3"/>`;
+    svgBars+=`<text x="${PAD+pctBar+6}" y="${y+BAR_H/2+4}" font-size="11" fill="#1F4E79" font-weight="600">${d.total} (${pct60.toFixed(0)}% ≤60s)</text>`;
+  });
+  // Meta line
+  svgBars+=`</svg>`;
+  const chartDiv=document.getElementById('prod-chart-atend');
+  if(chartDiv) chartDiv.innerHTML=`<div style="font-size:11px;color:#6c757d;margin-bottom:6px">⚠️ Laranja = abaixo de 3 atendimentos · Cor da barra = % atendidos em ≤60s (verde ≥90%, amarelo ≥70%, vermelho <70%)</div>`+svgBars;
+
+  // ── Avaliação cards ───────────────────
+  const avalGrid=document.getElementById('prod-aval-grid');
+  if(avalGrid){
+    avalGrid.innerHTML=sorted.map(([name])=>{
+      const aval=PROD_AVAL[name]||{nota:0,obs:''};
+      const stars=[1,2,3,4,5].map(n=>`<span style="cursor:pointer;font-size:22px;color:${n<=(aval.nota||0)?'#F5A623':'#dee2e6'}" onclick="prodSetNota('${name.replace(/'/g,"\\'")}',${n})"
+>★</span>`).join('');
+      const label=['','Péssimo','Ruim','Regular','Bom','Ótimo'][aval.nota||0]||'—';
+      const labelColor=['','#A32D2D','#C55A11','#854F0B','#185FA5','#375623'][aval.nota||0]||'#6c757d';
+      return `<div style="background:#f8f9fb;border:1px solid #dee2e6;border-radius:8px;padding:12px">
+        <div style="font-size:12px;font-weight:700;color:#1F4E79;margin-bottom:8px">${name.split(' ').slice(0,3).join(' ')}</div>
+        <div style="margin-bottom:6px">${stars}</div>
+        ${aval.nota?`<div style="font-size:11px;font-weight:700;color:${labelColor}">${aval.nota} — ${label}</div>`:'<div style="font-size:11px;color:#6c757d">Sem avaliação</div>'}
+        <textarea placeholder="Observação..." rows="2" style="width:100%;margin-top:6px;font-size:11px;padding:5px;border:1px solid #dee2e6;border-radius:4px;resize:none;box-sizing:border-box" oninput="prodSetObs('${name.replace(/'/g,"\\'")}',this.value)">${aval.obs||''}</textarea>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Evolução indicador ────────────────
+  prodRenderEvolucao();
+
+  // ── Tabela detalhe ────────────────────
+  const tbody=document.getElementById('prod-tbody');
+  if(tbody){
+    tbody.innerHTML=sorted.map(([name,d],i)=>{
+      const pct60=d.total>0?(d.atend60/d.total*100):0;
+      const alert=d.total<3;
+      const aval=PROD_AVAL[name]||{nota:0};
+      const avalLabel=['','Péssimo','Ruim','Regular','Bom','Ótimo'][aval.nota||0]||'—';
+      const avalColor=['','#A32D2D','#C55A11','#854F0B','#185FA5','#375623'][aval.nota||0]||'#6c757d';
+      const status60=pct60>=90?'<span style="color:#375623;font-weight:700">✅ Meta</span>':
+        pct60>=70?'<span style="color:#854F0B;font-weight:700">⚠️ Próx.</span>':
+        '<span style="color:#A32D2D;font-weight:700">❌ Abaixo</span>';
+      return `<tr style="background:${alert?'#FFF8F0':i%2===0?'#fff':'#f8f9fb'}">
+        <td style="padding:8px 12px;font-weight:600;color:${alert?'#C55A11':'#1F4E79'}">${name}${alert?' ⚠️':''}</td>
+        <td style="padding:8px 12px;text-align:center;font-weight:700">${d.total}</td>
+        <td style="padding:8px 12px;text-align:center">${d.atend60}</td>
+        <td style="padding:8px 12px;text-align:center;font-weight:700;color:${pct60>=90?'#375623':pct60>=70?'#854F0B':'#A32D2D'}">${pct60.toFixed(1)}%</td>
+        <td style="padding:8px 12px;text-align:center;color:${avalColor};font-weight:600">${aval.nota?aval.nota+' — '+avalLabel:'—'}</td>
+        <td style="padding:8px 12px;text-align:center">${status60}</td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+function prodSetNota(name, nota){
+  if(!PROD_AVAL[name]) PROD_AVAL[name]={nota:0,obs:''};
+  PROD_AVAL[name].nota=nota;
+  _prodSave();
+  prodRender();
+}
+function prodSetObs(name, obs){
+  if(!PROD_AVAL[name]) PROD_AVAL[name]={nota:0,obs:''};
+  PROD_AVAL[name].obs=obs;
+  _prodSave();
+}
+
+function prodRenderEvolucao(){
+  const div=document.getElementById('prod-chart-evolucao');
+  if(!div) return;
+  const hist=PROD_HISTORICO;
+  if(!hist.length){
+    div.innerHTML='<div style="color:#6c757d;font-size:12px;padding:1rem">Importe dados de múltiplos meses para visualizar a evolução.</div>';
+    return;
+  }
+  const W=800, H=180, PAD_L=50, PAD_R=20, PAD_T=20, PAD_B=40;
+  const chartW=W-PAD_L-PAD_R, chartH=H-PAD_T-PAD_B;
+  const maxPct=Math.max(100, Math.max(...hist.map(h=>h.pct))+5);
+  const n=hist.length;
+  const stepX=n>1?chartW/(n-1):chartW/2;
+
+  const points=hist.map((h,i)=>{
+    const x=PAD_L+(n>1?i*stepX:chartW/2);
+    const y=PAD_T+chartH-(h.pct/maxPct*chartH);
+    return {x,y,h};
+  });
+
+  const metaY=PAD_T+chartH-(90/maxPct*chartH);
+
+  let svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:${W}px">`;
+  // Grid
+  [0,25,50,75,90,100].forEach(v=>{
+    const y=PAD_T+chartH-(v/maxPct*chartH);
+    svg+=`<line x1="${PAD_L}" x2="${W-PAD_R}" y1="${y}" y2="${y}" stroke="#f0f0f0" stroke-width="1"/>`;
+    svg+=`<text x="${PAD_L-6}" y="${y+4}" text-anchor="end" font-size="9" fill="#aaa">${v}%</text>`;
+  });
+  // Meta line
+  svg+=`<line x1="${PAD_L}" x2="${W-PAD_R}" y1="${metaY}" y2="${metaY}" stroke="#375623" stroke-width="1.5" stroke-dasharray="6,3"/>`;
+  svg+=`<text x="${W-PAD_R+4}" y="${metaY+4}" font-size="9" fill="#375623">Meta 90%</text>`;
+  // Area fill
+  if(points.length>1){
+    const areaPath='M'+PAD_L+','+(PAD_T+chartH)+' '+points.map(p=>`L${p.x},${p.y}`).join(' ')+' L'+(PAD_L+chartW)+','+(PAD_T+chartH)+' Z';
+    svg+=`<path d="${areaPath}" fill="rgba(30,78,121,.08)"/>`;
+    const linePath='M'+points.map(p=>`${p.x},${p.y}`).join(' L');
+    svg+=`<path d="${linePath}" fill="none" stroke="#1F4E79" stroke-width="2.5"/>`;
+  }
+  // Points + labels
+  points.forEach(p=>{
+    const color=p.h.pct>=90?'#375623':'#A32D2D';
+    svg+=`<circle cx="${p.x}" cy="${p.y}" r="5" fill="${color}" stroke="#fff" stroke-width="2"/>`;
+    svg+=`<text x="${p.x}" y="${p.y-10}" text-anchor="middle" font-size="10" fill="${color}" font-weight="700">${p.h.pct.toFixed(1)}%</text>`;
+    svg+=`<text x="${p.x}" y="${H-PAD_B+14}" text-anchor="middle" font-size="9" fill="#6c757d">${p.h.mes.slice(0,3)}\n${p.h.ano.slice(2)}</text>`;
+  });
+  svg+=`</svg>`;
+  div.innerHTML=svg;
+}
+
+function prodExportXls(){
+  const {atendMap}=prodCalc();
+  const mes=document.getElementById('prod-mes')?.value||'';
+  const ano=document.getElementById('prod-ano')?.value||'';
+  const hdrs=['Atendente','Total (expediente)','Atendidos ≤60s','% ≤60s','Avaliação','Observação'];
+  const rows=Object.entries(atendMap).sort((a,b)=>b[1].total-a[1].total).map(([name,d])=>{
+    const pct=d.total>0?(d.atend60/d.total*100):0;
+    const aval=PROD_AVAL[name]||{nota:0,obs:''};
+    const avalLabel=['','Péssimo','Ruim','Regular','Bom','Ótimo'][aval.nota||0]||'—';
+    return [name,d.total,d.atend60,pct.toFixed(1)+'%',aval.nota?aval.nota+' — '+avalLabel:'—',aval.obs||''];
+  });
+  _exportXlsXML(hdrs,rows,'Produtividade_Chat_'+mes+'_'+ano);
 }
 
 function _portalInit(){
