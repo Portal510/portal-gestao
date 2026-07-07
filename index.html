@@ -2343,7 +2343,7 @@ function renderGeral(){
     const demVal = c.data_demissao||'';
     const demStr = demVal ? demVal.split('-').reverse().join('/') : '';
     const demCell = demStr
-      ? `<span style="font-size:12px;color:#7A0000;font-weight:600">${demStr}</span>${c.obs_demissao?`<div style="font-size:10px;color:#A32D2D;margin-top:2px;max-width:140px;white-space:normal" title="${escQ(c.obs_demissao)}">💬 ${c.obs_demissao.slice(0,45)}${c.obs_demissao.length>45?'…':''}</div>`:''}`
+      ? `<span style="font-size:12px;color:#7A0000;font-weight:600">${demStr}</span>`
       : `<span style="font-size:11px;color:#ccc">—</span>`;
 
     // Portal T&S link — search by CPF or nome
@@ -3313,11 +3313,11 @@ function exportXlsx(tab){
   let rows=[], headers=[], filename='';
   const all=DATA;
   if(tab==='geral'){
-    headers=['Nome','Conta Rede TCU','Cargo','UF','Salário','Data Admissão','Data Desligamento','Motivo Desligamento','CPF','RG','Data Nascimento','Raça/Cor','Sexo','PcD','Libras','Vítima Viol. Dom.','E-mail Pessoal','E-mail Institucional','Status'];
+    headers=['Nome','Conta Rede TCU','Cargo','UF','Salário','Data Admissão','Data Desligamento','CPF','RG','Data Nascimento','Raça/Cor','Sexo','PcD','Libras','Vítima Viol. Dom.','E-mail Pessoal','E-mail Institucional','Status'];
     rows=all.map(c=>{
       const adm=c.data_admissao?c.data_admissao.split('-').reverse().join('/'):'';
       const dem=c.data_demissao?c.data_demissao.split('-').reverse().join('/'):'';
-      return [c.nome,c.conta_rede||'',c.cargo,c.uf,(()=>{const s=String(c.salario||'').trim();if(!s)return '';if(s.startsWith('R$'))return s;const n=parseFloat(s);return isNaN(n)?s:'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});})(),adm,dem,c.obs_demissao||''  ,c.cpf,c.rg||'',c.data_nascimento?c.data_nascimento.split('-').reverse().join('/'):'',c.cor_raca||'',c.genero||'',c.pcd||'Não',c.libras||'Não',c.violencia_domestica||'Não',(c.email&&c.email!=='Pendente'?c.email:''),(c.email_inst&&c.email_inst!=='Pendente'?c.email_inst:''),c.status==='inativo'?'Inativo':'Ativo'];
+      return [c.nome,c.conta_rede||'',c.cargo,c.uf,(()=>{const s=String(c.salario||'').trim();if(!s)return '';if(s.startsWith('R$'))return s;const n=parseFloat(s);return isNaN(n)?s:'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});})(),adm,dem,c.cpf,c.rg||'',c.data_nascimento?c.data_nascimento.split('-').reverse().join('/'):'',c.cor_raca||'',c.genero||'',c.pcd||'Não',c.libras||'Não',c.violencia_domestica||'Não',(c.email&&c.email!=='Pendente'?c.email:''),(c.email_inst&&c.email_inst!=='Pendente'?c.email_inst:''),c.status==='inativo'?'Inativo':'Ativo'];
     });
     filename='Portal_TS_Geral';
   } else if(tab==='equipamentos'){
