@@ -3377,47 +3377,59 @@ function downloadCsv(headers, rows, filename){
   _exportXlsXML(headers, rows, filename);
 }
 
-// Gera XLS via SpreadsheetML — cada valor em sua coluna, sem ambiguidade
+// Gera .xlsx real via SheetJS — sem aviso de formato do Excel
 function _exportXlsXML(headers, rows, filename){
-  var esc = function(v){
+  var clean = function(v){
     var s = String(v==null?'':v);
-    // Remove HTML tags se houver
-    s = s.replace(/<[^>]+>/g,'').trim();
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return s.replace(/<[^>]+>/g,'').trim();
   };
-  var xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-    + '<?mso-application progid="Excel.Sheet"?>\n'
-    + '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" '
-    + 'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n'
-    + '<Styles>'
-    + '<Style ss:ID="H"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#042C53" ss:Pattern="Solid"/></Style>'
-    + '<Style ss:ID="E"><Alignment ss:WrapText="0"/></Style>'
-    + '<Style ss:ID="A"><Interior ss:Color="#F1EFE8" ss:Pattern="Solid"/></Style>'
-    + '</Styles>\n'
-    + '<Worksheet ss:Name="Dados"><Table>\n';
-  // Header row
-  xml += '<Row>';
-  headers.forEach(function(h){ xml += '<Cell ss:StyleID="H"><Data ss:Type="String">'+esc(h)+'</Data></Cell>'; });
-  xml += '</Row>\n';
-  // Data rows
-  rows.forEach(function(row, ri){
-    var style = ri%2===0?'E':'A';
-    xml += '<Row>';
-    row.forEach(function(cell){
-      xml += '<Cell ss:StyleID="'+style+'"><Data ss:Type="String">'+esc(cell)+'</Data></Cell>';
+
+  if(typeof XLSX !== 'undefined'){
+    // ── SheetJS real .xlsx ────────────────────
+    var wsData = [headers.map(clean)].concat(rows.map(function(row){
+      return row.map(clean);
+    }));
+    var ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Column widths
+    var colWidths = headers.map(function(h, i){
+      var maxLen = clean(h).length;
+      rows.forEach(function(row){
+        var cell = clean(row[i]||'');
+        if(cell.length > maxLen) maxLen = cell.length;
+      });
+      return { wch: Math.min(Math.max(maxLen + 2, 10), 60) };
     });
-    xml += '</Row>\n';
-  });
-  xml += '</Table></Worksheet></Workbook>';
-  var bom = '\uFEFF';
-  var blob = new Blob([bom+xml], {type:'application/vnd.ms-excel;charset=utf-8'});
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = (filename||'export')+'_'+new Date().toISOString().slice(0,10)+'.xls';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+    ws['!cols'] = colWidths;
+
+    // Style header row (SheetJS Community doesn't support full styles,
+    // but we can mark the range for reference)
+    var range = XLSX.utils.decode_range(ws['!ref']);
+    ws['!freeze'] = { xSplit: 0, ySplit: 1 }; // freeze header row
+
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Dados');
+    var fname = (filename||'export')+'_'+new Date().toISOString().slice(0,10)+'.xlsx';
+    XLSX.writeFile(wb, fname);
+
+  } else {
+    // Fallback: CSV download se SheetJS não carregou
+    var csv = [headers].concat(rows).map(function(row){
+      return row.map(function(v){
+        var s = clean(v);
+        return '"'+s.replace(/"/g,'""')+'"';
+      }).join(';');
+    }).join('\r\n');
+    var bom = '\uFEFF';
+    var blob = new Blob([bom+csv], {type:'text/csv;charset=utf-8'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (filename||'export')+'_'+new Date().toISOString().slice(0,10)+'.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  }
 }
 
 // ══════════════════════════════════════════
