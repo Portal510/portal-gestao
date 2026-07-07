@@ -1429,6 +1429,65 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </div>
   </div>
 
+  <!-- ── Upload de Declarações ─────────────────────────── -->
+  <div style="margin-top:24px;background:#fff;border:1px solid #dee2e6;border-radius:10px;padding:20px">
+    <div style="font-size:15px;font-weight:700;color:#1F4E79;margin-bottom:4px">📎 Upload de Declarações</div>
+    <div style="font-size:12px;color:#6c757d;margin-bottom:16px">Envie PDFs, imagens, Word ou ZIPs. Selecione o colaborador, tipo e mês antes de confirmar.</div>
+
+    <!-- Controles -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:#6c757d;display:block;margin-bottom:4px">COLABORADOR</label>
+        <select id="decl-up-colab" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px;min-width:220px">
+          <option value="">Selecionar colaborador…</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:#6c757d;display:block;margin-bottom:4px">TIPO</label>
+        <select id="decl-up-tipo" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
+          <option value="">Selecionar tipo…</option>
+          <option value="Decl. Desktop/Internet">Decl. Desktop/Internet</option>
+          <option value="Decl. Locação Equipamento">Decl. Locação Equipamento</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:#6c757d;display:block;margin-bottom:4px">MÊS</label>
+        <select id="decl-up-mes" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
+          <option value="">Selecionar mês…</option>
+          <option>Janeiro</option><option>Fevereiro</option><option>Março</option><option>Abril</option>
+          <option>Maio</option><option>Junho</option><option>Julho</option><option>Agosto</option>
+          <option>Setembro</option><option>Outubro</option><option>Novembro</option><option>Dezembro</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:#6c757d;display:block;margin-bottom:4px">ANO</label>
+        <select id="decl-up-ano" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
+          <option>2025</option><option selected>2026</option><option>2027</option>
+        </select>
+      </div>
+      <label style="background:#1F4E79;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap">
+        📂 Selecionar arquivo(s)
+        <input type="file" id="decl-up-input" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.zip" style="display:none" onchange="declUploadFiles(this)">
+      </label>
+    </div>
+
+    <!-- Drop zone -->
+    <div id="decl-up-dropzone" style="border:2px dashed #dee2e6;border-radius:8px;padding:20px;text-align:center;color:#6c757d;font-size:12px;cursor:pointer;transition:background .2s"
+      ondragover="event.preventDefault();this.style.background='#E8F0FE';this.style.borderColor='#1F4E79'"
+      ondragleave="this.style.background='';this.style.borderColor='#dee2e6'"
+      ondrop="event.preventDefault();this.style.background='';this.style.borderColor='#dee2e6';declUploadFiles({files:event.dataTransfer.files})"
+      onclick="document.getElementById('decl-up-input').click()">
+      🗂 Arraste arquivos aqui ou clique para selecionar<br>
+      <span style="font-size:11px">PDF · DOC · JPEG · JPG · PNG · ZIP</span>
+    </div>
+
+    <!-- Result list -->
+    <div id="decl-up-result" style="margin-top:12px;display:none">
+      <div style="font-size:12px;font-weight:600;color:#1F4E79;margin-bottom:8px">Arquivos importados:</div>
+      <div id="decl-up-list" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+  </div>
+
 </div>
 </div>
 
@@ -2998,7 +3057,7 @@ function showTab(id,el){
   });
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:renderDeclaracoes,requisitos:renderRequisitos,pendencias:renderPendencias,contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){}},gerencial:()=>{try{rGerencial();}catch(e){}},indicadores:()=>{try{indRender();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}}};
+  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:()=>{try{renderDeclaracoes();declUploadInit();}catch(e){}},requisitos:renderRequisitos,pendencias:renderPendencias,contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){}},gerencial:()=>{try{rGerencial();}catch(e){}},indicadores:()=>{try{indRender();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}}};
   if(renders[id]) renders[id]();
 }
 
@@ -4862,6 +4921,90 @@ function renderDeclaracoes(){
   document.getElementById('decl-kpi-desk').textContent  = totDesk;
   document.getElementById('decl-kpi-cel').textContent   = totCel;
   document.getElementById('decl-kpi-pend').textContent  = totPend;
+}
+
+// ── Upload de Declarações dentro da aba ─────────────────
+function declUploadInit(){
+  const sel = document.getElementById('decl-up-colab');
+  if(!sel || sel.options.length > 1) return;
+  [...DATA].filter(c=>c.status!=='inativo')
+    .sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'))
+    .forEach(c=>{
+      const o=document.createElement('option');
+      o.value=c._id; o.textContent=c.nome+' ('+c.uf+')';
+      sel.appendChild(o);
+    });
+  // Pre-select current month
+  const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const mesEl=document.getElementById('decl-up-mes');
+  if(mesEl && !mesEl._init){ mesEl.value=meses[new Date().getMonth()]; mesEl._init=true; }
+}
+
+function declUploadFiles(input){
+  const files = Array.from(input.files||[]);
+  if(!files.length) return;
+
+  const colabId  = parseInt(document.getElementById('decl-up-colab')?.value);
+  const tipo     = document.getElementById('decl-up-tipo')?.value;
+  const mes      = document.getElementById('decl-up-mes')?.value;
+  const ano      = document.getElementById('decl-up-ano')?.value || '2026';
+
+  if(!colabId){ toast('Selecione o colaborador.','warn'); return; }
+  if(!tipo)   { toast('Selecione o tipo de declaração.','warn'); return; }
+  if(!mes)    { toast('Selecione o mês da declaração.','warn'); return; }
+
+  const colab = DATA.find(c=>c._id===colabId);
+  if(!colab)  { toast('Colaborador não encontrado.','warn'); return; }
+
+  const resultDiv = document.getElementById('decl-up-result');
+  const listDiv   = document.getElementById('decl-up-list');
+  resultDiv.style.display = 'block';
+
+  files.forEach(file=>{
+    const reader = new FileReader();
+    reader.onload = function(e){
+      const ext  = file.name.split('.').pop().toLowerCase();
+      const size = (file.size/1024).toFixed(1)+'KB';
+      const id   = Date.now().toString()+Math.random().toString(36).slice(2,5);
+      const fileKey = mes+'-'+ano+'-'+file.name;
+
+      // Save to uploadedDocs
+      const existIdx = uploadedDocs.findIndex(d=>d.colabId===colabId&&d.tipo===tipo&&d.declMes===mes&&d.declAno===ano);
+      if(existIdx>=0) uploadedDocs.splice(existIdx,1);
+      uploadedDocs.unshift({
+        id, colabId, colabNome:colab.nome, colabUf:colab.uf,
+        tipo, cat:'Declarações',
+        fileName:file.name, ext, size,
+        declMes:mes, declAno:ano,
+        dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+        dataUrl:e.target.result, batchImported:true,
+      });
+
+      // Update DECL_DATA
+      const key = declKey(colab.nome, mes, ano);
+      if(!DECL_DATA[key]) DECL_DATA[key]={};
+      const campo = tipo==='Decl. Desktop/Internet'?'desk':'cel';
+      DECL_DATA[key][campo]='Entregue';
+      _declSave();
+      saveUploadDocs();
+      renderDeclaracoes();
+
+      // Show in result list
+      const item = document.createElement('div');
+      item.style.cssText='display:flex;align-items:center;gap:10px;background:#E1F5EE;border:1px solid #b7dfc5;border-radius:6px;padding:8px 12px;font-size:12px';
+      item.innerHTML=`<span style="font-size:16px">${ext==='pdf'?'📄':ext==='zip'?'🗜️':ext.match(/jpe?g|png/)?'🖼️':'📝'}</span>
+        <div style="flex:1">
+          <div style="font-weight:600;color:#1F4E79">${file.name}</div>
+          <div style="color:#6c757d">${colab.nome} · <b style="color:#1F4E79">${tipo}</b> · ${mes}/${ano} · ${size}</div>
+        </div>
+        <span style="color:#375623;font-weight:700;font-size:13px">✅ Importado</span>`;
+      listDiv.appendChild(item);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  toast(`✅ ${files.length} arquivo(s) importado(s) — ${tipo} · ${mes}/${ano}`,'ok');
+  if(input.type) input.value='';
 }
 
 function exportDeclaracoes(){
