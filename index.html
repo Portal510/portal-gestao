@@ -2108,7 +2108,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div class="modal" style="width:min(560px,95vw)">
     <h3 id="modal-nome"></h3>
     <div id="modal-body"></div>
-    <div class="modal-btns"><button class="btn-sec" onclick="closeModal('modal-detail')">Fechar</button></div>
+    <div class="modal-btns">
+      <button class="btn-sec" onclick="closeModal('modal-detail')">Fechar</button>
+      <button id="btn-excluir-colab" onclick="excluirColab()" style="padding:8px 18px;background:#A32D2D;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600">🗑 Excluir colaborador</button>
+    </div>
   </div>
 </div>
 
@@ -2947,7 +2950,10 @@ function toggleStatus(id){
   });
 }
 
+let _detailColabId = null;
+
 function openDetail(id){
+  _detailColabId = id;
   const c=DATA.find(x=>x._id===id);
   const ativo=c.status!=='inativo';
   document.getElementById('modal-nome').innerHTML=`
@@ -2983,6 +2989,22 @@ function openDetail(id){
 }
 
 function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+function excluirColab(){
+  const id = _detailColabId;
+  if(id===null) return;
+  const c = DATA.find(x=>x._id===id);
+  if(!c) return;
+  if(!confirm(`⚠️ Confirmar exclusão permanente de:\n\n${c.nome}\n\nEsta ação não pode ser desfeita.`)) return;
+  DATA.splice(DATA.findIndex(x=>x._id===id), 1);
+  // Reassign IDs to keep sequence
+  DATA.forEach((x,i)=>{ x._id=i; });
+  saveData();
+  closeModal('modal-detail');
+  renderGeral();
+  try{ renderPendencias(); }catch(e){}
+  toast('Colaborador excluído: '+c.nome,'ok');
+}
 document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m) m.classList.remove('open')}));
 
 function clearFilters(tab){
