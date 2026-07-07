@@ -6938,25 +6938,18 @@ function enviarLembretePend(id){
   const emailTo=c.email_inst&&c.email_inst!=='Pendente'?c.email_inst:(c.email&&c.email!=='Pendente'?c.email:'');
   if(!emailTo){ alert('E-mail não cadastrado para '+c.nome); return; }
 
-  // Group by category
-  const grupos={};
-  pends.forEach(p=>{
-    const g=p.cat==='certs'?'Certificações':p.cat==='equip'?'Equipamentos':
-      (p.label.includes('Termo')||p.label.includes('Declaração')||p.label.includes('Cadastro'))?'Documentos TCU':'Admissão';
-    if(!grupos[g]) grupos[g]=[];
-    grupos[g].push(p.label);
-  });
-  const gruposStr=Object.entries(grupos).map(([g,items])=>
-    g+':\n'+items.map(i=>'  • '+i).join('\n')
-  ).join('\n\n');
+  // List all pending items (all categories together, numbered)
+  const listaItens = pends.map((p,i)=>'  '+(i+1)+'. '+p.label).join('\n');
 
   const assunto=encodeURIComponent('[TCU/T&S] Pendências de documentação — '+c.nome);
   const corpo=encodeURIComponent(
     'Prezado(a) '+c.nome+',\n\n'+
     'Identificamos que os seguintes documentos ainda constam como PENDENTES em seu cadastro no Contrato T&S/TCU:\n\n'+
-    gruposStr+'\n\n'+
-    'Solicitamos que regularize a situação em até 5 (cinco) dias úteis, encaminhando os documentos ao gestor responsável.\n\n'+
-    'Em caso de dúvidas, entre em contato com a Central de Serviços de TI do TCU.\n\n'+
+    listaItens+'\n\n'+
+    'Solicitamos que regularize a situação em até 5 (cinco) dias úteis, inserindo o forms abaixo:\n\n'+
+    'Documentação – Preencher o formulário:\n'+
+    'https://forms.office.com/r/wrE4eJnCBj\n\n'+
+    'Em caso de dúvidas, entre em contato com sua supervisão imediata.\n\n'+
     'Atenciosamente,\n'+
     'Priscila Pamplona Torres\n'+
     'Gestora do Service Desk — Central de Serviços de TI\n'+
