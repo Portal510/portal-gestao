@@ -496,7 +496,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <div class="tab" onclick="showTab('predef',this)"><span class="tab-icon">📄</span><span class="tab-label">E-mails Pré-definidos</span></div>
 
     <div class="sidebar-section">Monitoramento</div>
-    <div class="tab" onclick="showTab('produtividade',this)"><span class="tab-icon">💬</span><span class="tab-label">Produtividade Chat</span></div>
+    <div class="tab" onclick="showTab('indicadores',this)"><span class="tab-icon">📊</span><span class="tab-label">Indicadores</span></div>
     <div class="tab" onclick="showTab('abono',this)"><span class="tab-icon">💰</span><span class="tab-label">Abono</span></div>
     <div class="tab" onclick="showTab('gerencial',this)"><span class="tab-icon">📊</span><span class="tab-label">Gerencial</span></div>
     <div class="tab" onclick="showTab('ferias',this)"><span class="tab-icon">🏖️</span><span class="tab-label">Férias</span></div>
@@ -1575,86 +1575,59 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
 </div>
 </div>
-<!-- ═══════════════════ PRODUTIVIDADE CHAT ═══════════════════ -->
-<div id="tab-produtividade" style="display:none">
+<!-- ═══════════════════ INDICADORES ═══════════════════ -->
+<div id="tab-indicadores" style="display:none">
 <div style="padding:20px 24px">
 
+  <!-- Header -->
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px">
     <div>
-      <div style="font-size:20px;font-weight:700;color:#1F4E79">💬 Produtividade — Atendimento via Chat</div>
-      <div style="font-size:12px;color:#6c757d;margin-top:3px">BSB-01 · Índice de início de atendimento remoto · Meta: ≥ 90%</div>
+      <div style="font-size:20px;font-weight:700;color:#1F4E79">📊 Indicadores de Nível de Serviço</div>
+      <div style="font-size:12px;color:#6c757d;margin-top:3px">Contrato 10/2026 · Acompanhamento mensal</div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <select id="prod-mes" onchange="prodFiltrar()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
+      <select id="ind-mes-sel" onchange="indFiltrar()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
+        <option value="">Todos os meses</option>
         <option>Janeiro</option><option>Fevereiro</option><option>Março</option><option>Abril</option>
         <option selected>Maio</option><option>Junho</option><option>Julho</option><option>Agosto</option>
         <option>Setembro</option><option>Outubro</option><option>Novembro</option><option>Dezembro</option>
       </select>
-      <select id="prod-ano" onchange="prodFiltrar()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
+      <select id="ind-ano-sel" onchange="indFiltrar()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
         <option>2025</option><option selected>2026</option><option>2027</option>
       </select>
-      <label style="background:#1F4E79;color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">
+      <select id="ind-grupo-sel" onchange="indFiltrar()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px;max-width:220px">
+        <option value="">Todos os serviços</option>
+      </select>
+      <label style="background:#1F4E79;color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px">
         📂 Importar XLSX
-        <input type="file" id="prod-file-input" accept=".xlsx,.xls" style="display:none" onchange="prodImportXlsx(this)">
+        <input type="file" id="ind-file-input" accept=".xlsx,.xls" style="display:none" onchange="indImportXlsx(this)">
       </label>
-      <button onclick="prodExportXls()" style="padding:6px 14px;background:#375623;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">⬇ Exportar</button>
+      <button onclick="indExportXls()" style="padding:6px 14px;background:#375623;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">⬇ Exportar</button>
     </div>
   </div>
 
-  <!-- KPIs indicador -->
-  <div id="prod-kpis" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px"></div>
-
-  <!-- Aviso quando sem dados -->
-  <div id="prod-empty" style="background:#E8F0FE;border:1px solid #2E75B6;border-radius:8px;padding:20px;text-align:center;color:#1F4E79;font-size:13px;margin-bottom:18px">
-    📂 Importe a planilha de atendimento remoto para visualizar os dados.<br>
-    <span style="font-size:11px;color:#6c757d">Formato esperado: colunas <b>Atendente</b>, <b>Fora expediente</b>, <b>TempoInicio</b></span>
+  <!-- Estado vazio -->
+  <div id="ind-empty" style="background:#E8F0FE;border:1px solid #2E75B6;border-radius:8px;padding:24px;text-align:center;color:#1F4E79;margin-bottom:18px">
+    <div style="font-size:32px;margin-bottom:10px">📊</div>
+    <div style="font-size:14px;font-weight:600">Importe a planilha de indicadores para visualizar os dados</div>
+    <div style="font-size:12px;color:#6c757d;margin-top:6px">Formato: 2026_MM_Indicadores_Contrato_10_2026.xlsx · Planilha com abas TEL, BSB, EST, AE, CE, AC, AP, STEL, SBSB, SEST, SAE, SCHA, GCON, GSD</div>
   </div>
 
-  <!-- Cards em grid -->
-  <div id="prod-cards-wrap" style="display:none">
+  <!-- Conteúdo dos indicadores -->
+  <div id="ind-wrap" style="display:none">
+    <!-- KPIs resumo -->
+    <div id="ind-kpis" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px"></div>
 
-    <!-- Card 1 — Atendimentos por atendente -->
+    <!-- Card de evolução (linha do tempo) -->
     <div style="background:#fff;border:1px solid #dee2e6;border-radius:10px;padding:18px;margin-bottom:18px">
-      <div style="font-size:15px;font-weight:700;color:#1F4E79;margin-bottom:14px">📊 Atendimentos por Atendente <span style="font-size:11px;font-weight:400;color:#6c757d">(apenas em expediente · alerta < 3)</span></div>
-      <div id="prod-chart-atend" style="width:100%;overflow-x:auto"></div>
+      <div style="font-size:15px;font-weight:700;color:#1F4E79;margin-bottom:4px">📈 Evolução Mensal por Serviço</div>
+      <div style="font-size:11px;color:#6c757d;margin-bottom:12px">% de indicadores dentro da meta — acumule meses para ver a tendência</div>
+      <div id="ind-evolucao-chart" style="width:100%;overflow-x:auto"></div>
     </div>
 
-    <!-- Card 2 — Avaliação dos atendentes -->
-    <div style="background:#fff;border:1px solid #dee2e6;border-radius:10px;padding:18px;margin-bottom:18px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-        <div style="font-size:15px;font-weight:700;color:#1F4E79">⭐ Avaliação dos Atendentes</div>
-        <div style="font-size:11px;color:#6c757d">1=Péssimo · 2=Ruim · 3=Regular · 4=Bom · 5=Ótimo</div>
-      </div>
-      <div id="prod-aval-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px"></div>
-    </div>
-
-    <!-- Card 3 — Evolução do indicador BSB-01 -->
-    <div style="background:#fff;border:1px solid #dee2e6;border-radius:10px;padding:18px;margin-bottom:18px">
-      <div style="font-size:15px;font-weight:700;color:#1F4E79;margin-bottom:14px">📈 Evolução do Indicador BSB-01 <span style="font-size:11px;font-weight:400;color:#6c757d">% atendidos em ≤ 60s · Meta 90%</span></div>
-      <div id="prod-chart-evolucao" style="width:100%;overflow-x:auto"></div>
-    </div>
-
-    <!-- Tabela detalhe -->
-    <div style="background:#fff;border:1px solid #dee2e6;border-radius:10px;padding:18px">
-      <div style="font-size:15px;font-weight:700;color:#1F4E79;margin-bottom:14px">🔍 Detalhamento por Atendente</div>
-      <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:12px">
-          <thead>
-            <tr>
-              <th style="background:#1F4E79;color:#fff;padding:9px 12px;text-align:left">Atendente</th>
-              <th style="background:#1F4E79;color:#fff;padding:9px 12px;text-align:center">Total (expediente)</th>
-              <th style="background:#1F4E79;color:#fff;padding:9px 12px;text-align:center">Atendidos ≤ 60s</th>
-              <th style="background:#1F4E79;color:#fff;padding:9px 12px;text-align:center">% ≤ 60s</th>
-              <th style="background:#1F4E79;color:#fff;padding:9px 12px;text-align:center">Avaliação</th>
-              <th style="background:#1F4E79;color:#fff;padding:9px 12px;text-align:center">Status</th>
-            </tr>
-          </thead>
-          <tbody id="prod-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-
-  </div><!-- /prod-cards-wrap -->
+    <!-- Cards por serviço -->
+    <div id="ind-cards" style="display:flex;flex-direction:column;gap:18px"></div>
+  </div>
 
 </div>
 </div>
@@ -2719,7 +2692,7 @@ function clearFilters(tab){
 }
 
 // TAB SWITCHING
-const tabIds=['geral','equipamentos','admissao','termos','certif','calendario','comunicados','predef','uniforme','upload','declaracoes','requisitos','pendencias','contrata','abono','gerencial','ferias','produtividade'];
+const tabIds=['geral','equipamentos','admissao','termos','certif','calendario','comunicados','predef','uniforme','upload','declaracoes','requisitos','pendencias','contrata','abono','gerencial','indicadores','ferias'];
 // ── Sidebar toggle ────────────────────────
 function toggleSidebar(){
   const sidebar=document.getElementById('sidebar');
@@ -2739,7 +2712,7 @@ function showTab(id,el){
   });
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:renderDeclaracoes,requisitos:renderRequisitos,pendencias:renderPendencias,contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){}},gerencial:()=>{try{rGerencial();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}},produtividade:()=>{try{prodRender();}catch(e){}}};
+  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:renderDeclaracoes,requisitos:renderRequisitos,pendencias:renderPendencias,contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){}},gerencial:()=>{try{rGerencial();}catch(e){}},indicadores:()=>{try{indRender();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}}};
   if(renders[id]) renders[id]();
 }
 
@@ -8167,6 +8140,301 @@ function prodExportXls(){
     return [name,d.total,d.atend60,pct.toFixed(1)+'%',aval.nota?aval.nota+' — '+avalLabel:'—',aval.obs||''];
   });
   _exportXlsXML(hdrs,rows,'Produtividade_Chat_'+mes+'_'+ano);
+}
+
+// ══════════════════════════════════════════
+// INDICADORES — Nível de Serviço Contrato 10/2026
+// ══════════════════════════════════════════
+
+var IND_HISTORICO = {}; // { 'Maio|2026': { TEL:[...], BSB:[...], ... } }
+var IND_SERVICES = {
+  'TEL':'Suporte Telefônico','BSB':'Suporte Brasília','EST':'Suporte Estados',
+  'AE':'Atendimentos Especiais','CE':'Cabeamento Estruturado','AC':'Administração de Contas',
+  'AP':'Admin. Parque Tecnológico','STEL':'Supervisão TEL','SBSB':'Supervisão BSB',
+  'SEST':'Supervisão EST','SAE':'Supervisão AE','SCHA':'Supervisão Chamados',
+  'GCON':'Gestão do Conhecimento','GSD':'Gestão Service Desk'
+};
+var IND_ICONS = {
+  'TEL':'📞','BSB':'🖥️','EST':'🌐','AE':'🔧','CE':'🔗','AC':'🔐',
+  'AP':'🖨️','STEL':'👔','SBSB':'👔','SEST':'👔','SAE':'👔','SCHA':'📋',
+  'GCON':'📚','GSD':'🏆'
+};
+
+function _indLoad(){
+  try{ const r=localStorage.getItem('ts_ind_hist'); if(r) IND_HISTORICO=JSON.parse(r); }catch(e){}
+}
+function _indSave(){
+  try{ localStorage.setItem('ts_ind_hist', JSON.stringify(IND_HISTORICO)); }catch(e){}
+}
+_indLoad();
+
+// ── Import XLSX ───────────────────────────
+function indImportXlsx(input){
+  const file = input.files[0]; if(!file) return;
+  if(typeof XLSX==='undefined'){ toast('SheetJS não carregado. Verifique a conexão.','err'); return; }
+  const mes = document.getElementById('ind-mes-sel')?.value || 'Maio';
+  const ano = document.getElementById('ind-ano-sel')?.value || '2026';
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+      const result = {};
+      Object.keys(IND_SERVICES).forEach(svc=>{
+        const ws = wb.Sheets[svc];
+        if(!ws){ result[svc]=[]; return; }
+        const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
+        const indicators = [];
+        rows.forEach(row=>{
+          if(!row[1] || !String(row[1]).startsWith(svc+'-')) return;
+          const id    = String(row[1]).trim();
+          const name  = row[2] ? String(row[2]).substring(0,80) : '';
+          const metaOp = row[4] ? String(row[4]).trim() : '>=';
+          const meta  = parseFloat(row[5]) || 0;
+          const medicao = parseFloat(row[7]);
+          const limite = parseFloat(row[8]) || 0;
+          const peso  = parseFloat(row[9]) || 0;
+          if(isNaN(medicao)) return;
+          // Check if within meta
+          let ok = metaOp==='>='||metaOp==='>' ? medicao>=meta : medicao<=meta;
+          indicators.push({id,name,metaOp,meta:+meta.toFixed(2),medicao:+medicao.toFixed(2),limite:+limite.toFixed(2),peso,ok});
+        });
+        result[svc] = indicators;
+      });
+      const key = mes+'|'+ano;
+      IND_HISTORICO[key] = {mes, ano, data: result};
+      _indSave();
+      toast('✅ '+Object.keys(result).length+' serviços importados para '+mes+'/'+ano,'ok');
+      // Populate grupo select
+      indPopulateGrupos();
+      indRender();
+    }catch(err){ toast('Erro ao ler planilha: '+err.message,'err'); console.error(err); }
+  };
+  reader.readAsArrayBuffer(file);
+  input.value='';
+}
+
+function indGetData(){
+  const mes = document.getElementById('ind-mes-sel')?.value||'';
+  const ano = document.getElementById('ind-ano-sel')?.value||'2026';
+  if(mes){
+    const key=mes+'|'+ano;
+    return IND_HISTORICO[key]?.data || null;
+  }
+  // Aggregate all months for this ano
+  const all={};
+  Object.values(IND_HISTORICO).filter(h=>h.ano===ano).forEach(h=>{
+    Object.entries(h.data).forEach(([svc,inds])=>{
+      if(!all[svc]) all[svc]=[];
+      // merge: update existing or add
+      inds.forEach(ind=>{
+        const ex=all[svc].find(x=>x.id===ind.id);
+        if(ex){ Object.assign(ex,ind); } else { all[svc].push({...ind}); }
+      });
+    });
+  });
+  return Object.keys(all).length ? all : null;
+}
+
+function indPopulateGrupos(){
+  const sel=document.getElementById('ind-grupo-sel');
+  if(!sel||sel.options.length>1) return;
+  Object.entries(IND_SERVICES).forEach(([k,v])=>{
+    const o=document.createElement('option');
+    o.value=k; o.textContent=IND_ICONS[k]+' '+v;
+    sel.appendChild(o);
+  });
+}
+
+function indFiltrar(){
+  indRender();
+}
+
+function indRender(){
+  const empty=document.getElementById('ind-empty');
+  const wrap=document.getElementById('ind-wrap');
+  const data=indGetData();
+  if(!data){ if(empty)empty.style.display='block'; if(wrap)wrap.style.display='none'; return; }
+  if(empty)empty.style.display='none';
+  if(wrap)wrap.style.display='block';
+  indPopulateGrupos();
+
+  const filGrupo=document.getElementById('ind-grupo-sel')?.value||'';
+  const services=filGrupo?{[filGrupo]:IND_SERVICES[filGrupo]}:IND_SERVICES;
+
+  // ── KPIs ─────────────────────────────────
+  let totalInds=0, okInds=0, nokInds=0, totalSvcs=0, nokSvcs=0;
+  Object.keys(services).forEach(svc=>{
+    const inds=(data[svc]||[]);
+    if(!inds.length) return;
+    totalSvcs++;
+    const svcOk=inds.filter(i=>i.ok).length;
+    const svcNok=inds.length-svcOk;
+    totalInds+=inds.length; okInds+=svcOk; nokInds+=svcNok;
+    if(svcNok>0) nokSvcs++;
+  });
+  const pctOk=totalInds>0?(okInds/totalInds*100):0;
+  document.getElementById('ind-kpis').innerHTML=[
+    ['Serviços',totalSvcs,'#1F4E79'],
+    ['Indicadores',totalInds,'#495057'],
+    ['✅ Dentro da meta',okInds,'#375623'],
+    ['❌ Fora da meta',nokInds,'#A32D2D'],
+    [pctOk>=90?'✅ Conformidade':'⚠️ Conformidade',pctOk.toFixed(1)+'%',pctOk>=90?'#375623':pctOk>=70?'#854F0B':'#A32D2D'],
+  ].map(([l,v,c])=>`<div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:12px 14px">
+    <div style="font-size:11px;color:#6c757d;margin-bottom:4px">${l}</div>
+    <div style="font-size:22px;font-weight:700;color:${c}">${v}</div>
+  </div>`).join('');
+
+  // ── Evolução ──────────────────────────────
+  indRenderEvolucao(services);
+
+  // ── Cards por serviço ─────────────────────
+  const cards=document.getElementById('ind-cards');
+  const mes=document.getElementById('ind-mes-sel')?.value||'';
+  const mesesOrder=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+  cards.innerHTML=Object.entries(services).map(([svc,svcName])=>{
+    const inds=(data[svc]||[]);
+    if(!inds.length) return '';
+    const okN=inds.filter(i=>i.ok).length;
+    const nokN=inds.length-okN;
+    const pct=inds.length>0?(okN/inds.length*100):0;
+    const statusColor=pct>=90?'#375623':pct>=70?'#854F0B':'#A32D2D';
+    const statusBg=pct>=90?'#E1F5EE':pct>=70?'#FEF9C3':'#FCEBEB';
+
+    const rows=inds.map((ind,i)=>{
+      const medStr=ind.medicao!==null&&ind.medicao!==undefined?ind.medicao.toFixed(2):'—';
+      const metaStr=ind.meta!==null?ind.meta.toFixed(2):'—';
+      const bg=ind.ok?(i%2===0?'#fff':'#f8f9fb'):(i%2===0?'#FFF5F5':'#FFE8E8');
+      const rowColor=ind.ok?'inherit':'#A32D2D';
+      return `<tr style="background:${bg}">
+        <td style="padding:7px 10px;font-weight:600;color:#1F4E79;white-space:nowrap">${ind.id}</td>
+        <td style="padding:7px 10px;font-size:11px;color:#495057">${ind.name}</td>
+        <td style="padding:7px 10px;text-align:center;font-size:11px;white-space:nowrap">${ind.metaOp} ${metaStr}</td>
+        <td style="padding:7px 10px;text-align:center;font-weight:700;color:${rowColor}">${medStr}</td>
+        <td style="padding:7px 10px;text-align:center">${ind.peso}</td>
+        <td style="padding:7px 10px;text-align:center">${ind.ok
+          ?'<span style="color:#375623;font-weight:700;font-size:12px">✅</span>'
+          :'<span style="color:#A32D2D;font-weight:700;font-size:12px">❌</span>'}</td>
+      </tr>`;
+    }).join('');
+
+    return `<div style="background:#fff;border:1px solid #dee2e6;border-radius:10px;overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#f8f9fb;border-bottom:1px solid #dee2e6;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:22px">${IND_ICONS[svc]||'📊'}</span>
+          <div>
+            <div style="font-weight:700;color:#1F4E79;font-size:14px">${svc} — ${svcName}</div>
+            <div style="font-size:11px;color:#6c757d">${inds.length} indicadores${mes?' · '+mes:''}${nokN>0?' · '+nokN+' fora da meta':''}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="text-align:right">
+            <div style="font-size:20px;font-weight:700;color:${statusColor}">${pct.toFixed(0)}%</div>
+            <div style="font-size:10px;color:#6c757d">conformidade</div>
+          </div>
+          <div style="background:${statusBg};color:${statusColor};padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700">
+            ${okN}/${inds.length} ✓
+          </div>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="background:#1F4E79">
+              <th style="padding:8px 10px;text-align:left;color:#fff;white-space:nowrap">Código</th>
+              <th style="padding:8px 10px;text-align:left;color:#fff">Indicador</th>
+              <th style="padding:8px 10px;text-align:center;color:#fff;white-space:nowrap">Meta</th>
+              <th style="padding:8px 10px;text-align:center;color:#fff;white-space:nowrap">Medição</th>
+              <th style="padding:8px 10px;text-align:center;color:#fff;white-space:nowrap">Peso</th>
+              <th style="padding:8px 10px;text-align:center;color:#fff;white-space:nowrap">Status</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function indRenderEvolucao(services){
+  const div=document.getElementById('ind-evolucao-chart');
+  if(!div) return;
+  const mesesOrder=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const ano=document.getElementById('ind-ano-sel')?.value||'2026';
+  // Get all months for this ano sorted
+  const months=[...new Set(Object.values(IND_HISTORICO).filter(h=>h.ano===ano).map(h=>h.mes))]
+    .sort((a,b)=>mesesOrder.indexOf(a)-mesesOrder.indexOf(b));
+  if(months.length<2){ div.innerHTML='<div style="color:#6c757d;font-size:12px;padding:1rem">Importe dados de múltiplos meses para ver a evolução.</div>'; return; }
+
+  const svcs=Object.keys(services).slice(0,6); // show up to 6 services
+  const colors=['#1F4E79','#375623','#C55A11','#854F0B','#534AB7','#185FA5'];
+  const W=800, H=220, PL=50, PR=80, PT=20, PB=40;
+  const cW=W-PL-PR, cH=H-PT-PB;
+  let svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:${W}px">`;
+  // Grid
+  [0,25,50,75,100].forEach(v=>{
+    const y=PT+cH-(v/100*cH);
+    svg+=`<line x1="${PL}" x2="${W-PR}" y1="${y}" y2="${y}" stroke="#f0f0f0" stroke-width="1"/>`;
+    svg+=`<text x="${PL-6}" y="${y+4}" text-anchor="end" font-size="9" fill="#aaa">${v}%</text>`;
+  });
+  // 90% meta line
+  const metaY=PT+cH-(90/100*cH);
+  svg+=`<line x1="${PL}" x2="${W-PR}" y1="${metaY}" y2="${metaY}" stroke="#375623" stroke-width="1.5" stroke-dasharray="5,3"/>`;
+  svg+=`<text x="${W-PR+4}" y="${metaY+4}" font-size="9" fill="#375623">90%</text>`;
+  // X axis labels
+  months.forEach((m,i)=>{
+    const x=PL+(months.length>1?i*cW/(months.length-1):cW/2);
+    svg+=`<text x="${x}" y="${H-PT+6}" text-anchor="middle" font-size="9" fill="#6c757d">${m.slice(0,3)}</text>`;
+  });
+  // Lines per service
+  svcs.forEach((svc,si)=>{
+    const color=colors[si%colors.length];
+    const points=months.map((m,i)=>{
+      const key=m+'|'+ano;
+      const h=IND_HISTORICO[key];
+      if(!h) return null;
+      const inds=h.data[svc]||[];
+      if(!inds.length) return null;
+      const ok=inds.filter(x=>x.ok).length;
+      const pct=ok/inds.length*100;
+      const x=PL+(months.length>1?i*cW/(months.length-1):cW/2);
+      const y=PT+cH-(pct/100*cH);
+      return {x,y,pct};
+    }).filter(Boolean);
+    if(points.length<1) return;
+    if(points.length>1){
+      svg+=`<polyline points="${points.map(p=>p.x+','+p.y).join(' ')}" fill="none" stroke="${color}" stroke-width="2" opacity="0.8"/>`;
+    }
+    points.forEach(p=>{
+      svg+=`<circle cx="${p.x}" cy="${p.y}" r="4" fill="${color}" stroke="#fff" stroke-width="1.5" title="${svc}: ${p.pct.toFixed(0)}%"/>`;
+    });
+  });
+  // Legend
+  svcs.forEach((svc,si)=>{
+    const x=W-PR+6;
+    const y=PT+si*18;
+    svg+=`<circle cx="${x+4}" cy="${y}" r="4" fill="${colors[si%colors.length]}"/>`;
+    svg+=`<text x="${x+12}" y="${y+4}" font-size="9" fill="#495057">${svc}</text>`;
+  });
+  svg+=`</svg>`;
+  div.innerHTML=svg;
+}
+
+function indExportXls(){
+  const data=indGetData();
+  if(!data){ toast('Nenhum dado para exportar.','warn'); return; }
+  const mes=document.getElementById('ind-mes-sel')?.value||'Todos';
+  const ano=document.getElementById('ind-ano-sel')?.value||'2026';
+  const filGrupo=document.getElementById('ind-grupo-sel')?.value||'';
+  const services=filGrupo?{[filGrupo]:IND_SERVICES[filGrupo]}:IND_SERVICES;
+  const hdrs=['Serviço','Código','Indicador','Op.','Meta','Medição','Peso','Status'];
+  const rows=[];
+  Object.entries(services).forEach(([svc,svcName])=>{
+    (data[svc]||[]).forEach(ind=>{
+      rows.push([svcName,ind.id,ind.name,ind.metaOp,ind.meta.toFixed(2),ind.medicao.toFixed(2),ind.peso,ind.ok?'✅ OK':'❌ Fora']);
+    });
+  });
+  _exportXlsXML(hdrs,rows,'Indicadores_'+mes+'_'+ano);
 }
 
 function _portalInit(){
