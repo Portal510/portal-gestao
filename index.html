@@ -1834,11 +1834,15 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
 <!-- GERAL EDIT DATE MODAL -->
 <div class="modal-bg" id="modal-geral-date">
-  <div class="modal" style="width:min(320px,95vw)">
+  <div class="modal" style="width:min(380px,95vw)">
     <h3 id="geral-date-title">Editar data</h3>
     <label style="font-size:12px;color:#6c757d;display:block;margin-bottom:4px" id="geral-date-label">Data</label>
     <input type="date" id="geral-date-input" style="width:100%;padding:8px 10px;border:1px solid #ced4da;border-radius:6px;font-size:14px">
     <div style="font-size:11px;color:#6c757d;margin-top:6px" id="geral-date-hint"></div>
+    <div id="geral-date-obs-wrap" style="display:none;margin-top:12px">
+      <label style="font-size:12px;font-weight:600;color:#7A0000;display:block;margin-bottom:4px">Motivo / Observação do desligamento</label>
+      <textarea id="geral-date-obs" rows="3" placeholder="Ex.: pedido de demissão, término de contrato, desligamento por justa causa..." style="width:100%;padding:8px 10px;border:1px solid #ced4da;border-radius:6px;font-size:13px;resize:vertical;box-sizing:border-box"></textarea>
+    </div>
     <div class="modal-btns">
       <button class="btn-sec" onclick="closeModal('modal-geral-date')">Cancelar</button>
       <button class="btn-danger" onclick="clearGeralDate()" style="padding:8px 14px">Limpar</button>
@@ -1970,7 +1974,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       </div>
       <div>
         <label>Data de Demissão</label>
-        <input type="date" id="cad-demissao">
+        <input type="date" id="cad-demissao" onchange="document.getElementById('cad-obs-dem-wrap').style.display=this.value?'block':'none'">
+      </div>
+      <div id="cad-obs-dem-wrap" style="display:none;grid-column:1/-1">
+        <label style="color:#A32D2D">Motivo / Observação do desligamento</label>
+        <textarea id="cad-obs-demissao" rows="2" placeholder="Ex.: pedido de demissão, término de contrato..." style="width:100%;padding:8px 10px;border:1px solid #ced4da;border-radius:6px;font-size:13px;resize:vertical;box-sizing:border-box"></textarea>
       </div>
       <!-- Dados pessoais adicionais (para Sistema Contrata) -->
       <div>
@@ -2335,7 +2343,7 @@ function renderGeral(){
     const demVal = c.data_demissao||'';
     const demStr = demVal ? demVal.split('-').reverse().join('/') : '';
     const demCell = demStr
-      ? `<span style="font-size:12px;color:#7A0000;font-weight:600">${demStr}</span>`
+      ? `<span style="font-size:12px;color:#7A0000;font-weight:600">${demStr}</span>${c.obs_demissao?`<div style="font-size:10px;color:#A32D2D;margin-top:2px;max-width:140px;white-space:normal" title="${escQ(c.obs_demissao)}">💬 ${c.obs_demissao.slice(0,45)}${c.obs_demissao.length>45?'…':''}</div>`:''}`
       : `<span style="font-size:11px;color:#ccc">—</span>`;
 
     // Portal T&S link — search by CPF or nome
@@ -3224,6 +3232,7 @@ function salvarCadastro(){
   const violencia_domestica=document.getElementById('cad-violencia')?.value||'Não';
   const data_admissao=document.getElementById('cad-admissao').value||'';
   const data_demissao=document.getElementById('cad-demissao').value||'';
+  const obs_demissao=document.getElementById('cad-obs-demissao')?.value.trim()||'';
   const rg=document.getElementById('cad-rg')?.value.trim()||'';
   const data_nascimento=document.getElementById('cad-nascimento')?.value||'';
   const genero=document.getElementById('cad-genero')?.value||'';
@@ -3237,7 +3246,7 @@ function salvarCadastro(){
   const certs=CARGO_CERTS_MAP[cargo]||{};
   const [exp_s,exp_m]=CARGO_EXP_MAP[cargo]||['N/A','N/A'];
   const docsAll={'Termo TCU':'Pendente','Cadastro TCU':'Pendente','Decl. Não Parentesco':'Pendente','Diploma/Superior':'Pendente','Especialização TI':'Pendente','Exp. Suporte':'Pendente','Exp. Microcomputadores':exp_m==='N/A'?'N/A':'Pendente','ASO Admissional':'Pendente','CTPS':'Pendente','Contrato de Trabalho':'Pendente','Termo Vale Transporte':'Pendente','Termo de Conduta T&S':'Pendente'};
-  const novo={_id:DATA.length,nome,cpf,uf,cargo,celular,email,email_inst,data_admissao,data_demissao,rg,data_nascimento,genero,cor_raca,tipo_vinculo,coberto,inicio_cobertura,fim_cobertura,celular_tablet:'Pendente',cracha:'Pendente',maleta:'Pendente',uniforme:'Pendente',certs,docs:docsAll,exp_suporte:exp_s,exp_micro:exp_m,conta_rede,salario,pcd,libras,violencia_domestica};
+  const novo={_id:DATA.length,nome,cpf,uf,cargo,celular,email,email_inst,data_admissao,data_demissao,obs_demissao,rg,data_nascimento,genero,cor_raca,tipo_vinculo,coberto,inicio_cobertura,fim_cobertura,celular_tablet:'Pendente',cracha:'Pendente',maleta:'Pendente',uniforme:'Pendente',certs,docs:docsAll,exp_suporte:exp_s,exp_micro:exp_m,conta_rede,salario,pcd,libras,violencia_domestica};
   DATA.push(novo);
   saveData();
   // Add to Sistema Contrata queue
@@ -3254,12 +3263,24 @@ let geralDateTarget={id:null,field:null};
 
 function openGeralEditDate(id,field,currentVal){
   geralDateTarget={id,field};
-  const labels={data_admissao:'Data de Admissão',data_demissao:'Data de Demissão'};
-  document.getElementById('geral-date-title').textContent='Editar: '+labels[field];
-  document.getElementById('geral-date-label').textContent=labels[field];
+  const labels={data_admissao:'Data de Admissão',data_demissao:'Data de Desligamento',data_nascimento:'Data de Nascimento'};
+  document.getElementById('geral-date-title').textContent='Editar: '+(labels[field]||field);
+  document.getElementById('geral-date-label').textContent=labels[field]||field;
   document.getElementById('geral-date-input').value=currentVal||'';
   const hint=document.getElementById('geral-date-hint');
-  hint.textContent=field==='data_demissao'?'Ao salvar com data de demissão, o colaborador será automaticamente marcado como Inativo.':'';
+  const obsWrap=document.getElementById('geral-date-obs-wrap');
+  const obsInput=document.getElementById('geral-date-obs');
+  if(field==='data_demissao'){
+    hint.textContent='Ao salvar com data de desligamento, o colaborador será marcado como Inativo.';
+    hint.style.color='#A32D2D';
+    obsWrap.style.display='block';
+    const c=DATA.find(x=>x._id===id);
+    obsInput.value=c?.obs_demissao||'';
+  } else {
+    hint.textContent='';
+    obsWrap.style.display='none';
+    obsInput.value='';
+  }
   document.getElementById('modal-geral-date').classList.add('open');
 }
 
@@ -3268,10 +3289,13 @@ function saveGeralDate(){
   const val=document.getElementById('geral-date-input').value;
   const c=DATA.find(x=>x._id===id);
   c[field]=val;
-  // Auto-inativar se data demissão preenchida
-  if(field==='data_demissao'&&val) c.status='inativo';
-  // Auto-ativar se demissão limpa
-  if(field==='data_demissao'&&!val) c.status='ativo';
+  // Save obs_demissao if applicable
+  if(field==='data_demissao'){
+    const obs=document.getElementById('geral-date-obs').value.trim();
+    c.obs_demissao=obs;
+    if(val) c.status='inativo';
+    if(!val){ c.status='ativo'; c.obs_demissao=''; }
+  }
   saveData();
   closeModal('modal-geral-date');
   renderGeral();
@@ -3289,11 +3313,11 @@ function exportXlsx(tab){
   let rows=[], headers=[], filename='';
   const all=DATA;
   if(tab==='geral'){
-    headers=['Nome','Conta Rede TCU','Cargo','UF','Salário','Data Admissão','Data Desligamento','CPF','RG','Data Nascimento','Raça/Cor','Sexo','PcD','Libras','Vítima Viol. Dom.','E-mail Pessoal','E-mail Institucional','Status'];
+    headers=['Nome','Conta Rede TCU','Cargo','UF','Salário','Data Admissão','Data Desligamento','Motivo Desligamento','CPF','RG','Data Nascimento','Raça/Cor','Sexo','PcD','Libras','Vítima Viol. Dom.','E-mail Pessoal','E-mail Institucional','Status'];
     rows=all.map(c=>{
       const adm=c.data_admissao?c.data_admissao.split('-').reverse().join('/'):'';
       const dem=c.data_demissao?c.data_demissao.split('-').reverse().join('/'):'';
-      return [c.nome,c.conta_rede||'',c.cargo,c.uf,(()=>{const s=String(c.salario||'').trim();if(!s)return '';if(s.startsWith('R$'))return s;const n=parseFloat(s);return isNaN(n)?s:'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});})(),adm,dem,c.cpf,c.rg||'',c.data_nascimento?c.data_nascimento.split('-').reverse().join('/'):'',c.cor_raca||'',c.genero||'',c.pcd||'Não',c.libras||'Não',c.violencia_domestica||'Não',(c.email&&c.email!=='Pendente'?c.email:''),(c.email_inst&&c.email_inst!=='Pendente'?c.email_inst:''),c.status==='inativo'?'Inativo':'Ativo'];
+      return [c.nome,c.conta_rede||'',c.cargo,c.uf,(()=>{const s=String(c.salario||'').trim();if(!s)return '';if(s.startsWith('R$'))return s;const n=parseFloat(s);return isNaN(n)?s:'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});})(),adm,dem,c.obs_demissao||''  ,c.cpf,c.rg||'',c.data_nascimento?c.data_nascimento.split('-').reverse().join('/'):'',c.cor_raca||'',c.genero||'',c.pcd||'Não',c.libras||'Não',c.violencia_domestica||'Não',(c.email&&c.email!=='Pendente'?c.email:''),(c.email_inst&&c.email_inst!=='Pendente'?c.email_inst:''),c.status==='inativo'?'Inativo':'Ativo'];
     });
     filename='Portal_TS_Geral';
   } else if(tab==='equipamentos'){
