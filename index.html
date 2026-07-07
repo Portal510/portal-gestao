@@ -1106,6 +1106,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
     <button class="up-btn" onclick="upAtualizar()" style="background:#E8F0FE;border-color:#2E75B6;color:#1F4E79;font-weight:600">🔄 Atualizar</button>
     <button class="up-btn" onclick="upSyncDocs()" style="background:#1F4E79;color:#fff;border-color:#1F4E79;font-weight:600" title="Sincronizar status dos documentos com as demais abas">🔗 Sincronizar</button>
+    <button class="up-btn" onclick="exportXlsx('upload')" style="background:#375623;color:#fff;border-color:#375623;font-weight:600">⬇ Exportar XLSX</button>
     <button class="up-btn" onclick="toggleConfigDownload()" style="font-weight:600">⚙️ Config. Download</button>
     <button class="up-btn" onclick="upBaixarZip()" style="background:#375623;color:#fff;border-color:#375623;font-weight:600">📥 Baixar ZIP</button>
     <button class="up-btn" onclick="upSincronizarBaixar()" style="background:#1F4E79;color:#fff;border-color:#1F4E79;font-weight:600">⬆ Sincronizar + Baixar ZIP</button>
@@ -1154,6 +1155,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         <option value="Gestor">Gestores</option>
         <option value="Especializado">Especializados (CE/AC/AP)</option>
       </select>
+      <button class="btn-export" onclick="exportXlsx('requisitos')">⬇ Exportar XLSX</button>
     </div>
   </div>
   <div id="req-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px"></div>
@@ -1195,6 +1197,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <div style="font-size:12px;color:#6c757d;margin-top:3px">Colaboradores novos aguardando envio de e-mail para o Fiscal realizar o cadastro no Sistema Contrata</div>
     </div>
     <div style="display:flex;gap:8px">
+      <button class="btn-export" onclick="exportXlsx('contrata')">⬇ Exportar XLSX</button>
       <button class="btn-export" onclick="exportPDF('contrata')" style="background:#a32d2d">📄 Exportar PDF</button>
       <button class="btn-clear" onclick="limparContrataEnviados()">🗑 Limpar enviados</button>
     </div>
@@ -1436,7 +1439,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <div style="font-size:12px;color:#6c757d;margin-top:3px">Controle de períodos solicitados · Detecção automática de conflitos</div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button onclick="ferExportXls()" style="padding:6px 14px;background:#1F4E79;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">⬇ Exportar XLSX</button>
+      <button onclick="ferExportXls()" class="btn-export">⬇ Exportar XLSX</button>
     </div>
   </div>
 
@@ -2346,15 +2349,15 @@ function renderGeral(){
     // Extra fields
     const nascVal = c.data_nascimento||'';
     const nascStr = nascVal ? nascVal.split('-').reverse().join('/') : '—';
-    // Parse salary — stored as raw float (5803.96) OR as "R$ 5.803,96"
     function fmtSal(v){
-      if(!v||v==='Pendente') return '—';
-      // Already formatted "R$ x.xxx,xx"
-      if(String(v).startsWith('R$')) return v;
-      // Raw float string
-      const n = parseFloat(String(v).replace(/[R$\s]/g,'').replace(/\./g,'').replace(',','.'));
-      if(isNaN(n)) return '—';
-      return 'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+      if(!v||v==='Pendente'||v==='') return '—';
+      const s = String(v).trim();
+      // Already formatted "R$ x.xxx,xx" — return as-is
+      if(s.startsWith('R$')) return s;
+      // Raw number (float with dot as decimal, e.g. 7790.08)
+      const n = parseFloat(s);
+      if(!isNaN(n)) return 'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+      return '—';
     }
     const salario = fmtSal(c.salario);
     const contaRede = c.conta_rede||'';
@@ -2517,9 +2520,8 @@ function colabImportXlsx(input){
 
         const salarioVal = get(COL.salario,'').replace(/[R$\s\.]/g,'').replace(',','.');
 
-        // Check if already exists by CPF or name
-        let existing = DATA.find(c=>c.cpf===cpf && cpf!=='Pendente');
-        if(!existing) existing = DATA.find(c=>c.nome.toLowerCase().trim()===nome.toLowerCase().trim());
+        // Match only by CPF — allow duplicate names (different people, same name)
+        let existing = cpf!=='Pendente' ? DATA.find(c=>c.cpf===cpf) : null;
 
         if(existing){
           // Update fields that are empty or changed
@@ -3272,7 +3274,7 @@ function exportXlsx(tab){
     rows=all.map(c=>{
       const adm=c.data_admissao?c.data_admissao.split('-').reverse().join('/'):'';
       const dem=c.data_demissao?c.data_demissao.split('-').reverse().join('/'):'';
-      return [c.nome,c.conta_rede||'',c.cargo,c.uf,c.salario||'',adm,dem,c.cpf,c.rg||'',c.data_nascimento?c.data_nascimento.split('-').reverse().join('/'):'',c.cor_raca||'',c.genero||'',c.pcd||'Não',c.libras||'Não',c.violencia_domestica||'Não',(c.email&&c.email!=='Pendente'?c.email:''),(c.email_inst&&c.email_inst!=='Pendente'?c.email_inst:''),c.status==='inativo'?'Inativo':'Ativo'];
+      return [c.nome,c.conta_rede||'',c.cargo,c.uf,(()=>{const s=String(c.salario||'').trim();if(!s)return '';if(s.startsWith('R$'))return s;const n=parseFloat(s);return isNaN(n)?s:'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});})(),adm,dem,c.cpf,c.rg||'',c.data_nascimento?c.data_nascimento.split('-').reverse().join('/'):'',c.cor_raca||'',c.genero||'',c.pcd||'Não',c.libras||'Não',c.violencia_domestica||'Não',(c.email&&c.email!=='Pendente'?c.email:''),(c.email_inst&&c.email_inst!=='Pendente'?c.email_inst:''),c.status==='inativo'?'Inativo':'Ativo'];
     });
     filename='Portal_TS_Geral';
   } else if(tab==='equipamentos'){
@@ -3296,6 +3298,58 @@ function exportXlsx(tab){
     headers=['Nome','Cargo',...certCols];
     rows=all.map(c=>[c.nome,c.cargo,...certCols.map(k=>c.certs[k]||'N/A')]);
     filename='Portal_TS_Certificacoes';
+  } else if(tab==='upload'){
+    headers=['Nome','UF','Tipo','Arquivo','Data Upload','Status'];
+    rows=(window.uploadedDocs||[]).map(d=>[d.colabNome||'',d.colabUf||'',d.tipo||'',d.fileName||'',d.dataUpload||'',d.pending?'Pendente':'Confirmado']);
+    filename='Portal_TS_Documentos';
+  } else if(tab==='requisitos'){
+    headers=['Cargo','Requisito','Nível','Detalhe'];
+    rows=[];
+    document.querySelectorAll('#req-cards .req-row').forEach(el=>{
+      const cells=[...el.querySelectorAll('td')].map(td=>td.textContent.trim());
+      if(cells.length) rows.push(cells);
+    });
+    if(!rows.length){
+      // Fallback: build from DATA
+      const cargosUniq=[...new Set(all.map(c=>c.cargo))].sort();
+      cargosUniq.forEach(cargo=>{
+        rows.push([cargo,'Cargo do contrato T&S/TCU','—','—']);
+      });
+    }
+    filename='Portal_TS_Requisitos';
+  } else if(tab==='contrata'){
+    headers=['Nome','CPF','Cargo','UF','E-mail','Data Admissão','Status'];
+    rows=all.filter(c=>c.status!=='inativo').map(c=>{
+      const adm=c.data_admissao?c.data_admissao.split('-').reverse().join('/'):'';
+      return [c.nome,c.cpf,c.cargo,c.uf,c.email_inst||c.email||'',adm,'Aguardando cadastro'];
+    });
+    filename='Portal_TS_Contrata';
+  } else if(tab==='gerencial'){
+    headers=['Nome','UF','Cargo','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    const meses=['01','02','03','04','05','06','07','08','09','10','11','12'];
+    const ano=new Date().getFullYear();
+    rows=all.map(c=>{
+      const ger=meses.map(m=>{
+        const key=c.nome+'|'+m+'|'+ano;
+        const v=(window.GER_DATA&&window.GER_DATA[key])||{};
+        return v.status||'';
+      });
+      return [c.nome,c.uf,c.cargo,...ger];
+    });
+    filename='Portal_TS_Gerencial_'+ano;
+  } else if(tab==='abono'){
+    headers=['Nome','UF','Cargo','Mês','Desktop','Internet','Celular'];
+    rows=[];
+    if(window.ABONO_DATA){
+      Object.entries(window.ABONO_DATA).forEach(([k,v])=>{
+        const parts=k.split('|');
+        if(parts.length<2) return;
+        const nome=parts[0],mes=parts[1];
+        const c=all.find(x=>x.nome===nome);
+        rows.push([nome,c?.uf||'',c?.cargo||'',mes,v.desktop||'',v.internet||'',v.celular||'']);
+      });
+    }
+    filename='Portal_TS_Abono';
   }
   downloadCsv(headers,rows,filename);
 }
