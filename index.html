@@ -2343,7 +2343,17 @@ function renderGeral(){
     // Extra fields
     const nascVal = c.data_nascimento||'';
     const nascStr = nascVal ? nascVal.split('-').reverse().join('/') : '—';
-    const salario = c.salario ? 'R$ '+parseFloat(c.salario).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '—';
+    // Parse salary — stored as raw float (5803.96) OR as "R$ 5.803,96"
+    function fmtSal(v){
+      if(!v||v==='Pendente') return '—';
+      // Already formatted "R$ x.xxx,xx"
+      if(String(v).startsWith('R$')) return v;
+      // Raw float string
+      const n = parseFloat(String(v).replace(/[R$\s]/g,'').replace(/\./g,'').replace(',','.'));
+      if(isNaN(n)) return '—';
+      return 'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    }
+    const salario = fmtSal(c.salario);
     const contaRede = c.conta_rede||'';
     const pcd     = c.pcd||'Não';
     const libras  = c.libras||'Não';
@@ -2373,7 +2383,10 @@ function renderGeral(){
       <b>${c.uf}</b>
       <span class="edit-icon" onclick="openGeralEditSelect(${c._id},'uf','${c.uf}')" title="Editar UF">✎</span>
     </td>
-    <td style="font-size:11px;white-space:nowrap">${salario}</td>
+    <td style="font-size:11px;white-space:nowrap">
+      ${salario}
+      <span class="edit-icon" onclick="openGeralEdit(${c._id},'salario','${escQ(c.salario||'')}')" title="Editar salário">✎</span>
+    </td>
     <td style="text-align:center">
       ${admStr?`<span style="font-size:11px;color:#155724;font-weight:600">${admStr}</span>`:`<span style="color:#ccc">—</span>`}
       <span class="edit-icon" onclick="openGeralEditDate(${c._id},'data_admissao','${admVal}')" title="Editar data de admissão">✎</span>
@@ -2390,9 +2403,18 @@ function renderGeral(){
       ${c.rg||'—'}
       <span class="edit-icon" onclick="openGeralEdit(${c._id},'rg','${escQ(c.rg||'')}')" title="Editar RG">✎</span>
     </td>
-    <td style="text-align:center;font-size:11px">${nascStr}</td>
-    <td style="font-size:11px;text-align:center">${c.cor_raca||'—'}</td>
-    <td style="font-size:11px;text-align:center">${c.genero||'—'}</td>
+    <td style="text-align:center;font-size:11px">
+      ${nascStr}
+      <span class="edit-icon" onclick="openGeralEditDate(${c._id},'data_nascimento','${nascVal}')" title="Editar data nascimento">✎</span>
+    </td>
+    <td style="font-size:11px;text-align:center">
+      ${c.cor_raca||'—'}
+      <span class="edit-icon" onclick="openGeralEdit(${c._id},'cor_raca','${escQ(c.cor_raca||'')}')" title="Editar raça/cor">✎</span>
+    </td>
+    <td style="font-size:11px;text-align:center">
+      ${c.genero||'—'}
+      <span class="edit-icon" onclick="openGeralEdit(${c._id},'genero','${escQ(c.genero||'')}')" title="Editar sexo">✎</span>
+    </td>
     <td style="text-align:center">
       <span style="background:${pcd==='Sim'?'#E8F0FE':'#f0f0f0'};color:${pcd==='Sim'?'#1F4E79':'#999'};padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;cursor:pointer" onclick="toggleGeralBool(${c._id},'pcd')">${pcd}</span>
     </td>
@@ -3061,8 +3083,13 @@ function openGeralEdit(id,field,currentVal){
 
 function saveGeralEdit(){
   const {id,field}=geralEditTarget;
-  const val=document.getElementById('geral-edit-input').value.trim()||'Pendente';
+  let val=document.getElementById('geral-edit-input').value.trim()||'Pendente';
   const c=DATA.find(x=>x._id===id);
+  // Normalize salary to "R$ x.xxx,xx"
+  if(field==='salario' && val && val!=='Pendente'){
+    const raw=parseFloat(val.replace(/[R$\s]/g,'').replace(/\./g,'').replace(',','.'));
+    if(!isNaN(raw)) val='R$ '+raw.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  }
   c[field]=val;
   saveData();
   closeModal('modal-geral-edit');
@@ -3242,7 +3269,7 @@ function exportXlsx(tab){
     rows=all.map(c=>{
       const adm=c.data_admissao?c.data_admissao.split('-').reverse().join('/'):'';
       const dem=c.data_demissao?c.data_demissao.split('-').reverse().join('/'):'';
-      return [c.nome,c.conta_rede||'',c.cargo,c.uf,c.salario?'R$ '+parseFloat(c.salario).toLocaleString('pt-BR',{minimumFractionDigits:2}):'',adm,dem,c.cpf,c.rg||'',c.data_nascimento?c.data_nascimento.split('-').reverse().join('/'):'',c.cor_raca||'',c.genero||'',c.pcd||'Não',c.libras||'Não',c.violencia_domestica||'Não',(c.email&&c.email!=='Pendente'?c.email:''),(c.email_inst&&c.email_inst!=='Pendente'?c.email_inst:''),c.status==='inativo'?'Inativo':'Ativo'];
+      return [c.nome,c.conta_rede||'',c.cargo,c.uf,c.salario||'',adm,dem,c.cpf,c.rg||'',c.data_nascimento?c.data_nascimento.split('-').reverse().join('/'):'',c.cor_raca||'',c.genero||'',c.pcd||'Não',c.libras||'Não',c.violencia_domestica||'Não',(c.email&&c.email!=='Pendente'?c.email:''),(c.email_inst&&c.email_inst!=='Pendente'?c.email_inst:''),c.status==='inativo'?'Inativo':'Ativo'];
     });
     filename='Portal_TS_Geral';
   } else if(tab==='equipamentos'){
