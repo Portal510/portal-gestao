@@ -5667,8 +5667,19 @@ function showZipResult(rows, zipName){
     const icon=r.status==='ok'?'✅':r.status==='dup'?'⏩':'⚠️';
     const fname = r.fileName||r.file?.name||'';
     const isPending = (r.status==='no-colab'||r.status==='no-tipo'||r.status==='manual');
-    // Auto-confirm button for rows that already have colab+tipo identified (status ok or dup with colab+tipo)
-    const hasAll = r.colab && r.tipo;
+    const isDecl = (r.tipo==='Decl. Desktop/Internet'||r.tipo==='Decl. Locação Equipamento'||
+                    r._manualTipo==='Decl. Desktop/Internet'||r._manualTipo==='Decl. Locação Equipamento');
+    const mesesOpts = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+      .map(m=>`<option value="${m}">${m}</option>`).join('');
+    const curMes = new Date().toLocaleDateString('pt-BR',{month:'long'});
+    const curMesCap = curMes.charAt(0).toUpperCase()+curMes.slice(1);
+    const mesSelect = `<span id="decl-mes-wrap-${fname.replace(/[^a-z0-9]/gi,'_')}" style="display:${isDecl?'inline-flex':'none'};align-items:center;gap:4px">
+        <span style="font-size:10px;color:#854D0E;font-weight:600">📅 Mês:</span>
+        <select id="decl-mes-sel-${fname.replace(/[^a-z0-9]/gi,'_')}" style="font-size:11px;padding:2px 6px;border:1px solid #f5c518;border-radius:4px;background:#FEF9C3;color:#854D0E;font-weight:600">
+          <option value="">Selecionar mês…</option>
+          ${mesesOpts}
+        </select>
+      </span>`;
     const selectHtml=isPending?`
       <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center">
         ${!r.colab?`<select class="up-select" style="font-size:11px;padding:3px 6px;background:#fff;border:1px solid #ced4da;color:#1a1a2e" onchange="upBatchSetColab(this,'${fname}')">
@@ -5679,14 +5690,26 @@ function showZipResult(rows, zipName){
           <option value="">Selecionar tipo…</option>
           ${Object.keys(TIPO_TO_FIELD).map(t=>`<option value="${t}">${t}</option>`).join('')}
         </select>`:''}
+        ${mesSelect}
         <button class="up-btn" style="font-size:11px;padding:3px 10px;background:#375623;color:#fff;border-color:#375623" onclick="upBatchConfirmRow('${fname}')">✓ Confirmar</button>
         <button class="up-btn up-btn-danger" style="font-size:11px;padding:3px 8px" title="Excluir da lista" onclick="upBatchDeleteRow('${fname}')">🗑</button>
       </div>`:'';
+    // For identified declaration rows, also show month selector inline
+    const identDeclHtml = (!isPending && isDecl) ? `
+      <div style="display:flex;gap:6px;margin-top:4px;align-items:center;flex-wrap:wrap">
+        <span style="font-size:10px;color:#854D0E;font-weight:600">📅 Mês da declaração:</span>
+        <select id="decl-mes-sel-${fname.replace(/[^a-z0-9]/gi,'_')}" style="font-size:11px;padding:2px 8px;border:1px solid #f5c518;border-radius:4px;background:#FEF9C3;color:#854D0E;font-weight:600" onchange="upBatchSetDeclMes(this,'${fname}')">
+          <option value="">Selecionar mês…</option>
+          ${['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'].map(m=>`<option value="${m}"${fname.toLowerCase().includes(m.toLowerCase())?` selected`:``}>${m}</option>`).join('')}
+        </select>
+      </div>` : '';
+
     return `<div id="batch-row-${fname.replace(/[^a-z0-9]/gi,'_')}" style="padding:5px 0;border-bottom:1px solid #dee2e6;font-size:12px">
       <span style="color:${color}">${icon}</span>
       <span style="color:#1a1a2e;margin-left:6px;font-weight:500">${fname}</span>
       <span style="color:#6c757d;margin-left:8px">${r.msg}</span>
       ${selectHtml}
+      ${identDeclHtml}
     </div>`;
   }).join('');
 
@@ -6261,13 +6284,34 @@ function upBatchDeleteRow(fname){
   }
 }
 
+function upBatchSetDeclMes(sel, fname){
+  // For already-identified rows, re-run upAtualizarStatus with the chosen month
+  const row = window._batchPendingRows?.find(r=>(r.fileName||r.file?.name)===fname);
+  if(!row||!row.colab||!row.tipo) return;
+  const mes = sel.value;
+  if(!mes) return;
+  const tipo = row.tipo;
+  // Build a synthetic fileName containing the month so upAtualizarStatus extracts it
+  const effectiveFileName = mes + ' ' + fname;
+  upAtualizarStatus(row.colab._id, tipo, effectiveFileName);
+  toast('✅ Declaração de '+mes+' registrada!','ok');
+}
+
 function upBatchSetColab(sel, fname){
   const row = window._batchPendingRows?.find(r=>(r.fileName||r.file?.name)===fname);
   if(row) row._manualColabId = parseInt(sel.value)||null;
 }
 function upBatchSetTipo(sel, fname){
   const row = window._batchPendingRows?.find(r=>(r.fileName||r.file?.name)===fname);
-  if(row) row._manualTipo = sel.value||null;
+  if(!row) return;
+  row._manualTipo = sel.value||null;
+  // Show/hide month selector for declarations
+  const key = fname.replace(/[^a-z0-9]/gi,'_');
+  const mesWrap = document.getElementById('decl-mes-wrap-'+key);
+  if(mesWrap){
+    const isDecl = sel.value==='Decl. Desktop/Internet'||sel.value==='Decl. Locação Equipamento';
+    mesWrap.style.display = isDecl ? 'inline-flex' : 'none';
+  }
 }
 function upBatchConfirmRow(fname){
   const row = window._batchPendingRows?.find(r=>(r.fileName||r.file?.name)===fname);
@@ -6280,8 +6324,19 @@ function upBatchConfirmRow(fname){
   const colab = DATA.find(x=>x._id===colabId);
   if(!colab){ alert('Colaborador não encontrado.'); return; }
 
-  // Get the File object — stored in _batchPendingFiles or row.file
+  // For declaration types, get the manually selected month
+  const isDecl = tipo==='Decl. Desktop/Internet'||tipo==='Decl. Locação Equipamento';
   const fileKey = row.fileName || row.file?.name;
+  const key = fileKey.replace(/[^a-z0-9]/gi,'_');
+  let declMes = '';
+  if(isDecl){
+    const mesSel = document.getElementById('decl-mes-sel-'+key);
+    if(mesSel && mesSel.value) declMes = mesSel.value;
+    if(!declMes){ alert('Selecione o mês da declaração antes de confirmar.'); return; }
+  }
+  // Build effective fileName to carry the month (used by upAtualizarStatus)
+  const effectiveFileName = declMes ? `${declMes} ${fileKey}` : fileKey;
+
   const file = window._batchPendingFiles?.[fileKey] || row.file || null;
 
   function doImport(dataUrl, size, ext){
@@ -6296,7 +6351,7 @@ function upBatchConfirmRow(fname){
       dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
       dataUrl, batchImported:true,
     });
-    upAtualizarStatus(colabId, tipo, fileName||'');
+    upAtualizarStatus(colabId, tipo, effectiveFileName);
     saveData();
     saveUploadDocs();
     try{ renderEquip(); }catch(e){}
