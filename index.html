@@ -2212,6 +2212,7 @@ function saveData(){
       return changes;
     });
     _safeSetItem(DATA_KEY, JSON.stringify(delta));
+    localStorage.setItem('ts_data_saved_at', Date.now().toString());
   }catch(e){
     console.warn('[saveData]',e);
   }
@@ -2224,8 +2225,10 @@ function loadData(){
     if(saved){
       const parsed = JSON.parse(saved);
       if(Array.isArray(parsed) && parsed.length > 0){
-        // Detect format: delta has small objects (few keys), full has many keys
-        const isDelta = parsed[0] && Object.keys(parsed[0]).length < 10;
+        // Delta format: objects have only changed fields (identified by having cpf + few keys, NOT nome+cargo+uf etc)
+        const first = parsed[0];
+        const isDelta = first && Object.keys(first).length < 8
+          && !('data_admissao' in first) && !('celular_tablet' in first) && !('docs' in first);
         if(isDelta){
           // Merge delta with COLAB base
           const merged = COLAB.map((base,i)=>{
@@ -2234,13 +2237,13 @@ function loadData(){
           });
           // Add new colabs not in COLAB base
           parsed.forEach(d=>{
-            if(!COLAB.find(b=>b.cpf===d.cpf)){
+            if(!COLAB.find(b=>b.cpf===d.cpf) && d.nome){
               merged.push({...d, _id:merged.length});
             }
           });
           return merged;
         } else {
-          // Full format — merge with base to add any new fields
+          // Full format — merge with base to add any missing base fields
           return parsed.map((c,i)=>{
             const base = COLAB.find(b=>b.cpf===c.cpf)||COLAB[i]||{};
             return {...base, ...c, _id:c._id??i};
@@ -7005,20 +7008,27 @@ function gestaoToPayload(){
 // ── Apply our payload → DATA ──────────────
 function applyGestaoPayload(payload){
   if(!payload?.colaboradores) return 0;
+  // Skip if payload is stale (older than local DATA save)
+  const payloadTs = payload.ts||0;
+  const localTs   = parseInt(localStorage.getItem('ts_data_saved_at')||'0');
+  if(payloadTs && localTs && payloadTs < localTs) return 0;
   let n=0;
   payload.colaboradores.forEach(inc=>{
     const local=DATA.find(c=>c.cpf===inc.cpf||c.nome.trim().toLowerCase()===inc.nome.trim().toLowerCase());
     if(!local) return;
-    const apply=(key,val)=>{ if(val&&val!==local[key]){local[key]=val;n++;} };
+    // Only apply non-empty values that actually differ
+    const apply=(key,val)=>{ if(val&&val!=='Pendente'&&val!==local[key]){local[key]=val;n++;} };
     apply('email_inst', inc.email_inst);
-    apply('email', inc.email!=='Pendente'?inc.email:'');
-    apply('celular', inc.celular!=='Pendente'?inc.celular:'');
+    apply('email', inc.email);
+    apply('celular', inc.celular);
     if(inc.status){ const st=inc.status==='desligado'?'inativo':inc.status; if(st!==local.status){local.status=st;n++;} }
     if(inc.data_admissao && inc.data_admissao!==local.data_admissao){local.data_admissao=inc.data_admissao;n++;}
     if(inc.data_demissao && inc.data_demissao!==local.data_demissao){local.data_demissao=inc.data_demissao;n++;}
     if(inc.rg && inc.rg!==local.rg){local.rg=inc.rg;n++;}
-    // Docs
-    if(inc.docs){ Object.entries(inc.docs).forEach(([k,v])=>{ if(v&&local.docs&&local.docs[k]!==undefined&&local.docs[k]!==v){local.docs[k]=v;n++;} }); }
+    // Docs — only update if incoming value is better (Entregue > Pendente)
+    if(inc.docs){ Object.entries(inc.docs).forEach(([k,v])=>{
+      if(v&&v==='Entregue'&&local.docs&&local.docs[k]!==undefined&&local.docs[k]!==v){local.docs[k]=v;n++;}
+    }); }
     // Certs
     if(inc.certs){ Object.entries(inc.certs).forEach(([k,v])=>{ if(v&&local.certs&&local.certs[k]!==undefined&&local.certs[k]!==v){local.certs[k]=v;n++;} }); }
     if(inc.certs_agenda&&Object.keys(inc.certs_agenda).length){local.certs_agenda=inc.certs_agenda;n++;}
@@ -7209,7 +7219,7 @@ function _addSyncBtn(){
 }
 
 // ── Initial localStorage sync (silent) ───
-(function(){ try{const n=syncFromLocalStorage();if(n>0)console.log('[Sync] localStorage:',n);}catch(e){} })();
+(function(){ try{syncFromLocalStorage();}catch(e){} })();
 
 
 // ══════════════════════════════════════════
