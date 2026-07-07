@@ -8714,6 +8714,91 @@ function indExportXls(){
 }
 
 function _portalInit(){
+  // ── Aplicar e-mails institucionais ───────
+  const _EMAIL_INST_MAP = {
+    'EDILENE ALVES DE MORAES':'edilene.moraes@tcu.gov.br',
+    'EZER WEIZMANN SUAID LEVYSKI':'ezer.levyski@tcu.gov.br',
+    'FABIO CRYSTIAN DA COSTA QUEIROZ':'fabio.queiroz@tcu.gov.br',
+    'FILIPE AUGUSTO DIAS CARVALHO':'filipe.carvalho@tcu.gov.br',
+    'JOVENIL VIANA MARQUES FILHO':'jovenil.marques@tcu.gov.br',
+    'MATHEUS DE QUEIROZ ALVES':'matheus.alves@tcu.gov.br',
+    'RAYANNE PEREIRA DA SILVA':'rayanne.silva@tcu.gov.br',
+    'SARAH MENDES RIBEIRO':'sarah.ribeiro@tcu.gov.br',
+    'THIAGO DA SILVA SENNA':'thiago.senna@tcu.gov.br',
+    'THIAGO DANTAS PRADO':'thiago.prado@tcu.gov.br',
+    'WANDERSON MARQUES DA COSTA':'wanderson.costa@tcu.gov.br',
+    'WELTON MACEDO SANTOS DURÃO':'welton.durao@tcu.gov.br',
+    'ALEXANDRE FERREIRA BOTTINO':'alexandre.bottino@tcu.gov.br',
+    'ANA CLARA SANTOS VELOSO':'ana.veloso@tcu.gov.br',
+    'CAIO DOS SANTOS SILVA':'caio.silva@tcu.gov.br',
+    'CAROLINA GONÇALVES ROCHA':'carolina.rocha@tcu.gov.br',
+    'EDUARDO FRANÇA ROCHA':'eduardo.rocha@tcu.gov.br',
+    'GABRIEL HENRIQUE COSTA RODRIGUES':'gabriel.rodrigues@tcu.gov.br',
+    'HERMANO MARQUES FERNANDES':'hermano.fernandes@tcu.gov.br',
+    'LUCAS SENA DE SOUZA':'lucas.souza@tcu.gov.br',
+    'OSVALDO MENDES DE AMORIM JÚNIOR':'osvaldo.junior@tcu.gov.br',
+    'ROBSON ALVES MEDEIROS':'robson.medeiros@tcu.gov.br',
+    'SUENE DA SILVA PINHO':'suene.pinho@tcu.gov.br',
+    'ADRIANO PEREIRA DA SILVA':'adriano.silva@tcu.gov.br',
+    'ADRIANO PORTELA PANTOJA':'adriano.portela@tcu.gov.br',
+    'ALBERTO MARQUES DAS MERCÊS JUNIOR':'alberto.junior@tcu.gov.br',
+    'ALEXANDER DUARTE RODRIGUES':'alexander.rodrigues@tcu.gov.br',
+    'ALEXSANDRO BARBOSA DE LIMA':'alexsandro.lima@tcu.gov.br',
+    'CLEOVANSOSTENES ABUD FREIRE':'cleovansostenes.freire@tcu.gov.br',
+    'DANIEL PEREIRA ROCHA NETO':'daniel.neto@tcu.gov.br',
+    'DEISE CRISTINA BARBOSA SALES':'deise.sales@tcu.gov.br',
+    'DIEGO GONÇALVES DE AZEVEDO':'diego.goncalves@tcu.gov.br',
+    'DIOGENES OLIVEIRA DANTAS':'diogenes.dantas@tcu.gov.br',
+    'ELIMAR DOS SANTOS VIEIRA':'elimar.vieira@tcu.gov.br',
+    'FRANCIELE CRISTINA DOS SANTOS':'franciele.santos@tcu.gov.br',
+    'FRANCISCO RABELO DE SOUZA':'francisco.souza@tcu.gov.br',
+    'HUDSON ALENCAR SALDANHA DE OLIVEIRA':'hudson.oliveira@tcu.gov.br',
+    'JEFFERSON LUCAS DA CONCEIÇÃO':'jefferson.conceicao@tcu.gov.br',
+    'JOÃO PAULO SANTOS VITÓRIA':'joao.vitoria@tcu.gov.br',
+    'JOSUE LAURO DE MORAES NEVES':'josue.neves@tcu.gov.br',
+    'LAÉLIA TAYANE FREITAS MARQUES SOUZA':'laelia.souza@tcu.gov.br',
+    'MAGNO VINÍCIUS SANTANA LUCENA':'magno.lucena@tcu.gov.br',
+    'MICHEL MACHADO':'michel.machado@tcu.gov.br',
+    'NIGER ALEXANDRE SOUZA DA SILVA':'niger.silva@tcu.gov.br',
+    'RAPHAEL DIÓGENES PEREIRA LIMA DOS SANTOS':'raphael.lima@tcu.gov.br',
+    'RAUL SCHEIR RABELO':'raul.rabelo@tcu.gov.br',
+    'RODRIGO HENRIQUE MARANHÃO SANTANA':'rodrigo.santana@tcu.gov.br',
+    'RONYELLISON BRAGA DOS SANTOS':'ronyellison.santos@tcu.gov.br',
+    'SILMARA FERREIRA COSTA':'silmara.costa@tcu.gov.br',
+    'WILLIAM DE SOUZA AGUIAR':'william.aguiar@tcu.gov.br',
+    'ABDIAS FRANCISCO RODRIGUES':'abdias.rodrigues@tcu.gov.br',
+    'CARLOS SILVA GOMES':'carlos.gomes@tcu.gov.br',
+    'DANILO DOS SANTOS NASCIMENTO':'danilo.nascimento@tcu.gov.br',
+    'GLAUBER NUNES NASCIMENTO':'glauber.nascimento@tcu.gov.br',
+    'KLISMAN SILVA SOUSA':'klisman.sousa@tcu.gov.br',
+    'MAGNO BARROS ALVES':'magno.alves@tcu.gov.br',
+    'MICHEL GALENO DE SOUZA':'michel.souza@tcu.gov.br',
+    'WILLIAM CÁSSIO DA ROCHA DUARTE':'william.duarte@tcu.gov.br',
+    'BRUNNA DO NASCIMENTO RUAS':'brunna.ruas@tcu.gov.br',
+    'EMERSON ANSELMO DE SOUSA':'emerson.sousa@tcu.gov.br',
+    'FABIO DE SOUSA SOARES':'fabio.soares@tcu.gov.br',
+    'FREDSON MAGALHÃES DA SILVA':'fredson.silva@tcu.gov.br',
+    'GISELLE MARIA':'giselle.maria@tcu.gov.br',
+    'LUCIANA ALVES DOS SANTOS TRINDADE':'luciana.trindade@tcu.gov.br',
+    'MARCOS SILVA ARAUJO':'marcos.araujo@tcu.gov.br',
+    'MARCUS VINICIUS M. O. PEREIRA':'marcus.vinicius@tcu.gov.br',
+    'MERILENE MARTINS DE SOUSA':'merilene.sousa@tcu.gov.br',
+    'RAFAEL JOSÉ PIRES':'rafael.pires@tcu.gov.br',
+    'RENATO GOMES LEMOS':'renato.lemos@tcu.gov.br',
+    'RENATO ROCHA DE CARVALHO':'renato.carvalho@tcu.gov.br',
+    'RICARDO CONCEIÇÃO DOS SANTOS':'ricardo.santos@tcu.gov.br',
+    'THIAGO SOARES CARNEIRO':'thiago.carneiro@tcu.gov.br',
+  };
+  try{
+    let changed=false;
+    DATA.forEach(c=>{
+      const email=_EMAIL_INST_MAP[c.nome.trim().toUpperCase()];
+      if(email && (!c.email_inst || c.email_inst==='Pendente' || c.email_inst==='')) {
+        c.email_inst=email; changed=true;
+      }
+    });
+    if(changed) saveData();
+  }catch(e){}
   // Restore sidebar state
   try{
     if(localStorage.getItem('sidebar_collapsed')==='1'){
