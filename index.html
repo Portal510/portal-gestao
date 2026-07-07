@@ -8321,6 +8321,20 @@ function indFiltrar(){
   indRender();
 }
 
+// ── Período de estabilização ──────────────
+// Mai=70% · Jun=80% · Jul=90% · Ago+=100%
+const IND_ESTABILIZACAO = {
+  'Janeiro':100,'Fevereiro':100,'Março':100,'Abril':100,
+  'Maio':70,'Junho':80,'Julho':90,
+  'Agosto':100,'Setembro':100,'Outubro':100,'Novembro':100,'Dezembro':100
+};
+function indGetMeta(mes, ano){
+  // Only apply estabilização for 2026
+  if(String(ano)==='2026' && IND_ESTABILIZACAO[mes]!==undefined)
+    return IND_ESTABILIZACAO[mes];
+  return 100;
+}
+
 function indRender(){
   const empty=document.getElementById('ind-empty');
   const wrap=document.getElementById('ind-wrap');
@@ -8345,15 +8359,21 @@ function indRender(){
     if(svcNok>0) nokSvcs++;
   });
   const pctOk=totalInds>0?(okInds/totalInds*100):0;
+  const metaConf=indGetMeta(mes, document.getElementById('ind-ano-sel')?.value||'2026');
+  const mesLabel=mes||'Todos';
+  const estabilBadge=metaConf<100
+    ? `<span style="background:#FEF9C3;color:#854D0E;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;margin-left:8px">⚡ Estabilização: meta ${metaConf}%</span>`
+    : '';
   document.getElementById('ind-kpis').innerHTML=[
     ['Serviços',totalSvcs,'#1F4E79'],
     ['Indicadores',totalInds,'#495057'],
     ['✅ Dentro da meta',okInds,'#375623'],
     ['❌ Fora da meta',nokInds,'#A32D2D'],
-    [pctOk>=90?'✅ Conformidade':'⚠️ Conformidade',pctOk.toFixed(1)+'%',pctOk>=90?'#375623':pctOk>=70?'#854F0B':'#A32D2D'],
+    [pctOk>=metaConf?'✅ Conformidade':'⚠️ Conformidade',pctOk.toFixed(1)+'%',pctOk>=metaConf?'#375623':pctOk>=(metaConf*0.8)?'#854F0B':'#A32D2D'],
   ].map(([l,v,c])=>`<div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:12px 14px">
     <div style="font-size:11px;color:#6c757d;margin-bottom:4px">${l}</div>
     <div style="font-size:22px;font-weight:700;color:${c}">${v}</div>
+    ${l.includes('Conformidade')?`<div style="font-size:10px;color:#6c757d;margin-top:2px">Meta: ${metaConf}%${metaConf<100?' (estabilização)':''}</div>`:''}
   </div>`).join('');
 
   // ── Evolução ──────────────────────────────
@@ -8361,17 +8381,32 @@ function indRender(){
 
   // ── Cards por serviço ─────────────────────
   const cards=document.getElementById('ind-cards');
-  const mes=document.getElementById('ind-mes-sel')?.value||'';
   const mesesOrder=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
-  cards.innerHTML=Object.entries(services).map(([svc,svcName])=>{
+  // Estabilização banner
+  let estabilBanner='';
+  if(metaConf<100){
+    const prox=metaConf===70?'Junho':metaConf===80?'Julho':'Agosto';
+    const proxMeta=metaConf===70?80:metaConf===80?90:100;
+    estabilBanner=`<div style="background:#FEF9C3;border:1px solid #F5C518;border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:24px">⚡</span>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#7A5000">Período de Estabilização — ${mes}/${document.getElementById('ind-ano-sel')?.value||'2026'}</div>
+        <div style="font-size:12px;color:#854D0E">Meta de conformidade para este mês: <b>${metaConf}%</b> dos indicadores dentro da meta · A partir de ${prox}: <b>${proxMeta}%</b></div>
+        <div style="font-size:11px;color:#6c757d;margin-top:2px">Mai/2026: 70% · Jun/2026: 80% · Jul/2026: 90% · Ago/2026 em diante: 100%</div>
+      </div>
+    </div>`;
+  }
+
+  cards.innerHTML=estabilBanner+Object.entries(services).map(([svc,svcName])=>{
     const inds=(data[svc]||[]);
     if(!inds.length) return '';
     const okN=inds.filter(i=>i.ok).length;
     const nokN=inds.length-okN;
     const pct=inds.length>0?(okN/inds.length*100):0;
-    const statusColor=pct>=90?'#375623':pct>=70?'#854F0B':'#A32D2D';
-    const statusBg=pct>=90?'#E1F5EE':pct>=70?'#FEF9C3':'#FCEBEB';
+    const atingiu=pct>=metaConf;
+    const statusColor=atingiu?'#375623':pct>=(metaConf*0.8)?'#854F0B':'#A32D2D';
+    const statusBg=atingiu?'#E1F5EE':pct>=(metaConf*0.8)?'#FEF9C3':'#FCEBEB';
 
     const rows=inds.map((ind,i)=>{
       const medStr=ind.medicao!==null&&ind.medicao!==undefined?ind.medicao.toFixed(2):'—';
@@ -8402,7 +8437,7 @@ function indRender(){
         <div style="display:flex;align-items:center;gap:10px">
           <div style="text-align:right">
             <div style="font-size:20px;font-weight:700;color:${statusColor}">${pct.toFixed(0)}%</div>
-            <div style="font-size:10px;color:#6c757d">conformidade</div>
+            <div style="font-size:10px;color:#6c757d">meta: ${metaConf}%${atingiu?' ✓':' ✗'}</div>
           </div>
           <div style="background:${statusBg};color:${statusColor};padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700">
             ${okN}/${inds.length} ✓
@@ -8449,16 +8484,24 @@ function indRenderEvolucao(services){
     svg+=`<line x1="${PL}" x2="${W-PR}" y1="${y}" y2="${y}" stroke="#f0f0f0" stroke-width="1"/>`;
     svg+=`<text x="${PL-6}" y="${y+4}" text-anchor="end" font-size="9" fill="#aaa">${v}%</text>`;
   });
-  // 90% meta line
-  const metaY=PT+cH-(90/100*cH);
-  svg+=`<line x1="${PL}" x2="${W-PR}" y1="${metaY}" y2="${metaY}" stroke="#375623" stroke-width="1.5" stroke-dasharray="5,3"/>`;
-  svg+=`<text x="${W-PR+4}" y="${metaY+4}" font-size="9" fill="#375623">90%</text>`;
-  // X axis labels
+  // X axis labels + per-month meta segments
   months.forEach((m,i)=>{
     const x=PL+(months.length>1?i*cW/(months.length-1):cW/2);
     svg+=`<text x="${x}" y="${H-PT+6}" text-anchor="middle" font-size="9" fill="#6c757d">${m.slice(0,3)}</text>`;
   });
-  // Lines per service
+  // Draw meta line as step function per month
+  if(months.length>=1){
+    months.forEach((m,i)=>{
+      const metaV=indGetMeta(m, ano);
+      const x1=PL+(months.length>1?i*cW/(months.length-1):0);
+      const x2=i<months.length-1?PL+(i+1)*cW/(months.length-1):PL+cW;
+      const metaYm=PT+cH-(metaV/100*cH);
+      svg+=`<line x1="${x1}" x2="${x2}" y1="${metaYm}" y2="${metaYm}" stroke="#C55A11" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.7"/>`;
+      if(i===months.length-1||indGetMeta(months[i+1]||m,ano)!==metaV){
+        svg+=`<text x="${x2-2}" y="${metaYm-3}" text-anchor="end" font-size="8" fill="#C55A11">${metaV}%</text>`;
+      }
+    });
+  }  // Lines per service
   svcs.forEach((svc,si)=>{
     const color=colors[si%colors.length];
     const points=months.map((m,i)=>{
