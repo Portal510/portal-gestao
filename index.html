@@ -546,7 +546,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <th>PcD</th>
       <th>Libras</th>
       <th style="min-width:120px">Vítima Viol. Dom.</th>
-      <th style="min-width:160px">E-mail</th>
+      <th style="min-width:160px">E-mail Pessoal</th>
+      <th style="min-width:160px">E-mail Institucional</th>
     </tr></thead>
     <tbody id="body-geral"></tbody>
   </table></div>
@@ -2402,11 +2403,15 @@ function renderGeral(){
       <span style="background:${violencia==='Sim'?'#FFF3CD':'#f0f0f0'};color:${violencia==='Sim'?'#7A5000':'#999'};padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;cursor:pointer" onclick="toggleGeralBool(${c._id},'violencia_domestica')">${violencia}</span>
     </td>
     <td style="font-size:11px">
-      ${emailCell}
-      <span class="edit-icon" onclick="openGeralEdit(${c._id},'email_inst','${escQ(c.email_inst||'')}')" title="Editar e-mail">✎</span>
+      ${c.email&&c.email!=='Pendente'?`<a href="mailto:${c.email}" style="color:#1F4E79;text-decoration:none">${c.email}</a>`:`<span style="color:#ccc">—</span>`}
+      <span class="edit-icon" onclick="openGeralEdit(${c._id},'email','${escQ(c.email||'')}')" title="Editar e-mail pessoal">✎</span>
+    </td>
+    <td style="font-size:11px">
+      ${c.email_inst&&c.email_inst!=='Pendente'?`<span style="background:#E8F0FE;color:#1A3A6B;padding:2px 7px;border-radius:9px;font-size:10px">🏛 ${c.email_inst}</span>`:`<span style="color:#ccc">—</span>`}
+      <span class="edit-icon" onclick="openGeralEdit(${c._id},'email_inst','${escQ(c.email_inst||'')}')" title="Editar e-mail institucional">✎</span>
     </td>
   </tr>`;
-  }).join(''):`<tr><td colspan="17" class="empty">Nenhum resultado</td></tr>`;
+  }).join(''):`<tr><td colspan="18" class="empty">Nenhum resultado</td></tr>`;
   updateStats('geral',rows);
 }
 
@@ -3233,11 +3238,11 @@ function exportXlsx(tab){
   let rows=[], headers=[], filename='';
   const all=DATA;
   if(tab==='geral'){
-    headers=['Nome','Conta Rede TCU','Cargo','UF','Salário','Data Admissão','Data Desligamento','CPF','RG','Data Nascimento','Raça/Cor','Sexo','PcD','Libras','Vítima Viol. Dom.','E-mail','Status'];
+    headers=['Nome','Conta Rede TCU','Cargo','UF','Salário','Data Admissão','Data Desligamento','CPF','RG','Data Nascimento','Raça/Cor','Sexo','PcD','Libras','Vítima Viol. Dom.','E-mail Pessoal','E-mail Institucional','Status'];
     rows=all.map(c=>{
       const adm=c.data_admissao?c.data_admissao.split('-').reverse().join('/'):'';
       const dem=c.data_demissao?c.data_demissao.split('-').reverse().join('/'):'';
-      return [c.nome,c.conta_rede||'',c.cargo,c.uf,c.salario?'R$ '+parseFloat(c.salario).toLocaleString('pt-BR',{minimumFractionDigits:2}):'',adm,dem,c.cpf,c.rg||'',c.data_nascimento?c.data_nascimento.split('-').reverse().join('/'):'',c.cor_raca||'',c.genero||'',c.pcd||'Não',c.libras||'Não',c.violencia_domestica||'Não',c.email_inst||c.email||'',c.status==='inativo'?'Inativo':'Ativo'];
+      return [c.nome,c.conta_rede||'',c.cargo,c.uf,c.salario?'R$ '+parseFloat(c.salario).toLocaleString('pt-BR',{minimumFractionDigits:2}):'',adm,dem,c.cpf,c.rg||'',c.data_nascimento?c.data_nascimento.split('-').reverse().join('/'):'',c.cor_raca||'',c.genero||'',c.pcd||'Não',c.libras||'Não',c.violencia_domestica||'Não',(c.email&&c.email!=='Pendente'?c.email:''),(c.email_inst&&c.email_inst!=='Pendente'?c.email_inst:''),c.status==='inativo'?'Inativo':'Ativo'];
     });
     filename='Portal_TS_Geral';
   } else if(tab==='equipamentos'){
