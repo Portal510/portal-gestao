@@ -2212,6 +2212,10 @@ const DATA_KEY = 'ts_portal_data_v2';
 // ── Save DATA to localStorage ──────────────
 function saveData(){
   try{
+    // Always keep DATA sorted alphabetically by name
+    DATA.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
+    // Reassign _id after sort to keep consistent
+    DATA.forEach((c,i)=>{ c._id=i; });
     // Save only fields that changed vs COLAB base (delta) to minimize localStorage usage
     const delta = DATA.map(c=>{
       const base = COLAB.find(b=>b.cpf===c.cpf)||{};
