@@ -2352,12 +2352,27 @@ function renderGeral(){
     function fmtSal(v){
       if(!v||v==='Pendente'||v==='') return '—';
       const s = String(v).trim();
-      // Already formatted "R$ x.xxx,xx" — return as-is
-      if(s.startsWith('R$')) return s;
-      // Raw number (float with dot as decimal, e.g. 7790.08)
-      const n = parseFloat(s);
-      if(!isNaN(n)) return 'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
-      return '—';
+      // Strip currency prefix and normalize
+      const raw = s.replace(/R\$\s*/,'').trim();
+      // Detect format:
+      // "3.830,17" → pt-BR (dot=thousands, comma=decimal) → parse removing dots, replace comma
+      // "3.830.17" → malformed (two dots, last is decimal) → remove first dots, keep last as decimal
+      // "3830.17"  → en float → parse directly
+      let n;
+      if(/^\d{1,3}(\.\d{3})+,\d{2}$/.test(raw)){
+        // pt-BR: "3.830,17"
+        n = parseFloat(raw.replace(/\./g,'').replace(',','.'));
+      } else if(/^\d{1,3}(\.\d{3})+\.\d{2}$/.test(raw)){
+        // malformed: "3.830.17" — last dot is decimal
+        const parts = raw.split('.');
+        const dec = parts.pop();
+        n = parseFloat(parts.join('') + '.' + dec);
+      } else {
+        // plain float or comma decimal
+        n = parseFloat(raw.replace(',','.'));
+      }
+      if(isNaN(n)) return s; // fallback
+      return 'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
     }
     const salario = fmtSal(c.salario);
     const contaRede = c.conta_rede||'';
@@ -3092,8 +3107,12 @@ function saveGeralEdit(){
   const c=DATA.find(x=>x._id===id);
   // Normalize salary to "R$ x.xxx,xx"
   if(field==='salario' && val && val!=='Pendente'){
-    const raw=parseFloat(val.replace(/[R$\s]/g,'').replace(/\./g,'').replace(',','.'));
-    if(!isNaN(raw)) val='R$ '+raw.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const raw=val.replace(/R\$\s*/,'').trim();
+    let n;
+    if(/^\d{1,3}(\.\d{3})+,\d{2}$/.test(raw)) n=parseFloat(raw.replace(/\./g,'').replace(',','.'));
+    else if(/^\d{1,3}(\.\d{3})+\.\d{2}$/.test(raw)){const p=raw.split('.');const d=p.pop();n=parseFloat(p.join('')+'.'+d);}
+    else n=parseFloat(raw.replace(',','.'));
+    if(!isNaN(n)) val='R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
   }
   c[field]=val;
   saveData();
@@ -8909,7 +8928,15 @@ function _portalInit(){
         // Update all fields (overwrite with spreadsheet data)
         if (row.cargo) found.cargo = row.cargo;
         if (row.uf)    found.uf    = row.uf;
-        if (row.salario) found.salario = row.salario;
+        if (row.salario) {
+          // Normalize malformed "R$ 3.830.17" → "R$ 3.830,17"
+          const rawSal = String(row.salario).replace(/R\$\s*/,'').trim();
+          let nSal;
+          if(/^\d{1,3}(\.\d{3})+\.\d{2}$/.test(rawSal)){const p=rawSal.split('.');const d=p.pop();nSal=parseFloat(p.join('')+'.'+d);}
+          else if(/^\d{1,3}(\.\d{3})+,\d{2}$/.test(rawSal)){nSal=parseFloat(rawSal.replace(/\./g,'').replace(',','.'));}
+          else nSal=parseFloat(rawSal.replace(',','.'));
+          found.salario = !isNaN(nSal)?'R$ '+nSal.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):row.salario;
+        }
         if (row.data_admissao) found.data_admissao = row.data_admissao;
         if (row.data_demissao) { found.data_demissao = row.data_demissao; found.status = 'inativo'; }
         if (row.cpf)  found.cpf  = row.cpf;
