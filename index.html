@@ -449,6 +449,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <div class="header-sub">Gestão de Terceirizados — TCU</div>
   </div>
   <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <button onclick="atualizarTodasAbas()" title="Atualizar e sincronizar todas as abas do portal"
+      style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;padding:5px 12px;border-radius:14px;cursor:pointer;font-size:11px;font-weight:600;white-space:nowrap">
+      🔄 Atualizar
+    </button>
     <button onclick="exportarBackup()" title="Exportar todos os dados para transferir para outro dispositivo/navegador"
       style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 12px;border-radius:14px;cursor:pointer;font-size:11px;font-weight:600;white-space:nowrap">
       💾 Backup
@@ -4789,6 +4793,18 @@ function declStatus(c, mes, ano){
   };
 }
 
+function declCiclar(nome, mes, ano, campo){
+  // Cycle: Pendente → Entregue → N/A → Pendente
+  const key = declKey(nome, mes, ano);
+  if(!DECL_DATA[key]) DECL_DATA[key]={};
+  const atual = DECL_DATA[key][campo]||'Pendente';
+  const prox = atual==='Pendente'?'Entregue':atual==='Entregue'?'N/A':'Pendente';
+  DECL_DATA[key][campo]=prox;
+  _declSave();
+  renderDeclaracoes();
+  toast(`${campo==='desk'?'Desktop/Internet':'Locação Equipamento'}: ${prox}`,'ok');
+}
+
 function renderDeclaracoes(){
   const mes  = document.getElementById('decl-mes')?.value  || 'Junho';
   const ano  = document.getElementById('decl-ano')?.value  || '2026';
@@ -4803,7 +4819,7 @@ function renderDeclaracoes(){
       .forEach(uf=>{ const o=document.createElement('option');o.value=uf;o.textContent=uf;ufSel.appendChild(o); });
   }
 
-  // Set current month
+  // Set current month on first load
   const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   const mesEl = document.getElementById('decl-mes');
   if(mesEl && mesEl.selectedIndex===0 && !mesEl._init){
@@ -4815,23 +4831,20 @@ function renderDeclaracoes(){
 
   let totDesk=0, totCel=0, totPend=0;
 
+  function mkBadge(status, nome, mes, ano, campo){
+    const nomeSafe = nome.replace(/'/g,"\\'");
+    if(status==='Entregue')
+      return `<span style="background:#E1F5EE;color:#3B6D11;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;user-select:none" title="Clique para alterar" onclick="declCiclar('${nomeSafe}','${mes}','${ano}','${campo}')">✅ Entregue</span>`;
+    if(status==='N/A')
+      return `<span style="background:#f1efe8;color:#6c757d;padding:3px 10px;border-radius:12px;font-size:11px;cursor:pointer;user-select:none" title="Clique para alterar" onclick="declCiclar('${nomeSafe}','${mes}','${ano}','${campo}')">— N/A</span>`;
+    return `<span style="background:#FCEBEB;color:#A32D2D;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;user-select:none" title="Clique para alterar" onclick="declCiclar('${nomeSafe}','${mes}','${ano}','${campo}')">⏳ Pendente</span>`;
+  }
+
   tbody.innerHTML = ativos.map((c,i)=>{
     const {desk,cel} = declStatus(c, mes, ano);
     if(desk==='Entregue') totDesk++;
     if(cel==='Entregue') totCel++;
     if(desk==='Pendente'||cel==='Pendente') totPend++;
-
-    const deskBadge = desk==='Entregue'
-      ? `<span style="background:#E1F5EE;color:#3B6D11;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">✅ Entregue</span>`
-      : desk==='N/A'
-        ? `<span style="background:#f1efe8;color:#6c757d;padding:3px 10px;border-radius:12px;font-size:11px;font-style:italic">N/A</span>`
-        : `<span style="background:#FCEBEB;color:#A32D2D;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer" onclick="declMarcarEntregue('${c.nome}','${mes}','${ano}','desk')">⏳ Pendente</span>`;
-
-    const celBadge = cel==='Entregue'
-      ? `<span style="background:#E1F5EE;color:#3B6D11;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">✅ Entregue</span>`
-      : cel==='N/A'
-        ? `<span style="background:#f1efe8;color:#6c757d;padding:3px 10px;border-radius:12px;font-size:11px;font-style:italic">N/A</span>`
-        : `<span style="background:#FCEBEB;color:#A32D2D;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer" onclick="declMarcarEntregue('${c.nome}','${mes}','${ano}','cel')">⏳ Pendente</span>`;
 
     const bg = i%2===0?'':'background:#f8f9fb';
     return `<tr style="${bg}">
@@ -4839,8 +4852,8 @@ function renderDeclaracoes(){
       <td style="padding:8px 12px;font-weight:600;color:#1F4E79">${c.nome}</td>
       <td style="padding:8px 12px;font-weight:600">${c.uf}</td>
       <td style="padding:8px 12px;font-size:11px">${c.cargo}</td>
-      <td style="padding:8px 12px;text-align:center">${deskBadge}</td>
-      <td style="padding:8px 12px;text-align:center">${celBadge}</td>
+      <td style="padding:8px 12px;text-align:center">${mkBadge(desk,c.nome,mes,ano,'desk')}</td>
+      <td style="padding:8px 12px;text-align:center">${mkBadge(cel,c.nome,mes,ano,'cel')}</td>
     </tr>`;
   }).join('') || '<tr><td colspan="6" style="padding:2rem;text-align:center;color:#6c757d">Nenhum colaborador encontrado.</td></tr>';
 
@@ -4849,15 +4862,6 @@ function renderDeclaracoes(){
   document.getElementById('decl-kpi-desk').textContent  = totDesk;
   document.getElementById('decl-kpi-cel').textContent   = totCel;
   document.getElementById('decl-kpi-pend').textContent  = totPend;
-}
-
-function declMarcarEntregue(nome, mes, ano, campo){
-  const key = declKey(nome, mes, ano);
-  if(!DECL_DATA[key]) DECL_DATA[key]={};
-  DECL_DATA[key][campo]='Entregue';
-  _declSave();
-  renderDeclaracoes();
-  toast('Declaração marcada como Entregue!','ok');
 }
 
 function exportDeclaracoes(){
@@ -6118,7 +6122,7 @@ const TIPO_KEYWORDS = {
   'HDI SCD':                ['scd','support center director'],
   'Termo Maleta':              ['maleta','termo maleta','ferramenta'],
   'Decl. Desktop/Internet':    ['desktop internet','internet desktop','conectividade','ajuste custo','custo desktop','custo internet','decl desktop','decl internet'],
-  'Decl. Locação Equipamento': ['locacao equip','locação equip','equipamento locacao','decl locacao','decl celular','celular locacao'],
+  'Decl. Locação Equipamento': ['locacao equip','locação equip','equipamento locacao','decl locacao','decl celular','celular locacao','locação de equip','locacao de equip','declaração locação','declaracao locacao','decl locação'],
   'XLA Foundation':         ['xla','xla foundation'],
 };
 
@@ -6515,6 +6519,27 @@ function openReqModal(cargo, e){
 // ══════════════════════════════════════════
 // BACKUP / RESTAURAR DADOS
 // ══════════════════════════════════════════
+function atualizarTodasAbas(){
+  const fns=[
+    ['renderGeral',()=>renderGeral()],
+    ['renderEquip',()=>renderEquip()],
+    ['renderAdm',()=>renderAdm()],
+    ['renderTermos',()=>renderTermos()],
+    ['renderCert',()=>renderCert()],
+    ['renderPendencias',()=>renderPendencias()],
+    ['renderDeclaracoes',()=>renderDeclaracoes()],
+    ['ferRender',()=>ferRender()],
+    ['ferCtrlRender',()=>ferCtrlRender()],
+    ['indRender',()=>indRender()],
+    ['rGerencial',()=>rGerencial()],
+    ['upFilterDocs',()=>upFilterDocs()],
+    ['updateHeaderStats',()=>updateHeaderStats()],
+  ];
+  let ok=0;
+  fns.forEach(([name,fn])=>{ try{ fn(); ok++; }catch(e){ console.warn('Atualizar: '+name,e); } });
+  toast(`🔄 ${ok} abas atualizadas!`,'ok');
+}
+
 function exportarBackup(){
   // Build slim backup — only changed fields vs COLAB base (delta)
   const delta = DATA.map((c, i) => {
