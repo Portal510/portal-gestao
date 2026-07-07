@@ -2517,9 +2517,13 @@ function colabImportXlsx(input){
       // Detect header row — look for "Nome" in first row
       let headerRow = rows[0].map(v=>String(v||'').trim().toLowerCase());
       // Column map (flexible — tries to match by name)
-      const col = (names) => {
+      const col = (names, exact=false) => {
         for(const n of names){
-          const idx = headerRow.findIndex(h=>h.includes(n.toLowerCase()));
+          const nl = n.toLowerCase();
+          const idx = headerRow.findIndex(h=>{
+            const hl = h.toLowerCase().trim();
+            return exact ? hl===nl : hl===nl || hl.includes(nl);
+          });
           if(idx>=0) return idx;
         }
         return -1;
@@ -2528,14 +2532,14 @@ function colabImportXlsx(input){
         nome:        col(['nome']),
         conta_rede:  col(['conta rede','conta_rede','login','rede']),
         cargo:       col(['cargo']),
-        uf:          col(['uf','estado']),
+        uf:          col(['uf','estado'], true),      // exact: avoid matching 'auf' etc.
         salario:     col(['salário','salario']),
         admissao:    col(['admiss','admissão']),
         demissao:    col(['desligamento','demiss','demissão']),
-        cpf:         col(['cpf']),
-        rg:          col(['rg']),
+        cpf:         col(['cpf'], true),              // exact
+        rg:          col(['rg'], true),               // exact: avoid matching 'cargo'
         nascimento:  col(['nascimento']),
-        cor_raca:    col(['raça','raca','cor']),
+        cor_raca:    col(['raça','raca','cor/raça','raça/cor']),
         genero:      col(['sexo','gênero','genero']),
         pcd:         col(['pcd']),
         libras:      col(['libras']),
