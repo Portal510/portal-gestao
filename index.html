@@ -521,6 +521,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </select>
     <button class="btn-clear" onclick="clearFilters('geral')">Limpar</button>
     <button class="btn-primary" onclick="openCadastro()" style="margin-left:auto">+ Novo Colaborador</button>
+    <label class="btn-export" style="cursor:pointer;background:#375623;display:inline-flex;align-items:center;gap:6px" title="Importar colaboradores de planilha XLSX">
+      📂 Importar XLSX
+      <input type="file" id="colab-import-input" accept=".xlsx,.xls" style="display:none" onchange="colabImportXlsx(this)">
+    </label>
     <button class="btn-export" onclick="exportXlsx('geral')">⬇ Exportar XLSX</button>
     <button class="btn-export" onclick="exportPDF('geral')" style="background:#a32d2d">📄 Exportar PDF</button>
   </div>
@@ -2414,6 +2418,158 @@ function toggleGeralBool(id, field){
   saveData(); renderGeral();
 }
 function escQ(s){ return (s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+
+// ── Importar colaboradores via XLSX ───────
+function colabImportXlsx(input){
+  const file = input.files[0]; if(!file) return;
+  if(typeof XLSX==='undefined'){ toast('SheetJS não carregado. Verifique a conexão.','err'); return; }
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      if(rows.length < 2){ toast('Planilha vazia ou sem dados.','warn'); return; }
+
+      // Detect header row — look for "Nome" in first row
+      let headerRow = rows[0].map(v=>String(v||'').trim().toLowerCase());
+      // Column map (flexible — tries to match by name)
+      const col = (names) => {
+        for(const n of names){
+          const idx = headerRow.findIndex(h=>h.includes(n.toLowerCase()));
+          if(idx>=0) return idx;
+        }
+        return -1;
+      };
+      const COL = {
+        nome:        col(['nome']),
+        conta_rede:  col(['conta rede','conta_rede','login','rede']),
+        cargo:       col(['cargo']),
+        uf:          col(['uf','estado']),
+        salario:     col(['salário','salario']),
+        admissao:    col(['admiss','admissão']),
+        demissao:    col(['desligamento','demiss','demissão']),
+        cpf:         col(['cpf']),
+        rg:          col(['rg']),
+        nascimento:  col(['nascimento']),
+        cor_raca:    col(['raça','raca','cor']),
+        genero:      col(['sexo','gênero','genero']),
+        pcd:         col(['pcd']),
+        libras:      col(['libras']),
+        violencia:   col(['violência','violencia']),
+        email:       col(['e-mail','email']),
+      };
+
+      let added=0, updated=0, skipped=0;
+      const dataRows = rows.slice(1);
+
+      dataRows.forEach(row=>{
+        const get = (colIdx, fallback='') => colIdx>=0 ? String(row[colIdx]||'').trim() : fallback;
+        const nome = get(COL.nome);
+        if(!nome) return;
+
+        // Normalize CPF
+        const cpfRaw = get(COL.cpf,'').replace(/\D/g,'');
+        const cpf = cpfRaw.length===11 ? cpfRaw.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4') : get(COL.cpf,'Pendente');
+
+        // Parse dates: dd/mm/yyyy or yyyy-mm-dd → yyyy-mm-dd
+        const parseDate = v => {
+          if(!v) return '';
+          const s = String(v).trim();
+          if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+          const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+          if(m){
+            const y = m[3].length===2?'20'+m[3]:m[3];
+            return `${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+          }
+          return '';
+        };
+
+        const salarioVal = get(COL.salario,'').replace(/[R$\s\.]/g,'').replace(',','.');
+
+        // Check if already exists by CPF or name
+        let existing = DATA.find(c=>c.cpf===cpf && cpf!=='Pendente');
+        if(!existing) existing = DATA.find(c=>c.nome.toLowerCase().trim()===nome.toLowerCase().trim());
+
+        if(existing){
+          // Update fields that are empty or changed
+          if(get(COL.cargo)) existing.cargo = get(COL.cargo);
+          if(get(COL.uf)) existing.uf = get(COL.uf).toUpperCase().slice(0,2);
+          if(get(COL.admissao)) existing.data_admissao = parseDate(get(COL.admissao));
+          if(get(COL.demissao)) existing.data_demissao = parseDate(get(COL.demissao));
+          if(get(COL.conta_rede)) existing.conta_rede = get(COL.conta_rede);
+          if(salarioVal) existing.salario = salarioVal;
+          if(get(COL.rg)) existing.rg = get(COL.rg);
+          if(get(COL.nascimento)) existing.data_nascimento = parseDate(get(COL.nascimento));
+          if(get(COL.cor_raca)) existing.cor_raca = get(COL.cor_raca);
+          if(get(COL.genero)) existing.genero = get(COL.genero);
+          if(get(COL.pcd)) existing.pcd = get(COL.pcd);
+          if(get(COL.libras)) existing.libras = get(COL.libras);
+          if(get(COL.violencia)) existing.violencia_domestica = get(COL.violencia);
+          if(get(COL.email)){
+            const em = get(COL.email);
+            if(em.includes('@tcu.gov.br')) existing.email_inst = em;
+            else existing.email = em;
+          }
+          updated++;
+        } else {
+          // New collaborator — minimal required fields
+          const uf = get(COL.uf,'DF').toUpperCase().slice(0,2);
+          const cargo = get(COL.cargo,'');
+          if(!cargo){ skipped++; return; } // skip if no cargo
+
+          // Build certs and docs from CARGO_CERTS_MAP if available
+          const certs = {};
+          const docs = {
+            'Diploma/Superior':'Pendente','Especialização TI':'Pendente','Exp. Suporte':'Pendente',
+            'Exp. Microcomputadores':'Pendente','ASO Admissional':'Pendente','CTPS':'Pendente',
+            'Contrato de Trabalho':'Pendente','Termo TCU':'Pendente','Cadastro TCU':'Pendente',
+            'Decl. Não Parentesco':'Pendente','Termo Vale Transporte':'Pendente','Termo de Conduta T&S':'Pendente'
+          };
+          if(typeof CARGOS_CERTS_MAP!=='undefined'&&CARGOS_CERTS_MAP[cargo]){
+            CARGOS_CERTS_MAP[cargo].forEach(c=>{ certs[c]='Pendente'; });
+          }
+
+          const email_val = get(COL.email,'Pendente');
+          const email_inst = email_val.includes('@tcu.gov.br') ? email_val : 'Pendente';
+          const email_pes  = !email_val.includes('@tcu.gov.br') && email_val!=='Pendente' ? email_val : 'Pendente';
+
+          DATA.push({
+            _id: DATA.length,
+            nome, cpf, uf, cargo,
+            celular: 'Pendente',
+            email: email_pes,
+            email_inst,
+            data_admissao: parseDate(get(COL.admissao)),
+            data_demissao: parseDate(get(COL.demissao)),
+            rg: get(COL.rg,''),
+            data_nascimento: parseDate(get(COL.nascimento)),
+            genero: get(COL.genero,''),
+            cor_raca: get(COL.cor_raca,''),
+            tipo_vinculo: 'Efetivo',
+            coberto:'', inicio_cobertura:'', fim_cobertura:'',
+            celular_tablet:'Pendente', cracha:'Pendente', maleta:'Pendente', uniforme:'Pendente',
+            status: get(COL.demissao) ? 'inativo' : 'ativo',
+            certs, docs,
+            exp_suporte:'', exp_micro:'',
+            conta_rede: get(COL.conta_rede,''),
+            salario: salarioVal,
+            pcd: get(COL.pcd,'Não'),
+            libras: get(COL.libras,'Não'),
+            violencia_domestica: get(COL.violencia,'Não'),
+          });
+          added++;
+        }
+      });
+
+      saveData();
+      renderGeral();
+      toast(`✅ Importação concluída: ${added} adicionado(s) · ${updated} atualizado(s)${skipped?' · '+skipped+' ignorado(s)':''}`, 'ok');
+    }catch(err){ toast('Erro ao importar: '+err.message,'err'); console.error(err); }
+  };
+  reader.readAsArrayBuffer(file);
+  input.value='';
+}
 
 // Helper: row style + inactive badge for any tab
 function inativoStyle(c){ return c.status==='inativo'?'opacity:.5;background:#f8f8f8;':''; }
