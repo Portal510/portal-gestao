@@ -2404,7 +2404,8 @@ function renderGeral(){
   populateUfFilter('geral');
   const rows=filterData(
     (document.getElementById('search-geral')?.value||''),
-    (document.getElementById('filter-cargo-geral')?.value||'')
+    (document.getElementById('filter-cargo-geral')?.value||''),
+    {tab:'geral'}
   );
   const body=document.getElementById('body-geral');
   body.innerHTML=rows.length?rows.map((c,i)=>{
@@ -2769,7 +2770,7 @@ function cargoNa(cargo, campo){
 function renderEquip(){
   populateCargoFilter('filter-cargo-equip');
   populateUfFilter('equip');
-  const rows=filterData(document.getElementById('search-equip',{tab:'equip'}).value,document.getElementById('filter-cargo-equip',{tab:'equip'}).value,{tab:'equip'});
+  const rows=filterData(document.getElementById('search-equip')?.value||'',document.getElementById('filter-cargo-equip')?.value||'',{tab:'equip'});
   document.getElementById('body-equip').innerHTML=rows.length?rows.map((c,i)=>`<tr style="${inativoStyle(c)}">
     <td class="left" style="color:#999;font-size:11px">${i+1}</td>
     <td class="left" style="cursor:pointer;color:#1F4E79;font-weight:600" onclick="openDetail(${c._id})">${c.nome}${inativoBadge(c)}</td>
@@ -2806,7 +2807,7 @@ function renderDocs(){
 function renderAdm(){
   populateCargoFilter('filter-cargo-adm');
   populateUfFilter('adm');
-  const rows=filterData(document.getElementById('search-adm',{tab:'adm'}).value,document.getElementById('filter-cargo-adm',{tab:'adm'}).value,{tab:'adm'});
+  const rows=filterData(document.getElementById('search-adm')?.value||'',document.getElementById('filter-cargo-adm')?.value||'',{tab:'adm'});
   document.getElementById('body-adm').innerHTML=rows.length?rows.map((c,i)=>`<tr style="${inativoStyle(c)}">
     <td class="left" style="color:#999;font-size:11px">${i+1}</td>
     <td class="left" style="cursor:pointer;color:#1F4E79;font-weight:600" onclick="openDetail(${c._id})">${c.nome}${inativoBadge(c)}</td>
@@ -2828,7 +2829,7 @@ function renderAdm(){
 function renderTermos(){
   populateCargoFilter('filter-cargo-termos');
   populateUfFilter('termos');
-  const rows=filterData(document.getElementById('search-termos',{tab:'termos'}).value,document.getElementById('filter-cargo-termos',{tab:'termos'}).value,{tab:'termos'});
+  const rows=filterData(document.getElementById('search-termos')?.value||'',document.getElementById('filter-cargo-termos')?.value||'',{tab:'termos'});
   document.getElementById('body-termos').innerHTML=rows.length?rows.map((c,i)=>`<tr style="${inativoStyle(c)}">
     <td class="left" style="color:#999;font-size:11px">${i+1}</td>
     <td class="left" style="cursor:pointer;color:#1F4E79;font-weight:600" onclick="openDetail(${c._id})">${c.nome}${inativoBadge(c)}</td>
@@ -2845,7 +2846,7 @@ function renderTermos(){
 function renderCert(){
   populateCargoFilter('filter-cargo-cert');
   populateUfFilter('cert');
-  const rows=filterData(document.getElementById('search-cert',{tab:'cert'}).value,document.getElementById('filter-cargo-cert',{tab:'cert'}).value,{tab:'cert'});
+  const rows=filterData(document.getElementById('search-cert')?.value||'',document.getElementById('filter-cargo-cert')?.value||'',{tab:'cert'});
   const CERT_ORDER=['HDI SCA','HDI CSR','M365 Fundamentals','MD-100 ou MD-102','HDI DAST','AZ-900','ITIL Foundations v4','HDI SCTL','HDI KCS','HDI SCM','HDI SCD','XLA Foundation'];
   document.getElementById('body-cert').innerHTML=rows.length?rows.map((c,i)=>`<tr style="${inativoStyle(c)}">
     <td class="left" style="color:#999;font-size:11px">${i+1}</td>
