@@ -515,9 +515,19 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 <div id="tab-geral">
   <div class="stats-row" id="stats-geral"></div>
   <div class="toolbar">
-    <input type="text" id="search-geral" placeholder="🔍  Buscar por nome, cargo ou UF…" oninput="renderGeral()">
+    <input type="text" id="search-geral" placeholder="🔍 Buscar por nome, CPF, RG, cargo, UF, e-mail, celular, data…" oninput="renderGeral()" style="min-width:300px">
     <select id="filter-cargo-geral" onchange="renderGeral()"><option value="">Todos os cargos</option></select>
     <select id="filter-uf-geral" onchange="renderGeral()"><option value="">Todas as UF</option></select>
+    <select id="filter-sexo-geral" onchange="renderGeral()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px">
+      <option value="">Todos os sexos</option>
+      <option value="Masculino">Masculino</option>
+      <option value="Feminino">Feminino</option>
+    </select>
+    <select id="filter-pcd-geral" onchange="renderGeral()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px">
+      <option value="">PcD: Todos</option>
+      <option value="Sim">PcD: Sim</option>
+      <option value="Não">PcD: Não</option>
+    </select>
     <select id="filter-status-geral" onchange="renderGeral()">
       <option value="">Todos os status</option>
       <option value="ativo">● Ativos</option>
@@ -2329,14 +2339,39 @@ function editBadge(v,id,field){
 }
 
 function filterData(search,cargo){
-  const q=(search||'').toLowerCase();
+  const q=(search||'').toLowerCase().trim();
   const statusFilter=document.getElementById('filter-status-geral')?.value||'';
+  const fUf=document.getElementById('filter-uf-geral')?.value||'';
+  const fPcd=document.getElementById('filter-pcd-geral')?.value||'';
+  const fSexo=document.getElementById('filter-sexo-geral')?.value||'';
   return DATA.filter(c=>{
-    const matchQ=!q||c.nome.toLowerCase().includes(q)||c.cargo.toLowerCase().includes(q)||(c.uf||'').toLowerCase().includes(q);
+    // Search across ALL columns
+    const matchQ=!q||(
+      (c.nome||'').toLowerCase().includes(q)||
+      (c.cargo||'').toLowerCase().includes(q)||
+      (c.uf||'').toLowerCase().includes(q)||
+      (c.cpf||'').replace(/\D/g,'').includes(q.replace(/\D/g,''))||
+      (c.rg||'').toLowerCase().includes(q)||
+      (c.celular||'').replace(/\D/g,'').includes(q.replace(/\D/g,''))||
+      (c.email||'').toLowerCase().includes(q)||
+      (c.email_inst||'').toLowerCase().includes(q)||
+      (c.conta_rede||'').toLowerCase().includes(q)||
+      (c.salario||'').replace(/[R$\s.]/g,'').replace(',','.').includes(q.replace(',','.'))||
+      (c.cor_raca||'').toLowerCase().includes(q)||
+      (c.genero||'').toLowerCase().includes(q)||
+      (c.pcd||'').toLowerCase().includes(q)||
+      (c.libras||'').toLowerCase().includes(q)||
+      (c.data_admissao||'').split('-').reverse().join('/').includes(q)||
+      (c.data_demissao||'').split('-').reverse().join('/').includes(q)||
+      (c.data_nascimento||'').split('-').reverse().join('/').includes(q)
+    );
     const matchC=!cargo||c.cargo===cargo;
+    const matchU=!fUf||c.uf===fUf;
+    const matchP=!fPcd||c.pcd===fPcd;
+    const matchSexo=!fSexo||c.genero===fSexo;
     const ativo=c.status!=='inativo';
     const matchS=!statusFilter||(statusFilter==='ativo'&&ativo)||(statusFilter==='inativo'&&!ativo);
-    return matchQ&&matchC&&matchS;
+    return matchQ&&matchC&&matchU&&matchP&&matchSexo&&matchS;
   });
 }
 
@@ -2347,8 +2382,16 @@ function populateCargoFilter(selId){
   cargos.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
 }
 
+function populateUfFilter(){
+  const sel=document.getElementById('filter-uf-geral');
+  if(!sel||sel.options.length>1) return;
+  const ufs=[...new Set(DATA.map(c=>c.uf).filter(Boolean))].sort();
+  ufs.forEach(u=>{const o=document.createElement('option');o.value=u;o.textContent=u;sel.appendChild(o);});
+}
+
 function renderGeral(){
   populateCargoFilter('filter-cargo-geral');
+  populateUfFilter();
   const rows=filterData(
     (document.getElementById('search-geral')?.value||''),
     (document.getElementById('filter-cargo-geral')?.value||'')
@@ -3021,6 +3064,10 @@ function clearFilters(tab){
   const c=document.getElementById('filter-cargo-'+tab);
   if(s) s.value='';
   if(c) c.value='';
+  if(tab==='geral'){
+    ['filter-uf-geral','filter-sexo-geral','filter-pcd-geral','filter-status-geral']
+      .forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  }
   window['render'+tab.charAt(0).toUpperCase()+tab.slice(1)]?.();
 }
 
