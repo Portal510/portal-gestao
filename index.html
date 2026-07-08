@@ -2278,7 +2278,9 @@ const DATA_KEY = 'ts_portal_data_v2';
 // ── Save DATA to localStorage (formato completo — garante persistência) ──
 function saveData(){
   try{
-    DATA.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
+    // Remove entradas nulas ou sem nome
+    DATA = DATA.filter(c => c && c.nome && typeof c.nome === 'string');
+    DATA.sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt-BR',{sensitivity:'base'}));
     DATA.forEach((c,i)=>{ c._id=i; });
     _safeSetItem(DATA_KEY, JSON.stringify(DATA));
     localStorage.setItem('ts_data_saved_at', Date.now().toString());
@@ -2292,7 +2294,9 @@ function loadData(){
     if(saved){
       const parsed = JSON.parse(saved);
       if(Array.isArray(parsed) && parsed.length > 0){
-        return parsed.map((c,i)=>({...c, _id:c._id??i}));
+        return parsed
+          .filter(c => c && c.nome && typeof c.nome === 'string')
+          .map((c,i)=>({...c, _id:i}));
       }
     }
   }catch(e){ console.warn('[loadData]',e); }
@@ -9150,8 +9154,9 @@ function _portalInit(){
     let _xlsxAdded = 0, _xlsxUpdated = 0;
     _XLSX_DATA.forEach(row => {
       // Match by CPF (preferred) then by name
-      let found = DATA.find(c => c.cpf && c.cpf.replace(/\D/g,'') === row.cpf.replace(/\D/g,'') && row.cpf);
-      if (!found) found = DATA.find(c => c.nome.trim().toLowerCase() === row.nome.trim().toLowerCase());
+      if (!row || !row.nome) return; // skip invalid rows
+      let found = DATA.find(c => c && c.cpf && row.cpf && c.cpf.replace(/\D/g,'') === row.cpf.replace(/\D/g,''));
+      if (!found) found = DATA.find(c => c && c.nome && c.nome.trim().toLowerCase() === row.nome.trim().toLowerCase());
       // Partial name match (e.g. "Deise Cristina Sales" vs "Deise Cristina Barbosa Sales")
       if (!found) found = DATA.find(c => {
         const a = c.nome.trim().toLowerCase().split(' ');
