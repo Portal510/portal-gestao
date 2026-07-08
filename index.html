@@ -563,6 +563,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <th style="min-width:120px">Vítima Viol. Dom.</th>
       <th style="min-width:160px">E-mail Pessoal</th>
       <th style="min-width:160px">E-mail Institucional</th>
+      <th style="text-align:center;white-space:nowrap">Status</th>
     </tr></thead>
     <tbody id="body-geral"></tbody>
   </table></div>
@@ -2540,8 +2541,13 @@ function renderGeral(){
       ${c.email_inst&&c.email_inst!=='Pendente'?`<span style="background:#E8F0FE;color:#1A3A6B;padding:2px 7px;border-radius:9px;font-size:10px">🏛 ${c.email_inst}</span>`:`<span style="color:#ccc">—</span>`}
       <span class="edit-icon" onclick="openGeralEdit(${c._id},'email_inst','${escQ(c.email_inst||'')}')" title="Editar e-mail institucional">✎</span>
     </td>
+    <td style="text-align:center">
+      ${ativo
+        ?`<span style="background:#D4EDDA;color:#155724;font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;cursor:pointer;white-space:nowrap" title="Clique para inativar" onclick="toggleStatus(${c._id})">● Ativo</span>`
+        :`<span style="background:#FFE0E0;color:#7A0000;font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;cursor:pointer;white-space:nowrap" title="Clique para ativar" onclick="toggleStatus(${c._id})">○ Inativo</span>`}
+    </td>
   </tr>`;
-  }).join(''):`<tr><td colspan="19" class="empty">Nenhum resultado</td></tr>`;
+  }).join(''):`<tr><td colspan="20" class="empty">Nenhum resultado</td></tr>`;
   updateStats('geral',rows);
 }
 
@@ -3419,7 +3425,7 @@ function exportXlsx(tab){
   let rows=[], headers=[], filename='';
   const all=DATA;
   if(tab==='geral'){
-    headers=['Nome','Conta Rede TCU','Cargo','UF','Salário','Celular','Data Admissão','Data Desligamento','CPF','RG','Data Nascimento','Raça/Cor','Sexo','PcD','Libras','Vítima Viol. Dom.','E-mail Pessoal','E-mail Institucional','Status'];
+    headers=['Nome','Conta Rede TCU','Cargo','UF','Salário','Celular','Data Admissão','Data Desligamento','CPF','RG','Data Nascimento','Raça/Cor','Sexo','PcD','Libras','Vítima Viol. Dom.','E-mail Pessoal','E-mail Institucional','Status Cadastro'];
     rows=all.map(c=>{
       const adm=c.data_admissao?c.data_admissao.split('-').reverse().join('/'):'';
       const dem=c.data_demissao?c.data_demissao.split('-').reverse().join('/'):'';
