@@ -2343,44 +2343,58 @@ function editBadge(v,id,field){
 }
 
 // filterData — busca em TODOS os campos de DATA, usado por todas as abas
-function filterData(search, cargo, opts={}){
+function filterData(search, cargo, opts){
   const q=(search||'').toLowerCase().trim();
-  // Per-tab filter selects (geral has most; others have cargo + search)
-  const tab=opts.tab||'';
-  const statusFilter=(document.getElementById('filter-status-'+tab)||document.getElementById('filter-status-geral'))?.value||'';
-  const fUf=(document.getElementById('filter-uf-'+tab)||document.getElementById('filter-uf-geral'))?.value||'';
-  const fPcd=document.getElementById('filter-pcd-geral')?.value||'';
-  const fSexo=document.getElementById('filter-sexo-geral')?.value||'';
+  const tab=(opts&&opts.tab)||'';
+
+  // Get filter values from selects (per-tab or geral fallback)
+  const getVal=id=>{ const el=document.getElementById(id); return el?el.value:''; };
+  const statusFilter = getVal('filter-status-'+(tab||'geral')) || getVal('filter-status-geral');
+  const fUf         = getVal('filter-uf-'+tab)    || getVal('filter-uf-geral');
+  const fPcd        = getVal('filter-pcd-geral');
+  const fSexo       = getVal('filter-sexo-geral');
 
   return DATA.filter(c=>{
-    if(!opts.includeInactive && c.status==='inativo' && !statusFilter) return false;
-    // Full-text search across all fields
-    const matchQ=!q||(
+    // Status filter — only apply when explicitly selected
+    const ativo = c.status!=='inativo';
+    if(statusFilter==='ativo'   && !ativo) return false;
+    if(statusFilter==='inativo' &&  ativo) return false;
+    // When no status filter: show actives (inativos only if explicitly filtered)
+    if(!statusFilter && !ativo) return false;
+
+    // Cargo filter
+    if(cargo && c.cargo!==cargo) return false;
+
+    // UF filter
+    if(fUf && c.uf!==fUf) return false;
+
+    // PcD filter
+    if(fPcd && c.pcd!==fPcd) return false;
+
+    // Sexo filter
+    if(fSexo && c.genero!==fSexo) return false;
+
+    // Full-text search — empty = show all
+    if(!q) return true;
+    return (
       (c.nome||'').toLowerCase().includes(q)||
       (c.cargo||'').toLowerCase().includes(q)||
       (c.uf||'').toLowerCase().includes(q)||
-      (c.cpf||'').replace(/\D/g,'').includes(q.replace(/\D/g,''))||
+      (c.cpf||'').includes(q)||
       (c.rg||'').toLowerCase().includes(q)||
       (c.celular||'').replace(/\D/g,'').includes(q.replace(/\D/g,''))||
+      (c.celular||'').toLowerCase().includes(q)||
       (c.email||'').toLowerCase().includes(q)||
       (c.email_inst||'').toLowerCase().includes(q)||
       (c.conta_rede||'').toLowerCase().includes(q)||
-      (c.salario||'').replace(/[R$\s.]/g,'').replace(',','.').includes(q.replace(',','.'))||
+      (c.salario||'').toLowerCase().includes(q)||
       (c.cor_raca||'').toLowerCase().includes(q)||
       (c.genero||'').toLowerCase().includes(q)||
       (c.pcd||'').toLowerCase().includes(q)||
-      (c.libras||'').toLowerCase().includes(q)||
       (c.data_admissao||'').split('-').reverse().join('/').includes(q)||
       (c.data_demissao||'').split('-').reverse().join('/').includes(q)||
       (c.data_nascimento||'').split('-').reverse().join('/').includes(q)
     );
-    const matchC=!cargo||c.cargo===cargo;
-    const matchU=!fUf||c.uf===fUf;
-    const matchP=!fPcd||c.pcd===fPcd;
-    const matchSexo=!fSexo||c.genero===fSexo;
-    const ativo=c.status!=='inativo';
-    const matchS=!statusFilter||(statusFilter==='ativo'&&ativo)||(statusFilter==='inativo'&&!ativo);
-    return matchQ&&matchC&&matchU&&matchP&&matchSexo&&matchS;
   });
 }
 
