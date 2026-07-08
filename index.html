@@ -515,7 +515,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 <div id="tab-geral">
   <div class="stats-row" id="stats-geral"></div>
   <div class="toolbar">
-    <input type="text" id="search-geral" placeholder="🔍 Buscar por nome, CPF, RG, cargo, UF, e-mail, celular, data…" oninput="renderGeral()" style="min-width:300px">
+    <input type="text" id="search-geral" placeholder="🔍 Buscar por nome…" oninput="renderGeral()" style="min-width:220px">
     <select id="filter-cargo-geral" onchange="renderGeral()"><option value="">Todos os cargos</option></select>
     <select id="filter-uf-geral" onchange="renderGeral()"><option value="">Todas as UF</option></select>
     <select id="filter-sexo-geral" onchange="renderGeral()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px">
@@ -572,9 +572,16 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 <div id="tab-equipamentos" style="display:none">
   <div class="stats-row" id="stats-equip"></div>
   <div class="toolbar">
-    <input type="text" id="search-equip" placeholder="🔍 Buscar por nome, CPF, cargo, UF, e-mail, celular…" oninput="renderEquip()">
+    <input type="text" id="search-equip" placeholder="🔍 Buscar por nome…" oninput="renderEquip()">
     <select id="filter-cargo-equip" onchange="renderEquip()"><option value="">Todos os cargos</option></select>
     <select id="filter-uf-equip" onchange="renderEquip()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todas as UF</option></select>
+    <select id="filter-valor-equip" onchange="renderEquip()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status de campo</option>
+      <option value="Pendente">⏳ Pendente</option>
+      <option value="Entregue">✅ Entregue</option>
+      <option value="Sim">✔ Sim</option>
+      <option value="Não">✘ Não</option>
+      <option value="N/A">— N/A</option>
+      <option value="Agendado">📅 Agendado</option></select>
     <button class="btn-clear" onclick="clearFilters('equip')">Limpar</button>
     <button class="btn-export" onclick="exportXlsx('equipamentos')" style="margin-left:auto">⬇ Exportar XLSX</button>
     <button class="btn-danger" onclick="resetarPendente('equipamentos')" style="padding:7px 14px;background:#C55A11;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">🔄 Resetar para Pendente</button>
@@ -603,9 +610,16 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 <div id="tab-admissao" style="display:none">
   <div class="stats-row" id="stats-adm"></div>
   <div class="toolbar">
-    <input type="text" id="search-adm" placeholder="🔍 Buscar por nome, CPF, cargo, UF, e-mail, celular…" oninput="renderAdm()">
+    <input type="text" id="search-adm" placeholder="🔍 Buscar por nome…" oninput="renderAdm()">
     <select id="filter-cargo-adm" onchange="renderAdm()"><option value="">Todos os cargos</option></select>
     <select id="filter-uf-adm" onchange="renderAdm()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todas as UF</option></select>
+    <select id="filter-valor-adm" onchange="renderAdm()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status de campo</option>
+      <option value="Pendente">⏳ Pendente</option>
+      <option value="Entregue">✅ Entregue</option>
+      <option value="Sim">✔ Sim</option>
+      <option value="Não">✘ Não</option>
+      <option value="N/A">— N/A</option>
+      <option value="Agendado">📅 Agendado</option></select>
     <button class="btn-clear" onclick="clearFilters('adm')">Limpar</button>
     <button class="btn-export" onclick="exportXlsx('admissao')" style="margin-left:auto">⬇ Exportar XLSX</button>
     <button class="btn-danger" onclick="resetarPendente('admissao')" style="padding:7px 14px;background:#C55A11;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">🔄 Resetar para Pendente</button>
@@ -635,9 +649,16 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 <div id="tab-termos" style="display:none">
   <div class="stats-row" id="stats-termos"></div>
   <div class="toolbar">
-    <input type="text" id="search-termos" placeholder="🔍 Buscar por nome, CPF, cargo, UF, e-mail, celular…" oninput="renderTermos()">
+    <input type="text" id="search-termos" placeholder="🔍 Buscar por nome…" oninput="renderTermos()">
     <select id="filter-cargo-termos" onchange="renderTermos()"><option value="">Todos os cargos</option></select>
     <select id="filter-uf-termos" onchange="renderTermos()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todas as UF</option></select>
+    <select id="filter-valor-termos" onchange="renderTermos()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status de campo</option>
+      <option value="Pendente">⏳ Pendente</option>
+      <option value="Entregue">✅ Entregue</option>
+      <option value="Sim">✔ Sim</option>
+      <option value="Não">✘ Não</option>
+      <option value="N/A">— N/A</option>
+      <option value="Agendado">📅 Agendado</option></select>
     <button class="btn-clear" onclick="clearFilters('termos')">Limpar</button>
     <button class="btn-export" onclick="exportXlsx('termos')" style="margin-left:auto">⬇ Exportar XLSX</button>
     <button class="btn-danger" onclick="resetarPendente('termos')" style="padding:7px 14px;background:#C55A11;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">🔄 Resetar para Pendente</button>
@@ -663,9 +684,16 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 <div id="tab-certif" style="display:none">
   <div class="stats-row" id="stats-cert"></div>
   <div class="toolbar">
-    <input type="text" id="search-cert" placeholder="🔍 Buscar por nome, CPF, cargo, UF, e-mail, celular…" oninput="renderCert()">
+    <input type="text" id="search-cert" placeholder="🔍 Buscar por nome…" oninput="renderCert()">
     <select id="filter-cargo-cert" onchange="renderCert()"><option value="">Todos os cargos</option></select>
     <select id="filter-uf-cert" onchange="renderCert()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todas as UF</option></select>
+    <select id="filter-valor-cert" onchange="renderCert()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status de campo</option>
+      <option value="Pendente">⏳ Pendente</option>
+      <option value="Entregue">✅ Entregue</option>
+      <option value="Sim">✔ Sim</option>
+      <option value="Não">✘ Não</option>
+      <option value="N/A">— N/A</option>
+      <option value="Agendado">📅 Agendado</option></select>
     <button class="btn-clear" onclick="clearFilters('cert')">Limpar</button>
     <button class="btn-export" onclick="exportXlsx('certif')" style="margin-left:auto">⬇ Exportar XLSX</button>
     <button class="btn-danger" onclick="resetarPendente('certif')" style="padding:7px 14px;background:#C55A11;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">🔄 Resetar para Pendente</button>
@@ -2342,59 +2370,44 @@ function editBadge(v,id,field){
   return '<span class="badge '+cls+' cell-edit" onclick="openEdit('+id+',\''+field+'\')">'+label+'</span>';
 }
 
-// filterData — busca em TODOS os campos de DATA, usado por todas as abas
+// ── Filtro único para todas as abas ─────────────────────
 function filterData(search, cargo, opts){
-  const q=(search||'').toLowerCase().trim();
-  const tab=(opts&&opts.tab)||'';
+  var q = (search||'').toLowerCase().trim();
+  var tab = (opts && opts.tab) ? opts.tab : '';
 
-  // Get filter values from selects (per-tab or geral fallback)
-  const getVal=id=>{ const el=document.getElementById(id); return el?el.value:''; };
-  const statusFilter = getVal('filter-status-'+(tab||'geral')) || getVal('filter-status-geral');
-  const fUf         = getVal('filter-uf-'+tab)    || getVal('filter-uf-geral');
-  const fPcd        = getVal('filter-pcd-geral');
-  const fSexo       = getVal('filter-sexo-geral');
+  // Ler selects de status/UF/valor
+  function gv(id){ var e=document.getElementById(id); return e?e.value:''; }
+  var fCargo  = cargo || '';
+  var fUf     = gv('filter-uf-'+tab) || gv('filter-uf-geral');
+  var fStatus = gv('filter-status-'+tab) || gv('filter-status-geral');
+  var fValor  = gv('filter-valor-'+tab) || gv('filter-valor-geral');
 
-  return DATA.filter(c=>{
-    // Status filter — only apply when explicitly selected
-    const ativo = c.status!=='inativo';
-    if(statusFilter==='ativo'   && !ativo) return false;
-    if(statusFilter==='inativo' &&  ativo) return false;
-    // When no status filter: show actives (inativos only if explicitly filtered)
-    if(!statusFilter && !ativo) return false;
+  return DATA.filter(function(c){
+    // ── Status (ativo/inativo) ──────────────
+    var ativo = (c.status !== 'inativo');
+    if(fStatus === 'ativo'   && !ativo) return false;
+    if(fStatus === 'inativo' &&  ativo) return false;
+    if(!fStatus && !ativo) return false;  // padrão: só ativos
 
-    // Cargo filter
-    if(cargo && c.cargo!==cargo) return false;
+    // ── Cargo ──────────────────────────────
+    if(fCargo && c.cargo !== fCargo) return false;
 
-    // UF filter
-    if(fUf && c.uf!==fUf) return false;
+    // ── UF ─────────────────────────────────
+    if(fUf && c.uf !== fUf) return false;
 
-    // PcD filter
-    if(fPcd && c.pcd!==fPcd) return false;
+    // ── Valor de campo (Pendente/Entregue/Sim/Não/N\/A/Agendado) ──
+    if(fValor){
+      // Buscar em docs, certs, celular_tablet, cracha, maleta, uniforme
+      var allVals = [];
+      if(c.docs)  allVals = allVals.concat(Object.values(c.docs));
+      if(c.certs) allVals = allVals.concat(Object.values(c.certs));
+      ['celular_tablet','cracha','maleta','uniforme'].forEach(function(k){ if(c[k]) allVals.push(c[k]); });
+      if(!allVals.some(function(v){ return v === fValor; })) return false;
+    }
 
-    // Sexo filter
-    if(fSexo && c.genero!==fSexo) return false;
-
-    // Full-text search — empty = show all
+    // ── Busca por nome (apenas) ─────────────
     if(!q) return true;
-    return (
-      (c.nome||'').toLowerCase().includes(q)||
-      (c.cargo||'').toLowerCase().includes(q)||
-      (c.uf||'').toLowerCase().includes(q)||
-      (c.cpf||'').includes(q)||
-      (c.rg||'').toLowerCase().includes(q)||
-      (c.celular||'').replace(/\D/g,'').includes(q.replace(/\D/g,''))||
-      (c.celular||'').toLowerCase().includes(q)||
-      (c.email||'').toLowerCase().includes(q)||
-      (c.email_inst||'').toLowerCase().includes(q)||
-      (c.conta_rede||'').toLowerCase().includes(q)||
-      (c.salario||'').toLowerCase().includes(q)||
-      (c.cor_raca||'').toLowerCase().includes(q)||
-      (c.genero||'').toLowerCase().includes(q)||
-      (c.pcd||'').toLowerCase().includes(q)||
-      (c.data_admissao||'').split('-').reverse().join('/').includes(q)||
-      (c.data_demissao||'').split('-').reverse().join('/').includes(q)||
-      (c.data_nascimento||'').split('-').reverse().join('/').includes(q)
-    );
+    return (c.nome||'').toLowerCase().includes(q);
   });
 }
 
@@ -3089,17 +3102,11 @@ function excluirColab(){
 document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m) m.classList.remove('open')}));
 
 function clearFilters(tab){
-  const s=document.getElementById('search-'+tab);
-  const c=document.getElementById('filter-cargo-'+tab);
-  const u=document.getElementById('filter-uf-'+tab);
-  if(s) s.value='';
-  if(c) c.value='';
-  if(u) u.value='';
-  if(tab==='geral'){
-    ['filter-sexo-geral','filter-pcd-geral','filter-status-geral']
-      .forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-  }
-  window['render'+tab.charAt(0).toUpperCase()+tab.slice(1)]?.();
+  ['search-'+tab,'filter-cargo-'+tab,'filter-uf-'+tab,'filter-valor-'+tab,
+   'filter-status-'+tab,'filter-sexo-geral','filter-pcd-geral']
+    .forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  var fn=window['render'+tab.charAt(0).toUpperCase()+tab.slice(1)];
+  if(fn) fn();
 }
 
 // TAB SWITCHING
