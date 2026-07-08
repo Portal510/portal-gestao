@@ -572,8 +572,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 <div id="tab-equipamentos" style="display:none">
   <div class="stats-row" id="stats-equip"></div>
   <div class="toolbar">
-    <input type="text" id="search-equip" placeholder="🔍  Buscar nome…" oninput="renderEquip()">
+    <input type="text" id="search-equip" placeholder="🔍 Buscar por nome, CPF, cargo, UF, e-mail, celular…" oninput="renderEquip()">
     <select id="filter-cargo-equip" onchange="renderEquip()"><option value="">Todos os cargos</option></select>
+    <select id="filter-uf-equip" onchange="renderEquip()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todas as UF</option></select>
     <button class="btn-clear" onclick="clearFilters('equip')">Limpar</button>
     <button class="btn-export" onclick="exportXlsx('equipamentos')" style="margin-left:auto">⬇ Exportar XLSX</button>
     <button class="btn-danger" onclick="resetarPendente('equipamentos')" style="padding:7px 14px;background:#C55A11;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">🔄 Resetar para Pendente</button>
@@ -602,8 +603,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 <div id="tab-admissao" style="display:none">
   <div class="stats-row" id="stats-adm"></div>
   <div class="toolbar">
-    <input type="text" id="search-adm" placeholder="🔍  Buscar nome…" oninput="renderAdm()">
+    <input type="text" id="search-adm" placeholder="🔍 Buscar por nome, CPF, cargo, UF, e-mail, celular…" oninput="renderAdm()">
     <select id="filter-cargo-adm" onchange="renderAdm()"><option value="">Todos os cargos</option></select>
+    <select id="filter-uf-adm" onchange="renderAdm()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todas as UF</option></select>
     <button class="btn-clear" onclick="clearFilters('adm')">Limpar</button>
     <button class="btn-export" onclick="exportXlsx('admissao')" style="margin-left:auto">⬇ Exportar XLSX</button>
     <button class="btn-danger" onclick="resetarPendente('admissao')" style="padding:7px 14px;background:#C55A11;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">🔄 Resetar para Pendente</button>
@@ -633,8 +635,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 <div id="tab-termos" style="display:none">
   <div class="stats-row" id="stats-termos"></div>
   <div class="toolbar">
-    <input type="text" id="search-termos" placeholder="🔍  Buscar nome…" oninput="renderTermos()">
+    <input type="text" id="search-termos" placeholder="🔍 Buscar por nome, CPF, cargo, UF, e-mail, celular…" oninput="renderTermos()">
     <select id="filter-cargo-termos" onchange="renderTermos()"><option value="">Todos os cargos</option></select>
+    <select id="filter-uf-termos" onchange="renderTermos()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todas as UF</option></select>
     <button class="btn-clear" onclick="clearFilters('termos')">Limpar</button>
     <button class="btn-export" onclick="exportXlsx('termos')" style="margin-left:auto">⬇ Exportar XLSX</button>
     <button class="btn-danger" onclick="resetarPendente('termos')" style="padding:7px 14px;background:#C55A11;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">🔄 Resetar para Pendente</button>
@@ -660,8 +663,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 <div id="tab-certif" style="display:none">
   <div class="stats-row" id="stats-cert"></div>
   <div class="toolbar">
-    <input type="text" id="search-cert" placeholder="🔍  Buscar nome…" oninput="renderCert()">
+    <input type="text" id="search-cert" placeholder="🔍 Buscar por nome, CPF, cargo, UF, e-mail, celular…" oninput="renderCert()">
     <select id="filter-cargo-cert" onchange="renderCert()"><option value="">Todos os cargos</option></select>
+    <select id="filter-uf-cert" onchange="renderCert()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todas as UF</option></select>
     <button class="btn-clear" onclick="clearFilters('cert')">Limpar</button>
     <button class="btn-export" onclick="exportXlsx('certif')" style="margin-left:auto">⬇ Exportar XLSX</button>
     <button class="btn-danger" onclick="resetarPendente('certif')" style="padding:7px 14px;background:#C55A11;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">🔄 Resetar para Pendente</button>
@@ -2338,14 +2342,19 @@ function editBadge(v,id,field){
   return '<span class="badge '+cls+' cell-edit" onclick="openEdit('+id+',\''+field+'\')">'+label+'</span>';
 }
 
-function filterData(search,cargo){
+// filterData — busca em TODOS os campos de DATA, usado por todas as abas
+function filterData(search, cargo, opts={}){
   const q=(search||'').toLowerCase().trim();
-  const statusFilter=document.getElementById('filter-status-geral')?.value||'';
-  const fUf=document.getElementById('filter-uf-geral')?.value||'';
+  // Per-tab filter selects (geral has most; others have cargo + search)
+  const tab=opts.tab||'';
+  const statusFilter=(document.getElementById('filter-status-'+tab)||document.getElementById('filter-status-geral'))?.value||'';
+  const fUf=(document.getElementById('filter-uf-'+tab)||document.getElementById('filter-uf-geral'))?.value||'';
   const fPcd=document.getElementById('filter-pcd-geral')?.value||'';
   const fSexo=document.getElementById('filter-sexo-geral')?.value||'';
+
   return DATA.filter(c=>{
-    // Search across ALL columns
+    if(!opts.includeInactive && c.status==='inativo' && !statusFilter) return false;
+    // Full-text search across all fields
     const matchQ=!q||(
       (c.nome||'').toLowerCase().includes(q)||
       (c.cargo||'').toLowerCase().includes(q)||
@@ -2382,8 +2391,9 @@ function populateCargoFilter(selId){
   cargos.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
 }
 
-function populateUfFilter(){
-  const sel=document.getElementById('filter-uf-geral');
+function populateUfFilter(tab){
+  const id='filter-uf-'+(tab||'geral');
+  const sel=document.getElementById(id);
   if(!sel||sel.options.length>1) return;
   const ufs=[...new Set(DATA.map(c=>c.uf).filter(Boolean))].sort();
   ufs.forEach(u=>{const o=document.createElement('option');o.value=u;o.textContent=u;sel.appendChild(o);});
@@ -2391,7 +2401,7 @@ function populateUfFilter(){
 
 function renderGeral(){
   populateCargoFilter('filter-cargo-geral');
-  populateUfFilter();
+  populateUfFilter('geral');
   const rows=filterData(
     (document.getElementById('search-geral')?.value||''),
     (document.getElementById('filter-cargo-geral')?.value||'')
@@ -2758,7 +2768,8 @@ function cargoNa(cargo, campo){
 
 function renderEquip(){
   populateCargoFilter('filter-cargo-equip');
-  const rows=filterData(document.getElementById('search-equip').value,document.getElementById('filter-cargo-equip').value);
+  populateUfFilter('equip');
+  const rows=filterData(document.getElementById('search-equip',{tab:'equip'}).value,document.getElementById('filter-cargo-equip',{tab:'equip'}).value,{tab:'equip'});
   document.getElementById('body-equip').innerHTML=rows.length?rows.map((c,i)=>`<tr style="${inativoStyle(c)}">
     <td class="left" style="color:#999;font-size:11px">${i+1}</td>
     <td class="left" style="cursor:pointer;color:#1F4E79;font-weight:600" onclick="openDetail(${c._id})">${c.nome}${inativoBadge(c)}</td>
@@ -2794,7 +2805,8 @@ function renderDocs(){
 
 function renderAdm(){
   populateCargoFilter('filter-cargo-adm');
-  const rows=filterData(document.getElementById('search-adm').value,document.getElementById('filter-cargo-adm').value);
+  populateUfFilter('adm');
+  const rows=filterData(document.getElementById('search-adm',{tab:'adm'}).value,document.getElementById('filter-cargo-adm',{tab:'adm'}).value,{tab:'adm'});
   document.getElementById('body-adm').innerHTML=rows.length?rows.map((c,i)=>`<tr style="${inativoStyle(c)}">
     <td class="left" style="color:#999;font-size:11px">${i+1}</td>
     <td class="left" style="cursor:pointer;color:#1F4E79;font-weight:600" onclick="openDetail(${c._id})">${c.nome}${inativoBadge(c)}</td>
@@ -2815,7 +2827,8 @@ function renderAdm(){
 
 function renderTermos(){
   populateCargoFilter('filter-cargo-termos');
-  const rows=filterData(document.getElementById('search-termos').value,document.getElementById('filter-cargo-termos').value);
+  populateUfFilter('termos');
+  const rows=filterData(document.getElementById('search-termos',{tab:'termos'}).value,document.getElementById('filter-cargo-termos',{tab:'termos'}).value,{tab:'termos'});
   document.getElementById('body-termos').innerHTML=rows.length?rows.map((c,i)=>`<tr style="${inativoStyle(c)}">
     <td class="left" style="color:#999;font-size:11px">${i+1}</td>
     <td class="left" style="cursor:pointer;color:#1F4E79;font-weight:600" onclick="openDetail(${c._id})">${c.nome}${inativoBadge(c)}</td>
@@ -2831,7 +2844,8 @@ function renderTermos(){
 
 function renderCert(){
   populateCargoFilter('filter-cargo-cert');
-  const rows=filterData(document.getElementById('search-cert').value,document.getElementById('filter-cargo-cert').value);
+  populateUfFilter('cert');
+  const rows=filterData(document.getElementById('search-cert',{tab:'cert'}).value,document.getElementById('filter-cargo-cert',{tab:'cert'}).value,{tab:'cert'});
   const CERT_ORDER=['HDI SCA','HDI CSR','M365 Fundamentals','MD-100 ou MD-102','HDI DAST','AZ-900','ITIL Foundations v4','HDI SCTL','HDI KCS','HDI SCM','HDI SCD','XLA Foundation'];
   document.getElementById('body-cert').innerHTML=rows.length?rows.map((c,i)=>`<tr style="${inativoStyle(c)}">
     <td class="left" style="color:#999;font-size:11px">${i+1}</td>
@@ -3062,10 +3076,12 @@ document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>
 function clearFilters(tab){
   const s=document.getElementById('search-'+tab);
   const c=document.getElementById('filter-cargo-'+tab);
+  const u=document.getElementById('filter-uf-'+tab);
   if(s) s.value='';
   if(c) c.value='';
+  if(u) u.value='';
   if(tab==='geral'){
-    ['filter-uf-geral','filter-sexo-geral','filter-pcd-geral','filter-status-geral']
+    ['filter-sexo-geral','filter-pcd-geral','filter-status-geral']
       .forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   }
   window['render'+tab.charAt(0).toUpperCase()+tab.slice(1)]?.();
@@ -6918,7 +6934,7 @@ function renderPendencias(){
   const ativos = DATA.filter(c=>c.status!=='inativo');
   let list = ativos.map(c=>({c, pends:getPendencias(c)})).filter(({pends})=>pends.length>0);
 
-  if(busca) list=list.filter(({c})=>c.nome.toLowerCase().includes(busca)||c.uf.toLowerCase().includes(busca));
+  if(busca) list=list.filter(({c})=>c.nome.toLowerCase().includes(busca)||c.uf.toLowerCase().includes(busca)||(c.cargo||'').toLowerCase().includes(busca)||(c.cpf||'').includes(busca)||(c.email_inst||c.email||'').toLowerCase().includes(busca)||(c.celular||'').includes(busca));
   if(uf)    list=list.filter(({c})=>c.uf===uf);
   if(cat)   list=list.filter(({pends})=>pends.some(p=>p.cat===cat));
 
