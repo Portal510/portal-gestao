@@ -5940,6 +5940,8 @@ function upHandleFiles(files){
         rows.push({fileName:file.name,status:'ok',msg:`✅ ${colab.nome}${resolvedTipo?' · '+resolvedTipo:''}`,colab,tipo:resolvedTipo});
       saveUploadDocs();
       pending--;
+      // Feedback por arquivo processado
+      toast(`📎 ${pending} restante(s)…`+(pending===0?' Concluído!':''),'ok');
       if(pending===0){
         saveData();
         // Atualizar automaticamente as abas de controle
@@ -5948,7 +5950,9 @@ function upHandleFiles(files){
         try{ renderTermos(); }catch(e){}
         try{ renderCert(); }catch(e){}
         try{ renderPendencias(); }catch(e){}
+        try{ renderDeclaracoes(); }catch(e){}
         upFilterDocs();
+        toast(`✅ ${rows.length} arquivo(s) importado(s) com sucesso!`,'ok');
         showQuickUploadResult(rows);
       }
     };
@@ -6343,7 +6347,18 @@ function upBatchImport(files){
       upAtualizarStatus(colab._id, tipo, upGetEffectiveFileName(file.name, tipo));
       rows.push({file, colab, tipo, status:'ok', msg:`✅ ${colab.nome} · ${tipo}`});
       matched++;
-      pending--; if(pending===0){ saveUploadDocs(); showBatchResult(rows, matched, skipped, noColab, noTipo, arr.length); upFilterDocs(); }
+      pending--;
+      toast(`📎 ${matched}/${arr.length} importado(s)…`,'ok');
+      if(pending===0){
+        saveData();
+        saveUploadDocs();
+        try{ renderDeclaracoes(); }catch(e){}
+        try{ renderEquip(); }catch(e){}
+        try{ renderPendencias(); }catch(e){}
+        upFilterDocs();
+        toast(`✅ ${matched} arquivo(s) importado(s)!`,'ok');
+        showBatchResult(rows, matched, skipped, noColab, noTipo, arr.length);
+      }
     };
     reader.readAsDataURL(file);
   });
@@ -6470,14 +6485,21 @@ function upBatchConfirmRow(fname){
     const existIdx = uploadedDocs.findIndex(d=>d.colabId===colabId&&d.tipo===tipo&&d.fileName===fileKey);
     if(existIdx>=0) uploadedDocs.splice(existIdx,1);
     const id = Date.now().toString()+Math.random().toString(36).slice(2,5);
+    // Para declarações: pegar mês do select ou do nome do arquivo
+    const isDecl = tipo==='Decl. Desktop/Internet'||tipo==='Decl. Locação Equipamento';
+    const declMesSel = document.getElementById('up-mes')?.value||'';
+    const declAnoSel = document.getElementById('up-ano-decl')?.value||String(new Date().getFullYear());
+    const effFileName = isDecl && declMesSel ? declMesSel+' '+declAnoSel+' '+fileKey : upGetEffectiveFileName(fileKey, tipo);
     uploadedDocs.unshift({
       id, colabId, colabNome:colab.nome, colabUf:colab.uf,
       tipo, cat:TIPO_CAT[tipo]||'Outros',
-      fileName:fileKey, ext, size,
+      fileName:fileKey, effFileName, ext, size,
+      declMes: isDecl?(declMesSel||''):undefined,
+      declAno: isDecl?declAnoSel:undefined,
       dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
       dataUrl, batchImported:true,
     });
-    upAtualizarStatus(colabId, tipo, effectiveFileName);
+    upAtualizarStatus(colabId, tipo, effFileName);
     saveData();
     saveUploadDocs();
     try{ renderEquip(); }catch(e){}
@@ -6485,8 +6507,9 @@ function upBatchConfirmRow(fname){
     try{ renderTermos(); }catch(e){}
     try{ renderCert(); }catch(e){}
     try{ renderPendencias(); }catch(e){}
-    row.status='ok'; row.colab=colab; row.tipo=tipo;
-    row.msg=`✅ ${colab.nome} · ${tipo}`;
+    try{ renderDeclaracoes(); }catch(e){}
+    // Feedback visual imediato
+    toast(`✅ ${colab.nome} · ${tipo}`+(effFileName.match(/Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro/)?` · ${effFileName.match(/Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro/)[0]}`:''),'ok');
     upFilterDocs();
     // Refresh the result panel
     const allRows = window._batchPendingRows;
