@@ -2354,7 +2354,7 @@ function filterData(search, cargo, opts){
     var ativo = (c.status !== 'inativo');
     if(fStatus === 'ativo'   && !ativo) return false;
     if(fStatus === 'inativo' &&  ativo) return false;
-    if(!fStatus && !ativo) return false;  // padrão: só ativos
+    // Sem filtro de status: mostrar todos (ativos e inativos)
 
     // ── Cargo ──────────────────────────────
     if(fCargo && c.cargo !== fCargo) return false;
