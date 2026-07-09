@@ -2842,6 +2842,48 @@ function renderTermos(){
   updateStatsTermos(rows);
 }
 
+const CARGO_CERTS_REQUIRED = {"Analista de suporte telefônico (TEL)": ["HDI SCA", "HDI CSR"], "Analista de suporte (BSB)": ["M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST"], "Analista de suporte (EST)": ["M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST", "HDI CSR"], "Analista de suporte especializado (AE)": ["M365 Fundamentals", "HDI DAST", "HDI CSR", "MD-100 ou MD-102"], "Analista de suporte especializado (AC)": ["M365 Fundamentals", "MD-100 ou MD-102", "AZ-900"], "Administração de parque tecnológico (AP)": ["HDI DAST", "HDI SCA", "HDI CSR"], "Supervisor de suporte (STEL)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (BSB)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (EST)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (SAE)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (SCHA)": ["ITIL Foundations v4"], "Gestor de conhecimento": ["HDI KCS"], "Gestor de Service desk": ["ITIL Foundations v4", "HDI SCTL", "HDI SCM", "HDI SCD", "XLA Foundation"]};
+const ALL_CERTS_LIST = ["HDI SCA", "HDI CSR", "M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST", "AZ-900", "ITIL Foundations v4", "HDI SCTL", "HDI KCS", "HDI SCM", "HDI SCD", "XLA Foundation"];
+
+// Returns effective status of a cert for a colaborador
+// N/A if cargo doesn't need it; Entregue/Agendado/Pendente based on saved value
+// OR-group: if another cert in same OR group is Entregue/Agendado → this one is N/A
+function certGetStatus(c, certName){
+  const required = CARGO_CERTS_REQUIRED[c.cargo] || [];
+  // Not required for this cargo
+  if(!required.includes(certName)) return 'N/A';
+  // Check saved value
+  const saved = c.certs && c.certs[certName];
+  if(saved === 'Entregue' || saved === 'Agendado') return saved;
+  // Check OR groups — if another in same OR group is satisfied, this is N/A
+  const groups = CERT_OR_GROUPS[c.cargo] || [];
+  for(const group of groups){
+    if(!group.includes(certName)) continue;
+    // If another member is Entregue or Agendado, this one is N/A
+    const otherSatisfied = group.some(other =>
+      other !== certName &&
+      (c.certs[other]==='Entregue' || c.certs[other]==='Agendado')
+    );
+    if(otherSatisfied) return 'N/A';
+  }
+  // Required and not satisfied
+  return 'Pendente';
+}
+
+// Initialize certs object for a colaborador based on their cargo
+function certInitForColab(c){
+  if(!c.certs) c.certs = {};
+  const required = CARGO_CERTS_REQUIRED[c.cargo] || [];
+  ALL_CERTS_LIST.forEach(cert => {
+    if(required.includes(cert)){
+      // Only set to Pendente if not already set
+      if(!c.certs[cert] || c.certs[cert] === 'N/A') c.certs[cert] = 'Pendente';
+    } else {
+      c.certs[cert] = 'N/A';
+    }
+  });
+}
+
 function renderCert(){
   populateCargoFilter('filter-cargo-cert');
   populateUfFilter('cert');
@@ -2851,7 +2893,7 @@ function renderCert(){
     <td class="left" style="color:#999;font-size:11px">${i+1}</td>
     <td class="left" style="cursor:pointer;color:#1F4E79;font-weight:600" onclick="openDetail(${c._id})">${c.nome}${inativoBadge(c)}</td>
     <td class="left"><span class="badge-cargo">${c.cargo}</span></td>
-    ${CERT_ORDER.map(cert=>`<td>${editBadge(c.certs[cert]||'N/A',c._id,'certs.'+cert)}</td>`).join('')}
+    ${CERT_ORDER.map(cert=>{ const s=certGetStatus(c,cert); return `<td>${s==='N/A'?'<span class="badge badge-na">N/A</span>':editBadge(s,c._id,'certs.'+cert)}</td>`; }).join('')}
   </tr>`).join(''):`<tr><td colspan="15" class="empty">Nenhum resultado</td></tr>`;
   updateStatsCert(rows);
 }
@@ -6043,8 +6085,12 @@ function upAtualizarStatus(colabId, tipo, fileName){
   if(field.cat==='docs' && c.docs && c.docs[field.key]!==undefined && c.docs[field.key]!=='N/A'){
     c.docs[field.key] = 'Entregue';
   }
-  if(field.cat==='certs' && c.certs && c.certs[field.key]!==undefined && c.certs[field.key]!=='N/A'){
+  if(field.cat==='certs' && c.certs!==undefined){
+    if(!c.certs) c.certs={};
     c.certs[field.key] = 'Entregue';
+    // If part of OR group, set others in group to N/A
+    const groups = CERT_OR_GROUPS[c.cargo]||[];
+    groups.forEach(group=>{ if(group.includes(field.key)){ group.forEach(other=>{ if(other!==field.key && c.certs[other]==='Pendente') c.certs[other]='N/A'; }); } });
   }
   if(field.cat==='decl'){
     const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -9247,7 +9293,25 @@ function _portalInit(){
     if (_xlsxAdded > 0 || _xlsxUpdated > 0) saveData();
   } catch(e) { console.warn('_XLSX_DATA import error:', e); }
   } // end _XLSX_DATA guard
-  // ────────────────────────────────────────────────────────────────
+
+  // ── Inicializar certs por cargo ─────────────────────────────────────────
+  try{
+    let certsFixed=0;
+    DATA.forEach(c=>{
+      if(!c||!c.nome) return;
+      const required=CARGO_CERTS_REQUIRED[c.cargo]||[];
+      if(!c.certs) c.certs={};
+      ALL_CERTS_LIST.forEach(cert=>{
+        if(required.includes(cert)){
+          if(!c.certs[cert]||c.certs[cert]==='N/A') { c.certs[cert]='Pendente'; certsFixed++; }
+        } else {
+          if(c.certs[cert]!=='Entregue'&&c.certs[cert]!=='Agendado') c.certs[cert]='N/A';
+        }
+      });
+    });
+    if(certsFixed>0) saveData();
+  }catch(e){ console.warn('certInit:',e); }
+  // ────────────────────────────────────────────────────────────────────────
   // Restore sidebar state
   try{
     if(localStorage.getItem('sidebar_collapsed')==='1'){
