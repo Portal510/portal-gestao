@@ -7873,11 +7873,9 @@ function abonoSetMesAtual(){
 function rAbono(){
   var tbody=document.getElementById('abono-tbody');if(!tbody)return;
 
-  // If COLL not loaded yet, load and retry
+  // Try loading TS data in background, but don't block rendering
   if(!COLL.length){
-    tbody.innerHTML='<tr><td colspan="8" style="padding:2rem;text-align:center;color:var(--muted);">⏳ Carregando dados do Portal T&S...</td></tr>';
-    loadTsDataForTabs().then(()=>{ if(COLL.length) rAbono(); });
-    return;
+    loadTsDataForTabs().then(()=>{ if(COLL.length) rAbono(); }).catch(()=>{});
   }
   // populate cargo filter
   var cargoSel=document.getElementById('abono-f-cargo');
@@ -7901,7 +7899,10 @@ function rAbono(){
   var curMes=fMes||meses[now.getMonth()];
   var curAno=fAno||String(now.getFullYear());
 
-  var ativos=COLL.filter(c=>{
+  // Use DATA as source (fallback from COLL when Firebase not available)
+  var colabSource = (COLL && COLL.length) ? COLL : DATA;
+
+  var ativos=colabSource.filter(c=>{
     if(c.status==='inativo')return false;
     if(fCargo&&c.cargo!==fCargo)return false;
     if(fNome&&!c.nome.toLowerCase().includes(fNome))return false;
@@ -7992,7 +7993,7 @@ function expAbono(fmt){
   var curMes=fMes||meses[now.getMonth()];
   var curAno=fAno||String(now.getFullYear());
 
-  var rows=COLL.filter(c=>{
+  var rows=(COLL.length?COLL:DATA).filter(c=>{
     if(c.status==='inativo')return false;
     if(fCargo&&c.cargo!==fCargo)return false;
     if(fNome&&!c.nome.toLowerCase().includes(fNome))return false;
@@ -8083,7 +8084,7 @@ function enviarAbonoEmail(){
   var curMes=fMes||meses[now.getMonth()];
   var curAno=fAno||String(now.getFullYear());
 
-  var rows=COLL.filter(c=>{
+  var rows=(COLL.length?COLL:DATA).filter(c=>{
     if(c.status==='inativo')return false;
     if(fCargo&&c.cargo!==fCargo)return false;
     if(fNome&&!c.nome.toLowerCase().includes(fNome))return false;
@@ -8161,7 +8162,7 @@ function rGerencial() {
   }
 
   // Filter active collaborators
-  const colls = COLL.filter(c =>
+  const colls = (COLL.length?COLL:DATA).filter(c =>
     c.status === 'ativo' &&
     (!fCargo || c.cargo === fCargo || c.cargo === (CD[fCargo]?.label||''))
   );
@@ -8292,7 +8293,7 @@ function setGerVal(key, dKey, val) {
 
   if(newVal === 'PF' && oldVal !== 'PF'){
     // Add negative BH entry
-    var col = COLL.find(function(c){ return c.nome === nome; });
+    var col = (COLL.length?COLL:DATA).find(function(c){ return c.nome === nome; });
     var horas = col ? (col.horas||'8h') : '8h';
     var minutos = horas.includes('6') ? -360 : -480; // 6h=-360min, 8h=-480min
     // Remove existing PF entry for this day if any
