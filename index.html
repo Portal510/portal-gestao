@@ -2342,12 +2342,12 @@ function filterData(search, cargo, opts){
   var q = (search||'').toLowerCase().trim();
   var tab = (opts && opts.tab) ? opts.tab : '';
 
-  // Ler selects de status/UF/valor
+  // Ler selects — SOMENTE do tab atual (sem fallback para geral)
   function gv(id){ var e=document.getElementById(id); return e?e.value:''; }
   var fCargo  = cargo || '';
-  var fUf     = gv('filter-uf-'+tab) || gv('filter-uf-geral');
-  var fStatus = gv('filter-status-'+tab) || gv('filter-status-geral');
-  var fValor  = gv('filter-valor-'+tab) || gv('filter-valor-geral');
+  var fUf     = gv('filter-uf-'+tab);
+  var fStatus = tab==='geral' ? gv('filter-status-geral') : '';
+  var fValor  = tab ? gv('filter-valor-'+tab) : '';
 
   return DATA.filter(function(c){
     // ── Status (ativo/inativo) ──────────────
