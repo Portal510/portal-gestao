@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<!-- Portal Gestão T&S v4.2 build:2026-07-09T18:55:10Z -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portal T&S — Gestão de Terceirizados</title>
 
@@ -4369,6 +4370,7 @@ function imprimirTermoUni(){
   const content=document.getElementById('termo-uni-conteudo').innerHTML;
   const win=window.open('','_blank','width=800,height=700');
   win.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+<!-- Portal Gestão T&S v4.2 build:2026-07-09T18:55:10Z -->
     <title>Termo de Entrega de Uniforme</title>
     <style>
       body{font-family:'Times New Roman',serif;font-size:13px;margin:30px;color:#1a1a2e;line-height:1.7}
@@ -7523,6 +7525,7 @@ function openPDFWindow(title, headers, rows){
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<!-- Portal Gestão T&S v4.2 build:2026-07-09T18:55:10Z -->
 <title>${title}</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -8069,7 +8072,8 @@ function buildPDF(title, subtitle, headers, rows, filename) {
     var cls = ri%2===0?'':'alt';
     return '<tr class="'+cls+'">' + row.map(function(cell){ return '<td>'+(cell==null?'':cell)+'</td>'; }).join('') + '</tr>';
   }).join('');
-  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">'
+  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+<!-- Portal Gestão T&S v4.2 build:2026-07-09T18:55:10Z -->'
     + '<title>'+title+'</title><style>'
     + '*{box-sizing:border-box;margin:0;padding:0;}'
     + 'body{font-family:Arial,sans-serif;font-size:10pt;color:#222;padding:1.5cm;}'
