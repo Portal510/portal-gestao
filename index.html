@@ -9294,23 +9294,29 @@ function _portalInit(){
   } catch(e) { console.warn('_XLSX_DATA import error:', e); }
   } // end _XLSX_DATA guard
 
-  // ── Inicializar certs por cargo ─────────────────────────────────────────
-  try{
-    let certsFixed=0;
-    DATA.forEach(c=>{
-      if(!c||!c.nome) return;
-      const required=CARGO_CERTS_REQUIRED[c.cargo]||[];
-      if(!c.certs) c.certs={};
-      ALL_CERTS_LIST.forEach(cert=>{
-        if(required.includes(cert)){
-          if(!c.certs[cert]||c.certs[cert]==='N/A') { c.certs[cert]='Pendente'; certsFixed++; }
-        } else {
-          if(c.certs[cert]!=='Entregue'&&c.certs[cert]!=='Agendado') c.certs[cert]='N/A';
-        }
+  // ── Inicializar certs por cargo (apenas uma vez por sessão) ─────────────
+  // Não roda se já foi executado nesta sessão (evita sobrescrever backup restaurado)
+  if(!sessionStorage.getItem('ts_cert_init_done')){
+    try{
+      let certsFixed=0;
+      DATA.forEach(c=>{
+        if(!c||!c.nome) return;
+        const required=CARGO_CERTS_REQUIRED[c.cargo]||[];
+        if(!c.certs) c.certs={};
+        ALL_CERTS_LIST.forEach(cert=>{
+          if(required.includes(cert)){
+            // Só inicializa se não existir (undefined) — respeita valores já salvos
+            if(c.certs[cert]===undefined) { c.certs[cert]='Pendente'; certsFixed++; }
+          } else {
+            // N/A só se não for Entregue ou Agendado
+            if(c.certs[cert]!=='Entregue'&&c.certs[cert]!=='Agendado') c.certs[cert]='N/A';
+          }
+        });
       });
-    });
-    if(certsFixed>0) saveData();
-  }catch(e){ console.warn('certInit:',e); }
+      if(certsFixed>0) saveData();
+      sessionStorage.setItem('ts_cert_init_done','1');
+    }catch(e){ console.warn('certInit:',e); }
+  }
   // ────────────────────────────────────────────────────────────────────────
   // Restore sidebar state
   try{
