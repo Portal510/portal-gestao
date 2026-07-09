@@ -7709,6 +7709,7 @@ async function loadTsDataForTabs(){
     if(Array.isArray(tsData.COLL)&&tsData.COLL.length) COLL=tsData.COLL;
     if(tsData.GER_DATA) GER_DATA=tsData.GER_DATA;
     if(tsData.ABONO_DATA) ABONO_DATA=tsData.ABONO_DATA;
+      else{ try{ var ab=localStorage.getItem('ts_abono_data'); if(ab) ABONO_DATA=JSON.parse(ab); }catch(e){} }
     console.log('[TS Tabs] Loaded: COLL='+COLL.length+', GER_DATA keys='+Object.keys(GER_DATA).length);
   }catch(e){ console.warn('[TS Tabs load]',e); }
 }
@@ -7923,7 +7924,7 @@ function setAbono(nome,mes,ano,campo,val){
   var key=abonoKey(nome,mes,ano);
   if(!ABONO_DATA[key]) ABONO_DATA[key]={desktop:'R$ 112,07',internet:'R$ 112,07',celular:'R$ 95,00'};
   ABONO_DATA[key][campo]=val;
-  saveAll();
+  (function(){ try{ var tsData={COLL:COLL,GER_DATA:GER_DATA,ABONO_DATA:ABONO_DATA}; if(window._fbTsSave) window._fbTsSave(tsData); }catch(e){} try{ localStorage.setItem('ts_abono_data',JSON.stringify(ABONO_DATA)); }catch(e){} })();
   // Recalc row total inline
   rAbono();
 }
@@ -7931,7 +7932,7 @@ function setAbono(nome,mes,ano,campo,val){
 function resetAbono(nome,mes,ano){
   var key=abonoKey(nome,mes,ano);
   delete ABONO_DATA[key];
-  saveAll();rAbono();
+  (function(){ try{ var tsData={COLL:COLL,GER_DATA:GER_DATA,ABONO_DATA:ABONO_DATA}; if(window._fbTsSave) window._fbTsSave(tsData); }catch(e){} try{ localStorage.setItem('ts_abono_data',JSON.stringify(ABONO_DATA)); }catch(e){} })();rAbono();
   toast('Abono resetado para padrão.','ok');
 }
 
@@ -8014,7 +8015,12 @@ function aplicarAbonoSerie(){
     if(!ABONO_DATA[key]) ABONO_DATA[key]={desktop:'R$ 112,07',internet:'R$ 112,07',celular:'R$ 95,00'};
     ABONO_DATA[key][campo]=valor;
   });
-  saveAll();
+  // Persist ABONO_DATA via Firebase (primary) and localStorage (fallback)
+  try{
+    var tsData={COLL:COLL,GER_DATA:GER_DATA,ABONO_DATA:ABONO_DATA};
+    if(window._fbTsSave) window._fbTsSave(tsData);
+  }catch(e){}
+  try{ localStorage.setItem('ts_abono_data', JSON.stringify(ABONO_DATA)); }catch(e){}
   limparSelecaoAbono();
   rAbono();
   toast(keys.length+' registro(s) atualizado(s) com sucesso!','ok');
@@ -8264,14 +8270,14 @@ function setGerVal(key, dKey, val) {
     if(idx2 >= 0){ BH_DATA.splice(idx2, 1); toast('✅ BH: PF removido para '+nome, 'ok'); }
   }
 
-  saveAll();
+  (function(){ try{ var tsData={COLL:COLL,GER_DATA:GER_DATA,ABONO_DATA:ABONO_DATA}; if(window._fbTsSave) window._fbTsSave(tsData); }catch(e){} try{ localStorage.setItem('ts_abono_data',JSON.stringify(ABONO_DATA)); }catch(e){} })();
   try{ refreshGeral(); }catch(e){}
 }
 
 function setGerOC(key, dKey, val) {
   if (!GER_DATA[key]) GER_DATA[key] = {};
   GER_DATA[key]['oc_' + dKey] = val;
-  saveAll();
+  (function(){ try{ var tsData={COLL:COLL,GER_DATA:GER_DATA,ABONO_DATA:ABONO_DATA}; if(window._fbTsSave) window._fbTsSave(tsData); }catch(e){} try{ localStorage.setItem('ts_abono_data',JSON.stringify(ABONO_DATA)); }catch(e){} })();
 }
 
 // ── Ocorrências modal: multiple comments per day ──
@@ -8283,7 +8289,7 @@ function gerOcModal(key, dKey) {
   if (rec['oc_'+dKey] && !Array.isArray(rec['oc_'+dKey])) {
     const old = rec['oc_'+dKey];
     rec['oc_'+dKey] = old ? [{txt: old, ts: ''}] : [];
-    saveAll();
+    (function(){ try{ var tsData={COLL:COLL,GER_DATA:GER_DATA,ABONO_DATA:ABONO_DATA}; if(window._fbTsSave) window._fbTsSave(tsData); }catch(e){} try{ localStorage.setItem('ts_abono_data',JSON.stringify(ABONO_DATA)); }catch(e){} })();
   }
   if (!rec['oc_'+dKey]) rec['oc_'+dKey] = [];
 
@@ -8381,7 +8387,7 @@ function gerOcAdd(key, dKey) {
   const ts  = pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()
             + ' '+pad(now.getHours())+':'+pad(now.getMinutes());
   GER_DATA[key]['oc_'+dKey].push({txt, ts});
-  saveAll();
+  (function(){ try{ var tsData={COLL:COLL,GER_DATA:GER_DATA,ABONO_DATA:ABONO_DATA}; if(window._fbTsSave) window._fbTsSave(tsData); }catch(e){} try{ localStorage.setItem('ts_abono_data',JSON.stringify(ABONO_DATA)); }catch(e){} })();
   document.getElementById('oc-new-txt').value = '';
   toast('Ocorrência adicionada!','ok');
   if (window._gerOcCtx) window._gerOcCtx.renderOcModal();
@@ -8393,7 +8399,7 @@ function gerOcDel(key, dKey, idx) {
   if (!confirm('Remover esta ocorrência?')) return;
   if (!GER_DATA[key]||!Array.isArray(GER_DATA[key]['oc_'+dKey])) return;
   GER_DATA[key]['oc_'+dKey].splice(idx,1);
-  saveAll();
+  (function(){ try{ var tsData={COLL:COLL,GER_DATA:GER_DATA,ABONO_DATA:ABONO_DATA}; if(window._fbTsSave) window._fbTsSave(tsData); }catch(e){} try{ localStorage.setItem('ts_abono_data',JSON.stringify(ABONO_DATA)); }catch(e){} })();
   toast('Ocorrência removida.','ok');
   if (window._gerOcCtx) window._gerOcCtx.renderOcModal();
   rGerencial();
