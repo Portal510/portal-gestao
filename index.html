@@ -6751,33 +6751,19 @@ function atualizarTodasAbas(){
 }
 
 function exportarBackup(){
-  // Build slim backup — only changed fields vs COLAB base (delta)
-  const delta = DATA.map((c, i) => {
-    const base = COLAB.find(b=>b.cpf===c.cpf) || {};
-    const changes = {_id: c._id};
-    // Only store fields that differ from base
-    Object.keys(c).forEach(k=>{
-      if(k==='_id') return;
-      const cv = JSON.stringify(c[k]);
-      const bv = JSON.stringify(base[k]);
-      if(cv !== bv) changes[k] = c[k];
-    });
-    // Always include CPF to match on restore
-    changes.cpf = c.cpf;
-    return changes;
-  });
-
   const backup = {
-    versao: '3.0',
+    versao: '4.0',
     exportadoEm: new Date().toISOString(),
     portal: 'portal-gestao',
-    delta,                                                           // only changed fields
+    ts_portal_data_v2: DATA,   // full DATA — sem delta para garantir restauração correta
     ts_ctrl_uni:       JSON.parse(localStorage.getItem('ts_ctrl_uni')       || '[]'),
     ts_contrata_queue: JSON.parse(localStorage.getItem('ts_contrata_queue') || '[]'),
     ts_cal_notes:      JSON.parse(localStorage.getItem('ts_cal_notes')      || '{}'),
     ts_com_hist:       JSON.parse(localStorage.getItem('ts_com_hist')       || '[]'),
     ts_predef:         JSON.parse(localStorage.getItem('ts_predef')         || '[]'),
-    // Upload docs: metadata only (NO dataUrl — files not included to avoid size issues)
+    ts_decl_data:      JSON.parse(localStorage.getItem('ts_decl_data')      || '{}'),
+    ts_ferias_data:    JSON.parse(localStorage.getItem('ts_ferias_data')    || '[]'),
+    ts_ind_hist:       JSON.parse(localStorage.getItem('ts_ind_hist')       || '{}'),
     upload_meta: (JSON.parse(localStorage.getItem('ts_upload_docs')||'[]'))
                    .map(d=>{ const {dataUrl,...rest}=d; return rest; }),
   };
@@ -6813,23 +6799,20 @@ function importarBackup(input){
       const totalColab = backup.delta?.length || backup.ts_portal_data_v2?.length || 0;
       if(!confirm(`📂 Restaurar Backup\n\nData: ${new Date(backup.exportadoEm).toLocaleString('pt-BR')}\nVersão: ${backup.versao}\nRegistros: ${totalColab}\n\n⚠️ Os dados atuais serão substituídos.\n\nContinuar?`)) return;
 
-      // Version 3.0: delta format
-      if(backup.versao==='3.0' && backup.delta){
-        // Rebuild full DATA from COLAB base + delta
-        const merged = COLAB.map((base,i)=>{
-          const d = backup.delta.find(x=>x.cpf===base.cpf) || {};
-          return {...base, ...d, _id: i};
-        });
-        // Add any new colabs not in COLAB base
-        backup.delta.forEach(d=>{
-          if(!COLAB.find(b=>b.cpf===d.cpf)){
-            merged.push({...d, _id: merged.length});
-          }
-        });
+      // Version 4.0: full format (new)
+      if(backup.ts_portal_data_v2){
+        const valid = backup.ts_portal_data_v2.filter(c=>c&&c.nome&&typeof c.nome==='string');
+        _safeSetItem('ts_portal_data_v2', JSON.stringify(valid));
+      }
+      // Version 3.0: delta format — merge with _XLSX_DATA to recover names
+      else if(backup.versao==='3.0' && backup.delta){
+        const merged = backup.delta.map(d=>{
+          if(d.nome) return d; // already has nome
+          const cpfD = (d.cpf||'').replace(/\D/g,'');
+          const base = _XLSX_DATA.find(x=>(x.cpf||'').replace(/\D/g,'')===cpfD);
+          return base ? {...base,...d} : d;
+        }).filter(c=>c&&c.nome&&typeof c.nome==='string');
         _safeSetItem('ts_portal_data_v2', JSON.stringify(merged));
-      } else if(backup.ts_portal_data_v2){
-        // Legacy v2.0 full format
-        _safeSetItem('ts_portal_data_v2', JSON.stringify(backup.ts_portal_data_v2));
       }
 
       // Restore other data
@@ -6838,6 +6821,9 @@ function importarBackup(input){
       if(backup.ts_cal_notes)      _safeSetItem('ts_cal_notes',      JSON.stringify(backup.ts_cal_notes));
       if(backup.ts_com_hist)       _safeSetItem('ts_com_hist',       JSON.stringify(backup.ts_com_hist));
       if(backup.ts_predef)         _safeSetItem('ts_predef',         JSON.stringify(backup.ts_predef));
+      if(backup.ts_decl_data)      _safeSetItem('ts_decl_data',      JSON.stringify(backup.ts_decl_data));
+      if(backup.ts_ferias_data)    _safeSetItem('ts_ferias_data',    JSON.stringify(backup.ts_ferias_data));
+      if(backup.ts_ind_hist)       _safeSetItem('ts_ind_hist',       JSON.stringify(backup.ts_ind_hist));
       if(backup.upload_meta)       _safeSetItem('ts_upload_docs',    JSON.stringify(backup.upload_meta));
 
       alert(`✅ Backup restaurado!\n${totalColab} colaboradores carregados.\n\nO portal vai recarregar.`);
