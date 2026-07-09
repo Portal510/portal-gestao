@@ -491,6 +491,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <div class="tab" onclick="showTab('admissao',this)"><span class="tab-icon">🎓</span><span class="tab-label">Admissão</span></div>
     <div class="tab" onclick="showTab('termos',this)"><span class="tab-icon">📝</span><span class="tab-label">Termos</span></div>
     <div class="tab" onclick="showTab('certif',this)"><span class="tab-icon">🏆</span><span class="tab-label">Certificações</span></div>
+    <div class="tab" onclick="showTab('pend-cert',this)"><span class="tab-icon">⚠️</span><span class="tab-label">Pend. Cert/Diploma</span></div>
     <div class="tab" onclick="showTab('uniforme',this)"><span class="tab-icon">👔</span><span class="tab-label">Uniforme</span></div>
     <div class="tab" onclick="showTab('upload',this)"><span class="tab-icon">📎</span><span class="tab-label">Documentos</span></div>
     <div class="tab" onclick="showTab('declaracoes',this)"><span class="tab-icon">📋</span><span class="tab-label">Declarações</span></div>
@@ -1704,6 +1705,69 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
     <!-- Cards por serviço -->
     <div id="ind-cards" style="display:flex;flex-direction:column;gap:18px"></div>
+  </div>
+
+</div>
+</div>
+
+<!-- ═══════════════════ PENDÊNCIAS CERT/DIPLOMA ═══════════════════ -->
+<div id="tab-pend-cert" style="display:none">
+<div style="padding:20px 24px">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px">
+    <div>
+      <div style="font-size:20px;font-weight:700;color:#1F4E79">⚠️ Pendências — Certificações e Diploma</div>
+      <div style="font-size:12px;color:#6c757d;margin-top:3px">Prazo final: <b style="color:#A32D2D">27/07/2026</b> · Colaboradores com certificação ou diploma pendentes</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input type="text" id="pc-busca" placeholder="🔍 Buscar nome…" oninput="renderPendCert()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px;width:200px">
+      <select id="pc-cargo" onchange="renderPendCert()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px;max-width:250px">
+        <option value="">Todos os cargos</option>
+      </select>
+      <select id="pc-tipo" onchange="renderPendCert()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
+        <option value="">Todos os tipos</option>
+        <option value="diploma">📜 Diploma</option>
+        <option value="cert">🏆 Certificações</option>
+      </select>
+      <button onclick="exportXlsx('pend-cert')" style="padding:6px 14px;background:#375623;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">⬇ Exportar</button>
+    </div>
+  </div>
+
+  <!-- Prazo e novo agendamento -->
+  <div style="background:#FEF9C3;border:1px solid #F5C518;border-radius:8px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+    <div>
+      <div style="font-size:13px;font-weight:700;color:#7A5000">📅 Prazo final de entrega: 27/07/2026</div>
+      <div style="font-size:11px;color:#854D0E;margin-top:2px">Colaboradores abaixo devem regularizar Diploma/Superior e/ou Certificações exigidas pelo cargo</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
+      <label style="font-size:12px;font-weight:600;color:#7A5000">🔄 Prorrogar prazo:</label>
+      <input type="date" id="pc-novo-prazo" value="2026-07-27" onchange="renderPendCert()" style="padding:5px 10px;border:1px solid #F5C518;border-radius:6px;font-size:12px;background:#fff">
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div id="pc-kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px"></div>
+
+  <!-- Tabela -->
+  <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;overflow:hidden">
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr>
+            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left">#</th>
+            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left">Colaborador</th>
+            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left">Cargo</th>
+            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left">UF</th>
+            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left">Diploma</th>
+            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left">Certificações Pendentes</th>
+            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:center">Prazo</th>
+            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:center">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="pc-tbody"></tbody>
+      </table>
+    </div>
+    <div id="pc-count" style="padding:8px 14px;font-size:11px;color:#6c757d;border-top:1px solid #dee2e6;background:#f8f9fb"></div>
   </div>
 
 </div>
@@ -3124,7 +3188,7 @@ function clearFilters(tab){
 }
 
 // TAB SWITCHING
-const tabIds=['geral','equipamentos','admissao','termos','certif','calendario','comunicados','predef','uniforme','upload','declaracoes','requisitos','pendencias','contrata','abono','gerencial','indicadores','ferias'];
+const tabIds=['geral','equipamentos','admissao','termos','certif','pend-cert','calendario','comunicados','predef','uniforme','upload','declaracoes','requisitos','pendencias','contrata','abono','gerencial','indicadores','ferias'];
 // ── Sidebar toggle ────────────────────────
 function toggleSidebar(){
   const sidebar=document.getElementById('sidebar');
@@ -3144,7 +3208,7 @@ function showTab(id,el){
   });
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:()=>{try{renderDeclaracoes();}catch(e){}},requisitos:renderRequisitos,pendencias:renderPendencias,contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){}},gerencial:()=>{try{rGerencial();}catch(e){}},indicadores:()=>{try{indRender();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}}};
+  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,'pend-cert':renderPendCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:()=>{try{renderDeclaracoes();}catch(e){}},requisitos:renderRequisitos,pendencias:renderPendencias,contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){}},gerencial:()=>{try{rGerencial();}catch(e){}},indicadores:()=>{try{indRender();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}}};
   if(renders[id]) renders[id]();
 }
 
@@ -3495,6 +3559,8 @@ function exportXlsx(tab){
     headers=['Nome','Cargo',...certCols];
     rows=all.map(c=>[c.nome,c.cargo,...certCols.map(k=>c.certs[k]||'N/A')]);
     filename='Portal_TS_Certificacoes';
+  } else if(tab==='pend-cert'){
+    exportarPendCert(); return;
   } else if(tab==='upload'){
     headers=['Nome','UF','Tipo','Arquivo','Data Upload','Status'];
     rows=(window.uploadedDocs||[]).map(d=>[d.colabNome||'',d.colabUf||'',d.tipo||'',d.fileName||'',d.dataUpload||'',d.pending?'Pendente':'Confirmado']);
@@ -5547,7 +5613,182 @@ function ferCtrlExport(){
 }
 
 // ══════════════════════════════════════════
-// RESETAR STATUS PARA PENDENTE
+// PENDÊNCIAS — Certificações e Diploma
+// ══════════════════════════════════════════
+
+function renderPendCert(){
+  const tbody  = document.getElementById('pc-tbody');
+  const kpis   = document.getElementById('pc-kpis');
+  const countEl= document.getElementById('pc-count');
+  if(!tbody) return;
+
+  // Populate cargo filter
+  const cargoSel=document.getElementById('pc-cargo');
+  if(cargoSel&&cargoSel.options.length<=1){
+    [...new Set(DATA.filter(c=>c&&c.nome&&c.status!=='inativo').map(c=>c.cargo))].sort()
+      .forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;cargoSel.appendChild(o);});
+  }
+
+  const busca  = (document.getElementById('pc-busca')?.value||'').toLowerCase();
+  const fCargo = document.getElementById('pc-cargo')?.value||'';
+  const fTipo  = document.getElementById('pc-tipo')?.value||'';
+  const prazo  = document.getElementById('pc-novo-prazo')?.value||'2026-07-27';
+  const prazoFmt = prazo ? prazo.split('-').reverse().join('/') : '27/07/2026';
+  const hoje   = new Date();
+  const prazoDate = prazo ? new Date(prazo) : new Date('2026-07-27');
+  const diasRestantes = Math.ceil((prazoDate - hoje) / (1000*60*60*24));
+  const prazoAlerta = diasRestantes <= 7;
+  const prazoVencido = diasRestantes < 0;
+
+  const ALL_DOCS_DIPLOMA = ['Diploma/Superior','Especialização TI'];
+
+  // Build list
+  let rows = DATA.filter(c=>c&&c.nome&&typeof c.nome==='string'&&c.status!=='inativo');
+
+  // Check each colab for pendencies
+  const list = rows.map(c=>{
+    // Diploma pending
+    const diplomaPend = ALL_DOCS_DIPLOMA.filter(d=>
+      c.docs && (c.docs[d]==='Pendente'||!c.docs[d])
+    );
+
+    // Certs pending (required for cargo, not satisfied)
+    const required = CARGO_CERTS_REQUIRED[c.cargo]||[];
+    const certsPend = required.filter(cert=>{
+      const val = c.certs&&c.certs[cert];
+      if(val==='Entregue'||val==='Agendado') return false;
+      // OR group check
+      const groups = CERT_OR_GROUPS[c.cargo]||[];
+      for(const group of groups){
+        if(!group.includes(cert)) continue;
+        if(group.some(other=>other!==cert&&(c.certs&&(c.certs[other]==='Entregue'||c.certs[other]==='Agendado')))) return false;
+      }
+      return true;
+    });
+
+    return {c, diplomaPend, certsPend, total: diplomaPend.length + certsPend.length};
+  }).filter(r=>r.total>0);
+
+  // Apply filters
+  if(busca) list.splice(0, list.length, ...list.filter(r=>r.c.nome.toLowerCase().includes(busca)));
+  if(fCargo) list.splice(0, list.length, ...list.filter(r=>r.c.cargo===fCargo));
+  if(fTipo==='diploma') list.splice(0, list.length, ...list.filter(r=>r.diplomaPend.length>0));
+  if(fTipo==='cert') list.splice(0, list.length, ...list.filter(r=>r.certsPend.length>0));
+
+  // Sort by nome
+  list.sort((a,b)=>a.c.nome.localeCompare(b.c.nome,'pt-BR'));
+
+  // KPIs
+  const totalColab = list.length;
+  const soDiploma  = list.filter(r=>r.diplomaPend.length>0&&r.certsPend.length===0).length;
+  const soCert     = list.filter(r=>r.certsPend.length>0&&r.diplomaPend.length===0).length;
+  const ambos      = list.filter(r=>r.diplomaPend.length>0&&r.certsPend.length>0).length;
+  if(kpis) kpis.innerHTML=[
+    ['Colaboradores pendentes', totalColab, '#A32D2D'],
+    ['Só diploma', soDiploma, '#854F0B'],
+    ['Só certificação', soCert, '#185FA5'],
+    ['Diploma + Certificação', ambos, '#7A0000'],
+  ].map(([l,v,c])=>`<div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:12px 14px">
+    <div style="font-size:11px;color:#6c757d;margin-bottom:4px">${l}</div>
+    <div style="font-size:24px;font-weight:700;color:${c}">${v}</div>
+  </div>`).join('');
+
+  if(!list.length){
+    tbody.innerHTML='<tr><td colspan="8" style="padding:2rem;text-align:center;color:#375623;font-weight:600">✅ Nenhuma pendência encontrada!</td></tr>';
+    if(countEl) countEl.textContent='';
+    return;
+  }
+
+  const prazoBadge = prazoVencido
+    ? `<span style="background:#FCEBEB;color:#A32D2D;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">❌ VENCIDO</span>`
+    : prazoAlerta
+      ? `<span style="background:#FEF9C3;color:#854D0E;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">⚠️ ${diasRestantes}d</span>`
+      : `<span style="background:#E1F5EE;color:#375623;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600">${prazoFmt}</span>`;
+
+  tbody.innerHTML = list.map((r,i)=>{
+    const {c, diplomaPend, certsPend} = r;
+    const diplomaCell = diplomaPend.length
+      ? `<span style="color:#A32D2D;font-size:11px">⏳ ${diplomaPend.join(', ')}</span>`
+      : `<span style="color:#375623;font-size:11px">✅ OK</span>`;
+    const certsCell = certsPend.length
+      ? `<div style="display:flex;flex-wrap:wrap;gap:3px">${certsPend.map(ct=>`<span style="background:#FCEBEB;color:#A32D2D;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600">⏳ ${ct}</span>`).join('')}</div>`
+      : `<span style="color:#375623;font-size:11px">✅ OK</span>`;
+    const bg = i%2===0?'#fff':'#f8f9fb';
+    return `<tr style="background:${bg}">
+      <td style="padding:8px 12px;color:#999;font-size:11px">${i+1}</td>
+      <td style="padding:8px 12px;font-weight:600;color:#1F4E79">${c.nome}</td>
+      <td style="padding:8px 12px;font-size:11px">${c.cargo}</td>
+      <td style="padding:8px 12px;font-weight:600">${c.uf}</td>
+      <td style="padding:8px 12px">${diplomaCell}</td>
+      <td style="padding:8px 12px">${certsCell}</td>
+      <td style="padding:8px 12px;text-align:center">${prazoBadge}</td>
+      <td style="padding:8px 12px;text-align:center">
+        <button onclick="pcEnviarEmail(${c._id})" style="padding:3px 10px;background:#FFF3E8;color:#C55A11;border:none;border-radius:5px;cursor:pointer;font-size:11px;font-weight:600" title="Enviar e-mail">📧</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  if(countEl) countEl.textContent=`${list.length} colaborador(es) com pendências · Prazo: ${prazoFmt}${prazoVencido?' — VENCIDO':prazoAlerta?' — '+diasRestantes+' dia(s) restante(s)':''}`;
+}
+
+function pcEnviarEmail(id){
+  const c=DATA.find(x=>x._id===id);
+  if(!c) return;
+  const email=c.email_inst&&c.email_inst!=='Pendente'?c.email_inst:(c.email&&c.email!=='Pendente'?c.email:'');
+  if(!email){ toast('E-mail não cadastrado para '+c.nome,'warn'); return; }
+
+  const prazo=document.getElementById('pc-novo-prazo')?.value||'2026-07-27';
+  const prazoFmt=prazo.split('-').reverse().join('/');
+  const required=CARGO_CERTS_REQUIRED[c.cargo]||[];
+  const certsPend=required.filter(cert=>{
+    const val=c.certs&&c.certs[cert];
+    if(val==='Entregue'||val==='Agendado') return false;
+    const groups=CERT_OR_GROUPS[c.cargo]||[];
+    for(const g of groups){
+      if(!g.includes(cert)) continue;
+      if(g.some(o=>o!==cert&&(c.certs&&(c.certs[o]==='Entregue'||c.certs[o]==='Agendado')))) return false;
+    }
+    return true;
+  });
+  const diplomaPend=['Diploma/Superior','Especialização TI'].filter(d=>c.docs&&(c.docs[d]==='Pendente'||!c.docs[d]));
+  const lista=[...diplomaPend.map(d=>'  • '+d),...certsPend.map(ct=>'  • Certificação: '+ct)].join('\n');
+
+  const assunto=encodeURIComponent('[TCU/T&S] Pendências de Certificação e Diploma — '+c.nome);
+  const corpo=encodeURIComponent(
+    'Prezado(a) '+c.nome+',\n\n'+
+    'Identificamos que os seguintes documentos/certificações ainda constam como PENDENTES em seu cadastro no Contrato T&S/TCU:\n\n'+
+    lista+'\n\n'+
+    'Solicitamos que regularize a situação em até o prazo final de '+prazoFmt+'.\n\n'+
+    'Para entregar a documentação, acesse o formulário abaixo:\n'+
+    'https://forms.office.com/r/wrE4eJnCBj\n\n'+
+    'Em caso de dúvidas, entre em contato com sua supervisão imediata.\n\n'+
+    'Atenciosamente,\nPriscila Pamplona Torres\nGestora do Service Desk — TCU | Contrato T&S'
+  );
+  window.location.href='mailto:'+email+'?subject='+assunto+'&body='+corpo;
+}
+
+function exportarPendCert(){
+  const busca=(document.getElementById('pc-busca')?.value||'').toLowerCase();
+  const fCargo=document.getElementById('pc-cargo')?.value||'';
+  const ALL_DOCS_DIPLOMA=['Diploma/Superior','Especialização TI'];
+  const rows=DATA.filter(c=>c&&c.nome&&c.status!=='inativo').map(c=>{
+    const diplomaPend=ALL_DOCS_DIPLOMA.filter(d=>c.docs&&(c.docs[d]==='Pendente'||!c.docs[d]));
+    const required=CARGO_CERTS_REQUIRED[c.cargo]||[];
+    const certsPend=required.filter(cert=>{
+      const val=c.certs&&c.certs[cert];
+      if(val==='Entregue'||val==='Agendado') return false;
+      const groups=CERT_OR_GROUPS[c.cargo]||[];
+      for(const g of groups){if(!g.includes(cert)) continue;if(g.some(o=>o!==cert&&(c.certs&&(c.certs[o]==='Entregue'||c.certs[o]==='Agendado')))) return false;}
+      return true;
+    });
+    return {c,diplomaPend,certsPend,total:diplomaPend.length+certsPend.length};
+  }).filter(r=>r.total>0&&(!busca||r.c.nome.toLowerCase().includes(busca))&&(!fCargo||r.c.cargo===fCargo));
+  rows.sort((a,b)=>a.c.nome.localeCompare(b.c.nome,'pt-BR'));
+  const prazo=document.getElementById('pc-novo-prazo')?.value||'2026-07-27';
+  const hdrs=['Nome','Cargo','UF','Diploma Pendente','Certificações Pendentes','Prazo'];
+  const data=rows.map(r=>[r.c.nome,r.c.cargo,r.c.uf,r.diplomaPend.join('; ')||'OK',r.certsPend.join('; ')||'OK',prazo.split('-').reverse().join('/')]);
+  _exportXlsXML(hdrs,data,'Pendencias_Cert_Diploma');
+}
 // ══════════════════════════════════════════
 const RESET_FIELDS = {
   equipamentos: {
@@ -8138,13 +8379,9 @@ function rGerencial() {
   if (!wrap) return;
 
   // If COLL not loaded yet, load from Firebase and retry
+  // Try loading TS data in background, but render with DATA if COLL unavailable
   if (!COLL.length) {
-    wrap.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--muted);">⏳ Carregando dados do Portal T&S...</div>';
-    loadTsDataForTabs().then(() => {
-      if (COLL.length) rGerencial();
-      else wrap.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--r600);">❌ Não foi possível carregar os colaboradores. Clique em 🔄 Sync T&S no topo.</div>';
-    });
-    return;
+    loadTsDataForTabs().then(() => { if (COLL.length) rGerencial(); }).catch(()=>{});
   }
 
   const mes  = document.getElementById('ger-mes')?.value   || 'Abril';
