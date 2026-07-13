@@ -530,8 +530,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       📂 Importar XLSX
       <input type="file" id="colab-import-input" accept=".xlsx,.xls" style="display:none" onchange="colabImportXlsx(this)">
     </label>
-    <button class="btn-export" onclick="exportXlsx('geral')">⬇ Exportar XLSX</button>
-    <button class="btn-export" onclick="exportPDF('geral')" style="background:#a32d2d">📄 Exportar PDF</button>
+    <button class="btn-export" onclick=\"withBtn(this,()=>exportXlsx('geral'))\">⬇ Exportar XLSX</button>
+    <button class="btn-export" onclick=\"withBtn(this,()=>exportPDF('geral'))\" style="background:#a32d2d">📄 Exportar PDF</button>
   </div>
   <div class="tbl-wrap"><table id="tbl-geral">
     <thead><tr>
@@ -575,7 +575,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <option value="N/A">— N/A</option>
       <option value="Agendado">📅 Agendado</option></select>
     <button class="btn-clear" onclick="clearFilters('equip')">Limpar</button>
-    <button class="btn-export" onclick="exportXlsx('equipamentos')" style="margin-left:auto">⬇ Exportar XLSX</button>
+    <button class="btn-export" onclick=\"withBtn(this,()=>exportXlsx('equipamentos'))\" style="margin-left:auto">⬇ Exportar XLSX</button>
     <button class="btn-danger" onclick="resetarPendente('equipamentos')" style="padding:7px 14px;background:#C55A11;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">🔄 Resetar para Pendente</button>
   </div>
   <div class="tbl-wrap"><table id="tbl-equip">
@@ -613,7 +613,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <option value="N/A">— N/A</option>
       <option value="Agendado">📅 Agendado</option></select>
     <button class="btn-clear" onclick="clearFilters('adm')">Limpar</button>
-    <button class="btn-export" onclick="exportXlsx('admissao')" style="margin-left:auto">⬇ Exportar XLSX</button>
+    <button class="btn-export" onclick=\"withBtn(this,()=>exportXlsx('admissao'))\" style="margin-left:auto">⬇ Exportar XLSX</button>
     <button class="btn-danger" onclick="resetarPendente('admissao')" style="padding:7px 14px;background:#C55A11;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">🔄 Resetar para Pendente</button>
   </div>
   <div class="tbl-wrap"><table>
@@ -652,7 +652,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <option value="N/A">— N/A</option>
       <option value="Agendado">📅 Agendado</option></select>
     <button class="btn-clear" onclick="clearFilters('termos')">Limpar</button>
-    <button class="btn-export" onclick="exportXlsx('termos')" style="margin-left:auto">⬇ Exportar XLSX</button>
+    <button class="btn-export" onclick=\"withBtn(this,()=>exportXlsx('termos'))\" style="margin-left:auto">⬇ Exportar XLSX</button>
     <button class="btn-danger" onclick="resetarPendente('termos')" style="padding:7px 14px;background:#C55A11;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">🔄 Resetar para Pendente</button>
   </div>
   <div class="tbl-wrap"><table>
@@ -687,7 +687,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <option value="N/A">— N/A</option>
       <option value="Agendado">📅 Agendado</option></select>
     <button class="btn-clear" onclick="clearFilters('cert')">Limpar</button>
-    <button class="btn-export" onclick="exportXlsx('certif')" style="margin-left:auto">⬇ Exportar XLSX</button>
+    <button class="btn-export" onclick=\"withBtn(this,()=>exportXlsx('certif'))\" style="margin-left:auto">⬇ Exportar XLSX</button>
     <button class="btn-danger" onclick="resetarPendente('certif')" style="padding:7px 14px;background:#C55A11;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">🔄 Resetar para Pendente</button>
   </div>
   <div class="tbl-wrap" style="overflow-x:auto"><table>
@@ -1138,7 +1138,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <button class="up-btn" onclick="document.getElementById('up-zip-input').click()" style="padding:8px 18px;font-weight:600;white-space:nowrap;background:#375623;border-color:#375623;color:#fff">
         📦 Importar ZIP
       </button>
-      <input type="file" id="up-zip-input" accept=".zip" multiple style="display:none" onchange="Array.from(this.files).forEach(f=>upImportZip(f))">
+      <input type="file" id="up-zip-input" accept=".zip" multiple style="display:none" onchange="upHandleFiles(this.files)">
     </div>
 
     <!-- Resultado da importação em lote / ZIP -->
@@ -1167,7 +1167,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
     <button class="up-btn" onclick="upAtualizar()" style="background:#E8F0FE;border-color:#2E75B6;color:#1F4E79;font-weight:600">🔄 Atualizar</button>
     <button class="up-btn" onclick="upSyncDocs()" style="background:#1F4E79;color:#fff;border-color:#1F4E79;font-weight:600" title="Sincronizar status dos documentos com as demais abas">🔗 Sincronizar</button>
-    <button class="up-btn" onclick="exportXlsx('upload')" style="background:#375623;color:#fff;border-color:#375623;font-weight:600">⬇ Exportar XLSX</button>
+    <button class="up-btn" onclick=\"withBtn(this,()=>exportXlsx('upload'))\" style="background:#375623;color:#fff;border-color:#375623;font-weight:600">⬇ Exportar XLSX</button>
     <button class="up-btn" onclick="toggleConfigDownload()" style="font-weight:600">⚙️ Config. Download</button>
     <button class="up-btn" onclick="upBaixarZip()" style="background:#375623;color:#fff;border-color:#375623;font-weight:600">📥 Baixar ZIP</button>
     <button class="up-btn" onclick="upSincronizarBaixar()" style="background:#1F4E79;color:#fff;border-color:#1F4E79;font-weight:600">⬆ Sincronizar + Baixar ZIP</button>
@@ -1216,7 +1216,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         <option value="Gestor">Gestores</option>
         <option value="Especializado">Especializados (CE/AC/AP)</option>
       </select>
-      <button class="btn-export" onclick="exportXlsx('requisitos')">⬇ Exportar XLSX</button>
+      <button class="btn-export" onclick=\"withBtn(this,()=>exportXlsx('requisitos'))\">⬇ Exportar XLSX</button>
     </div>
   </div>
   <div id="req-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px"></div>
@@ -1243,7 +1243,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         <option value="">Todas as UF</option>
       </select>
       <button class="btn-export" onclick="exportPendencias()" style="padding:7px 14px">⬇ Exportar XLSX</button>
-      <button class="btn-export" onclick="exportPDF('pendencias')" style="background:#a32d2d;padding:7px 14px">📄 PDF</button>
+      <button class="btn-export" onclick=\"withBtn(this,()=>exportPDF('pendencias'))\" style="background:#a32d2d;padding:7px 14px">📄 PDF</button>
     </div>
   </div>
   <div id="pend-stats" style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap"></div>
@@ -1258,8 +1258,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <div style="font-size:12px;color:#6c757d;margin-top:3px">Colaboradores novos aguardando envio de e-mail para o Fiscal realizar o cadastro no Sistema Contrata</div>
     </div>
     <div style="display:flex;gap:8px">
-      <button class="btn-export" onclick="exportXlsx('contrata')">⬇ Exportar XLSX</button>
-      <button class="btn-export" onclick="exportPDF('contrata')" style="background:#a32d2d">📄 Exportar PDF</button>
+      <button class="btn-export" onclick=\"withBtn(this,()=>exportXlsx('contrata'))\">⬇ Exportar XLSX</button>
+      <button class="btn-export" onclick=\"withBtn(this,()=>exportPDF('contrata'))\" style="background:#a32d2d">📄 Exportar PDF</button>
       <button class="btn-clear" onclick="limparContrataEnviados()">🗑 Limpar enviados</button>
     </div>
   </div>
@@ -1726,7 +1726,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         <option value="diploma">📜 Diploma</option>
         <option value="cert">🏆 Certificações</option>
       </select>
-      <button onclick="exportXlsx('pend-cert')" style="padding:6px 14px;background:#375623;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">⬇ Exportar</button>
+      <button onclick=\"withBtn(this,()=>exportXlsx('pend-cert'))\" style="padding:6px 14px;background:#375623;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">⬇ Exportar</button>
     </div>
   </div>
 
@@ -6687,6 +6687,189 @@ function upGuessType(filename){
     if(score > bestScore){ bestScore=score; bestType=tipo; }
   });
   return bestScore > 0 ? bestType : null;
+}
+
+
+// ── Ampulheta em qualquer botão ──────────────────────────
+function withSpinner(btn, asyncFn){
+  if(!btn) { asyncFn(); return; }
+  const orig = btn.innerHTML;
+  btn.innerHTML = '⏳'; btn.disabled = true;
+  Promise.resolve().then(asyncFn).finally(()=>{
+    setTimeout(()=>{ btn.innerHTML=orig; btn.disabled=false; }, 400);
+  });
+}
+// Wrapper para onclick inline: withBtn(this, fn)
+function withBtn(btn, fn){ withSpinner(btn, fn); }
+
+// ── Upload unificado: docs + ZIPs juntos ──────────────────
+async function upHandleFiles(files){
+  const arr = Array.from(files);
+  if(!arr.length) return;
+
+  const tipo    = document.getElementById('up-tipo')?.value || null;
+  const colabId = parseInt(document.getElementById('up-colab')?.value);
+
+  // Mostrar progresso
+  const panel = document.getElementById('up-batch-result');
+  if(panel){ panel.style.display='block'; panel.innerHTML=`<div style="color:#6c757d;font-size:13px">⏳ Processando ${arr.length} arquivo(s)…</div>`; }
+
+  const allRows = [];   // {fileName, file, status:'ok'|'dup'|'pending', colab, tipo, doc}
+  let processed = 0;
+
+  function progress(msg){
+    if(panel) panel.innerHTML = `<div style="color:#6c757d;font-size:13px">⏳ ${msg}</div>`;
+  }
+
+  // Read file as dataURL
+  function readFile(file){ return new Promise(res=>{ const fr=new FileReader(); fr.onload=e=>res(e.target.result); fr.onerror=()=>res(null); fr.readAsDataURL(file); }); }
+
+  // Process one file
+  async function processFile(file){
+    processed++;
+    progress(`Processando ${processed}/${arr.length}: ${file.name}`);
+    const ext = file.name.split('.').pop().toLowerCase();
+
+    let resolvedColab = isNaN(colabId) ? null : DATA.find(x=>x._id===colabId);
+    let resolvedTipo  = tipo;
+
+    if(!resolvedColab){ const g=upGuessColab(file.name); if(g) resolvedColab=g; }
+    if(!resolvedTipo){ const g=upGuessType(file.name); if(g) resolvedTipo=g; }
+
+    if(!resolvedColab || !resolvedTipo){
+      // Not identified — add as pending card immediately
+      const id = Date.now().toString()+Math.random().toString(36).slice(2,6);
+      const dataUrl = await readFile(file);
+      const entry = {
+        id, pending:true,
+        colabId:   resolvedColab?._id ?? null,
+        colabNome: resolvedColab?.nome ?? '— Não identificado —',
+        colabUf:   resolvedColab?.uf  ?? '—',
+        tipo:      resolvedTipo ?? '— Não identificado —',
+        cat:       resolvedTipo?(TIPO_CAT[resolvedTipo]||'Outros'):'Pendente',
+        fileName:file.name, ext, size:file.size, dataUrl,
+        dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+      };
+      uploadedDocs.unshift(entry);
+      allRows.push({fileName:file.name, file, status:'pending', colab:resolvedColab, tipo:resolvedTipo, docId:id});
+      return;
+    }
+
+    // Check duplicate
+    const isDup = uploadedDocs.some(d=>d.colabId===resolvedColab._id&&d.tipo===resolvedTipo&&!d.pending);
+    const dataUrl = await readFile(file);
+    const id = Date.now().toString()+Math.random().toString(36).slice(2,6);
+    const effName = upGetEffectiveFileName(file.name, resolvedTipo);
+    uploadedDocs.unshift({
+      id, colabId:resolvedColab._id, colabNome:resolvedColab.nome, colabUf:resolvedColab.uf,
+      tipo:resolvedTipo, cat:TIPO_CAT[resolvedTipo]||'Outros',
+      fileName:file.name, ext, size:file.size, dataUrl, duplicate:isDup,
+      dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+    });
+    if(!isDup) upAtualizarStatus(resolvedColab._id, resolvedTipo, effName);
+    allRows.push({fileName:file.name, file, status:isDup?'dup':'ok', colab:resolvedColab, tipo:resolvedTipo});
+  }
+
+  // Extract ZIP files
+  async function processZip(file){
+    progress(`📦 Extraindo ZIP: ${file.name}`);
+    const ab = await new Promise(res=>{const fr=new FileReader();fr.onload=e=>res(e.target.result);fr.readAsArrayBuffer(file);});
+    const JSZip = await loadJSZip();
+    const zip = await new JSZip().loadAsync(ab);
+    const entries = [];
+    zip.forEach((path, entry)=>{ if(!entry.dir) entries.push({path,entry}); });
+    for(const {path,entry} of entries){
+      const blob = await entry.async('blob');
+      const f2 = new File([blob], path.split('/').pop(), {type:blob.type});
+      await processFile(f2);
+    }
+  }
+
+  // Process all files (ZIPs and regular) in order
+  for(const file of arr){
+    if(file.name.toLowerCase().endsWith('.zip')){
+      await processZip(file);
+    } else {
+      await processFile(file);
+    }
+  }
+
+  // Save and update all tabs
+  saveData();
+  saveUploadDocs();
+  ['renderAdm','renderTermos','renderEquip','renderCert','renderDeclaracoes','renderPendencias']
+    .forEach(fn=>{ try{window[fn]&&window[fn]();}catch(e){} });
+  upFilterDocs();
+
+  // Show result panel
+  upShowResult(allRows);
+
+  // Reset input
+  const inp = document.getElementById('up-file-input');
+  if(inp) inp.value='';
+  const zinp = document.getElementById('up-zip-input');
+  if(zinp) zinp.value='';
+}
+
+// ── Result panel ─────────────────────────────────────────
+function upShowResult(rows){
+  const panel = document.getElementById('up-batch-result');
+  if(!panel) return;
+  panel.style.display = 'block';
+
+  const ok      = rows.filter(r=>r.status==='ok');
+  const pending = rows.filter(r=>r.status==='pending');
+  const dups    = rows.filter(r=>r.status==='dup');
+
+  let h = `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #dee2e6">
+    <b style="font-size:13px;color:#1F4E79">📊 Resultado</b>
+    <span style="background:#D4EDDA;color:#155724;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">✅ ${ok.length} importados</span>
+    ${pending.length?`<span style="background:#FCEBEB;color:#A32D2D;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">⚠️ ${pending.length} não identificados</span>`:''}
+    ${dups.length?`<span style="background:#f0f2f5;color:#6c757d;padding:2px 10px;border-radius:12px;font-size:12px">⏩ ${dups.length} duplicados</span>`:''}
+    <span style="color:#6c757d;font-size:11px">📁 ${rows.length} total</span>
+    <button onclick="document.getElementById('up-batch-result').style.display='none'" style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:18px;color:#999;line-height:1" title="Fechar">✕</button>
+  </div>`;
+
+  // Pending section — full selects
+  if(pending.length){
+    h += `<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:#A32D2D;margin-bottom:8px">⚠️ Não identificados — selecione e confirme:</div>`;
+    pending.forEach(r=>{
+      const d = uploadedDocs.find(x=>x.id===r.docId);
+      if(!d) return;
+      h += `<div style="background:#FFF8F0;border:1.5px solid #F5C518;border-radius:8px;padding:10px 14px;margin-bottom:8px">
+        <div style="font-weight:600;color:#7A3000;font-size:12px;margin-bottom:8px">📄 ${r.fileName}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          ${!d.colabId?`<select class="up-select" style="font-size:11px;padding:4px 8px;max-width:240px" data-pid="${d.id}" onchange="upPendingSetColab(this.dataset.pid,this.value)">
+            <option value="">— Selecionar colaborador —</option>
+            ${[...DATA].sort((a,b)=>a.nome.localeCompare(b.nome)).map(c=>`<option value="${c._id}">${c.nome} (${c.uf})</option>`).join('')}
+          </select>`:`<span style="background:#E1F5EE;color:#155724;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:600">👤 ${d.colabNome}</span>`}
+          ${d.tipo==='— Não identificado —'?`<select class="up-select" style="font-size:11px;padding:4px 8px;max-width:210px" data-pid="${d.id}" onchange="upPendingSetTipo(this.dataset.pid,this.value)">
+            <option value="">— Selecionar tipo —</option>
+            ${Object.keys(TIPO_TO_FIELD).map(t=>`<option value="${t}">${t}</option>`).join('')}
+          </select>`:`<span style="background:#E8F0FE;color:#1A3A6B;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:600">📋 ${d.tipo}</span>`}
+          <button class="btn-primary" style="font-size:11px;padding:5px 14px;background:#1F4E79" data-pid="${d.id}" onclick="upPendingConfirmar(this.dataset.pid);this.closest('[data-pid]')&&upShowResult(window._lastUpRows||[])">✓ Confirmar</button>
+        </div>
+      </div>`;
+    });
+    h += `</div>`;
+  }
+
+  // OK section (collapsible)
+  if(ok.length){
+    h += `<details style="margin-bottom:6px"><summary style="cursor:pointer;font-size:12px;font-weight:600;color:#155724">✅ ${ok.length} importado(s) — clique para ver</summary><div style="margin-top:6px">`;
+    ok.forEach(r=>{ h+=`<div style="font-size:11px;padding:2px 8px;color:#155724">• ${r.fileName} — ${r.colab?.nome} · ${r.tipo}</div>`; });
+    h += `</div></details>`;
+  }
+
+  // Dups section (collapsible)
+  if(dups.length){
+    h += `<details><summary style="cursor:pointer;font-size:12px;color:#6c757d">⏩ ${dups.length} duplicado(s)</summary><div style="margin-top:6px">`;
+    dups.forEach(r=>{ h+=`<div style="font-size:11px;padding:2px 8px;color:#6c757d">• ${r.fileName}</div>`; });
+    h += `</div></details>`;
+  }
+
+  panel.innerHTML = h;
+  window._lastUpRows = rows;
 }
 
 function upBatchImport(files){
