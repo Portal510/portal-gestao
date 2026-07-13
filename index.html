@@ -2339,26 +2339,67 @@ function saveData(){
     DATA.forEach((c,i)=>{ c._id=i; });
     _safeSetItem(DATA_KEY, JSON.stringify(DATA));
     localStorage.setItem('ts_data_saved_at', Date.now().toString());
-    // Salvar no Firebase em background
-    try{
-      if(typeof window._fbGestaoSave==='function')
-        window._fbGestaoSave({colaboradores:DATA, ts:Date.now()});
-    }catch(fe){}
+    // Salvar cópia de segurança no Firebase (documento separado 'gestao-data')
+    try{ _fbBackupData(); }catch(fe){}
   }catch(e){ console.warn('[saveData]',e); }
 }
 
 // Restaura DATA do Firebase se localStorage vazio ou corrompido
+// Salva DATA completo em documento Firebase separado (gestao-data)
+// Não interfere com o sistema de sync (gestao_sync_cache / gestao doc)
+var _fbBackupThrottle = null;
+function _fbBackupData(){
+  // Throttle: no máximo 1 save a cada 10 segundos
+  if(_fbBackupThrottle) return;
+  _fbBackupThrottle = setTimeout(function(){
+    _fbBackupThrottle = null;
+    try{
+      if(!window._fbGestaoReady) return;
+      var API_KEY_B = 'AIzaSyB6gK-4UWyVnf0u7wQf-lge1LEXnoDmTz8';
+      var PROJECT_B = 'portal-ts';
+      var DOC_BACKUP = 'https://firestore.googleapis.com/v1/projects/'+PROJECT_B+'/databases/(default)/documents/portal-gestao/gestao-data';
+      var payload = {colaboradores: DATA, savedAt: new Date().toISOString(), count: DATA.length};
+      var json = JSON.stringify(payload);
+      // Reduzir se >800KB
+      if(json.length > 800000){
+        payload.colaboradores = DATA.map(function(c){
+          return {_id:c._id,nome:c.nome,cpf:c.cpf,cargo:c.cargo,uf:c.uf,
+                  status:c.status,docs:c.docs,certs:c.certs,
+                  email_inst:c.email_inst,celular:c.celular,salario:c.salario,
+                  data_admissao:c.data_admissao};
+        });
+        json = JSON.stringify(payload);
+      }
+      var body = JSON.stringify({fields:{
+        payload:{stringValue:json},
+        savedAt:{stringValue:new Date().toISOString()},
+        count:{integerValue:String(DATA.length)}
+      }});
+      fetch(DOC_BACKUP+'?key='+API_KEY_B,
+        {method:'PATCH',headers:{'Content-Type':'application/json'},body:body})
+        .then(function(r){ if(r.ok) console.log('[fbBackup] '+DATA.length+' colabs saved'); })
+        .catch(function(e){ console.warn('[fbBackup]',e.message||e); });
+    }catch(e){ console.warn('[fbBackupData]',e); }
+  }, 10000);
+}
+
 async function _fbRestoreIfEmpty(){
   try{
-    if(typeof window._fbGestaoLoad!=='function') return false;
-    const payload = await window._fbGestaoLoad();
+    var API_KEY_R = 'AIzaSyB6gK-4UWyVnf0u7wQf-lge1LEXnoDmTz8';
+    var PROJECT_R = 'portal-ts';
+    var DOC_BACKUP_R = 'https://firestore.googleapis.com/v1/projects/'+PROJECT_R+'/databases/(default)/documents/portal-gestao/gestao-data';
+    var r = await fetch(DOC_BACKUP_R+'?key='+API_KEY_R);
+    if(!r.ok) return false;
+    var doc = await r.json();
+    if(!doc||!doc.fields||!doc.fields.payload) return false;
+    var payload = JSON.parse(doc.fields.payload.stringValue);
     if(!payload||!Array.isArray(payload.colaboradores)||payload.colaboradores.length<5) return false;
-    const valid = payload.colaboradores.filter(c=>c&&c.nome&&typeof c.nome==='string');
+    var valid = payload.colaboradores.filter(function(c){return c&&c.nome&&typeof c.nome==='string';});
     if(valid.length<5) return false;
     _safeSetItem(DATA_KEY, JSON.stringify(valid));
     localStorage.setItem('ts_data_saved_at', Date.now().toString());
-    DATA = valid.map((c,i)=>({...c,_id:i}));
-    console.log('[fbRestore] Restaurado '+valid.length+' colaboradores do Firebase');
+    DATA = valid.map(function(c,i){return Object.assign({},c,{_id:i});});
+    console.log('[fbRestore] Restaurado '+valid.length+' colaboradores do Firebase (gestao-data)');
     return true;
   }catch(e){ console.warn('[fbRestoreIfEmpty]',e); return false; }
 }
