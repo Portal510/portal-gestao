@@ -6460,7 +6460,7 @@ function upFilterDocs(){
           <span style="margin-left:8px;color:${isPending?'#C55A11':'#58a6ff'};font-weight:600">${d.colabNome}</span>
           <span style="margin-left:6px;color:#6c757d">· ${d.colabUf} · ${sizeStr} · ${d.dataUpload}</span>
         </div>
-        ${isPending?`<div id="pend-form-${d.id}" style="display:none;gap:6px;margin-top:7px;flex-wrap:wrap;align-items:center">
+        ${isPending?`<div id="pend-form-${d.id}" style="display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;align-items:center">
           <select class="up-select" style="font-size:11px;padding:3px 7px;max-width:230px" onchange="upPendingSetColab('${d.id}',this.value)">
             <option value="">${d.colabId!=null?'Alterar colaborador…':'— Selecionar colaborador —'}</option>
             ${[...DATA].sort((a,b)=>a.nome.localeCompare(b.nome)).map(c=>`<option value="${c._id}" ${c._id===d.colabId?'selected':''}>${c.nome} (${c.uf})</option>`).join('')}
@@ -6470,8 +6470,7 @@ function upFilterDocs(){
             ${Object.keys(TIPO_TO_FIELD).map(t=>`<option value="${t}" ${t===d.tipo?'selected':''}>${t}</option>`).join('')}
           </select>
           <button class="btn-primary" style="font-size:11px;padding:4px 12px;background:#375623;border-color:#375623" onclick="upPendingConfirmar('${d.id}')">✓ Confirmar</button>
-        </div>
-        <div style="font-size:10px;color:#C55A11;margin-top:4px;cursor:pointer" onclick="upPendingToggle('${d.id}')">▼ Clique para identificar</div>`:''}
+        </div>`:''}
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0">
         ${isPending
