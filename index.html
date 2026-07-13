@@ -8515,8 +8515,7 @@ function buildPDF(title, subtitle, headers, rows, filename) {
     var cls = ri%2===0?'':'alt';
     return '<tr class="'+cls+'">' + row.map(function(cell){ return '<td>'+(cell==null?'':cell)+'</td>'; }).join('') + '</tr>';
   }).join('');
-  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
-'
+  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">'
     + '<title>'+title+'</title><style>'
     + '*{box-sizing:border-box;margin:0;padding:0;}'
     + 'body{font-family:Arial,sans-serif;font-size:10pt;color:#222;padding:1.5cm;}'
