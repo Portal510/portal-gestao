@@ -2346,43 +2346,8 @@ function saveData(){
 }
 
 // Restaura DATA do Firebase se localStorage vazio ou corrompido
-// Salva DATA completo em documento Firebase separado (gestao-data)
-// Não interfere com o sistema de sync (gestao_sync_cache / gestao doc)
-var _fbBackupThrottle = null;
-function _fbBackupData(){
-  // Throttle: no máximo 1 save a cada 10 segundos
-  if(_fbBackupThrottle) return;
-  _fbBackupThrottle = setTimeout(function(){
-    _fbBackupThrottle = null;
-    try{
-      if(!window._fbGestaoReady) return;
-      var API_KEY_B = 'AIzaSyB6gK-4UWyVnf0u7wQf-lge1LEXnoDmTz8';
-      var PROJECT_B = 'portal-ts';
-      var DOC_BACKUP = 'https://firestore.googleapis.com/v1/projects/'+PROJECT_B+'/databases/(default)/documents/portal-gestao/gestao-data';
-      var payload = {colaboradores: DATA, savedAt: new Date().toISOString(), count: DATA.length};
-      var json = JSON.stringify(payload);
-      // Reduzir se >800KB
-      if(json.length > 800000){
-        payload.colaboradores = DATA.map(function(c){
-          return {_id:c._id,nome:c.nome,cpf:c.cpf,cargo:c.cargo,uf:c.uf,
-                  status:c.status,docs:c.docs,certs:c.certs,
-                  email_inst:c.email_inst,celular:c.celular,salario:c.salario,
-                  data_admissao:c.data_admissao};
-        });
-        json = JSON.stringify(payload);
-      }
-      var body = JSON.stringify({fields:{
-        payload:{stringValue:json},
-        savedAt:{stringValue:new Date().toISOString()},
-        count:{integerValue:String(DATA.length)}
-      }});
-      fetch(DOC_BACKUP+'?key='+API_KEY_B,
-        {method:'PATCH',headers:{'Content-Type':'application/json'},body:body})
-        .then(function(r){ if(r.ok) console.log('[fbBackup] '+DATA.length+' colabs saved'); })
-        .catch(function(e){ console.warn('[fbBackup]',e.message||e); });
-    }catch(e){ console.warn('[fbBackupData]',e); }
-  }, 10000);
-}
+// Firebase backup desativado (rede bloqueia acesso)
+function _fbBackupData(){ /* no-op */ }
 
 async function _fbRestoreIfEmpty(){
   try{
@@ -2402,7 +2367,7 @@ async function _fbRestoreIfEmpty(){
     DATA = valid.map(function(c,i){return Object.assign({},c,{_id:i});});
     console.log('[fbRestore] Restaurado '+valid.length+' colaboradores do Firebase (gestao-data)');
     return true;
-  }catch(e){ console.warn('[fbRestoreIfEmpty]',e); return false; }
+  }catch(e){ return false; } // silenced — Firebase may be unavailable
 }
 
 // ── Load DATA from localStorage ──────────────────────
