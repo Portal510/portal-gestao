@@ -10013,8 +10013,10 @@ function _portalInit(){
       }
     });
     if(espFixed) _safeSetItem(DATA_KEY, JSON.stringify(DATA));
-    // Apply celular/salario from latest spreadsheet to DATA
+    // Apply celular/salario from latest spreadsheet to DATA (v2026-07)
     let xlsxFixed=false;
+    const _xlsxVer='cel-2026-07';
+    const _needsXlsxUpdate = localStorage.getItem('ts_xlsx_ver')!==_xlsxVer;
     const xlsxMap={};
     _XLSX_DATA.forEach(x=>{ if(x.cpf) xlsxMap[x.cpf.replace(/\D/g,'')]=x; });
     DATA.forEach(c=>{
@@ -10022,8 +10024,8 @@ function _portalInit(){
       const cpfN=c.cpf.replace(/\D/g,'');
       const x=xlsxMap[cpfN];
       if(x){
-        if(x.celular&&x.celular!=='Pendente'&&(!c.celular||c.celular==='Pendente')){ c.celular=x.celular; xlsxFixed=true; }
-        if(x.salario&&(!c.salario||c.salario==='Pendente')){ c.salario=x.salario; xlsxFixed=true; }
+        if(x.celular&&x.celular!=='Pendente'){ c.celular=x.celular; xlsxFixed=true; }
+        if(x.salario&&x.salario!=='Pendente'){ c.salario=x.salario; xlsxFixed=true; }
       }
     });
     if(xlsxFixed) _safeSetItem(DATA_KEY, JSON.stringify(DATA));
