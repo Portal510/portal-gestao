@@ -6542,14 +6542,22 @@ function upPendingSetColab(id, colabId){
   const c = DATA.find(x=>x._id===parseInt(colabId));
   if(!c) return;
   d.colabId = c._id; d.colabNome = c.nome; d.colabUf = c.uf;
-  saveUploadDocs(); upFilterDocs();
+  saveUploadDocs();
+  // Update the name badge in the card without full re-render
+  document.querySelectorAll('[data-pid="'+id+'"]').forEach(el=>{
+    const nameSpan = el.closest('.up-card')?.querySelector('.up-card-nome + div span:nth-child(2)');
+    // Just save — no full re-render to avoid resetting other selects
+  });
+  // Don't call upFilterDocs — would reset tipo select
+  console.log('[setColab] id='+id+' colabId='+c._id+' nome='+c.nome); return; upFilterDocs();
 }
 
 function upPendingSetTipo(id, tipo){
   const d = uploadedDocs.find(x=>x.id===id);
   if(!d) return;
   d.tipo = tipo; d.cat = TIPO_CAT[tipo]||'Outros';
-  saveUploadDocs(); upFilterDocs();
+  saveUploadDocs();
+  console.log('[setTipo] id='+id+' tipo='+tipo); return; upFilterDocs();
 }
 
 function upPendingConfirmar(id){
