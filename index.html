@@ -6471,7 +6471,13 @@ function upFilterDocs(){
       <div class="up-card-info">
         <div class="up-card-nome" title="${d.fileName}">${d.fileName}${isDup?' <span style="background:#FFE0E0;color:#a32d2d;font-size:10px;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:6px">⚠️ DUPLICADO</span>':''}</div>
         <div class="up-card-meta" style="margin-top:4px">
-          <span class="up-badge up-badge-tipo" style="${isPending?'background:#FFE0C0;color:#7A3000':''}">${d.tipo}</span>
+          ${(d.tipo==='—'||d.tipo==='— Não identificado —')
+            ? `<select class="up-select" style="font-size:11px;padding:3px 7px;max-width:210px;background:#FFF8F0;border-color:#F5C518;color:#7A3000" data-pid="${d.id}" onchange="upPendingSetTipo(this.dataset.pid,this.value)">
+                <option value="">— Selecionar tipo —</option>
+                ${Object.keys(TIPO_TO_FIELD).map(t=>`<option value="${t}">${t}</option>`).join('')}
+               </select>
+               <button class="btn-primary" style="font-size:11px;padding:3px 10px;background:#375623" data-pid="${d.id}" onclick="upPendingConfirmar(this.dataset.pid)">✓</button>`
+            : `<span class="up-badge up-badge-tipo" style="${isPending?'background:#FFE0C0;color:#7A3000':''}">${d.tipo}</span>`}
           <span style="margin-left:8px;color:${isPending?'#C55A11':'#58a6ff'};font-weight:600">${d.colabNome}</span>
           <span style="margin-left:6px;color:#6c757d">· ${d.colabUf} · ${sizeStr} · ${d.dataUpload}</span>
         </div>
@@ -6746,7 +6752,7 @@ async function upHandleFiles(files){
     if(!resolvedTipo){ const g=upGuessType(file.name); if(g) resolvedTipo=g; }
 
     if(!resolvedColab || !resolvedTipo){
-      // Not identified — add as pending card immediately
+      // Not identified — add as pending card immediately (includes colab known but no tipo)
       const id = Date.now().toString()+Math.random().toString(36).slice(2,6);
       const dataUrl = await readFile(file);
       const entry = {
