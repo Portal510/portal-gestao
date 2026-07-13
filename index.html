@@ -6471,17 +6471,11 @@ function upFilterDocs(){
       <div class="up-card-info">
         <div class="up-card-nome" title="${d.fileName}">${d.fileName}${isDup?' <span style="background:#FFE0E0;color:#a32d2d;font-size:10px;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:6px">⚠️ DUPLICADO</span>':''}</div>
         <div class="up-card-meta" style="margin-top:4px">
-          ${(d.tipo==='—'||d.tipo==='— Não identificado —')
-            ? `<select class="up-select" style="font-size:11px;padding:3px 7px;max-width:210px;background:#FFF8F0;border-color:#F5C518;color:#7A3000" data-pid="${d.id}" onchange="upPendingSetTipo(this.dataset.pid,this.value)">
-                <option value="">— Selecionar tipo —</option>
-                ${Object.keys(TIPO_TO_FIELD).map(t=>`<option value="${t}">${t}</option>`).join('')}
-               </select>
-               <button class="btn-primary" style="font-size:11px;padding:3px 10px;background:#375623" data-pid="${d.id}" onclick="upPendingConfirmar(this.dataset.pid)">✓</button>`
-            : `<span class="up-badge up-badge-tipo" style="${isPending?'background:#FFE0C0;color:#7A3000':''}">${d.tipo}</span>`}
+          <span class="up-badge up-badge-tipo" style="${isPending?'background:#FFE0C0;color:#7A3000':isDup?'background:#FFE0E0;color:#a32d2d':''}">${d.tipo==='— Não identificado —'?'⚠️ Não identificado':d.tipo}</span>
           <span style="margin-left:8px;color:${isPending?'#C55A11':'#58a6ff'};font-weight:600">${d.colabNome}</span>
           <span style="margin-left:6px;color:#6c757d">· ${d.colabUf} · ${sizeStr} · ${d.dataUpload}</span>
         </div>
-        ${isPending?`<div id="pend-form-${d.id}" style="display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;align-items:center">
+        ${(isPending||d.tipo==='—'||d.tipo==='— Não identificado —'||!d.colabId)?`<div id="pend-form-${d.id}" style="display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;align-items:center">
           <select class="up-select" style="font-size:11px;padding:3px 7px;max-width:230px" data-pid="${d.id}" onchange="upPendingSetColab(this.dataset.pid,this.value)">
             <option value="">${d.colabId!=null?'Alterar colaborador…':'— Selecionar colaborador —'}</option>
             ${[...DATA].sort((a,b)=>a.nome.localeCompare(b.nome)).map(c=>`<option value="${c._id}" ${c._id===d.colabId?'selected':''}>${c.nome} (${c.uf})</option>`).join('')}
@@ -6568,29 +6562,32 @@ function upPendingSetTipo(id, tipo){
 
 function upPendingConfirmar(id){
   const d = uploadedDocs.find(x=>x.id===id);
-  if(!d){ toast('Documento não encontrado — tente novamente.','warn'); return; }
-  if(!d.colabId){
-    toast('⚠️ Selecione o colaborador antes de confirmar.','warn'); return;
+  if(!d){ toast('Documento não encontrado.','warn'); return; }
+
+  // Read current select values from DOM (in case user changed but didn't trigger onchange)
+  const colabSel = document.querySelector('[data-pid="'+id+'"][onchange*="SetColab"]');
+  const tipoSel  = document.querySelector('[data-pid="'+id+'"][onchange*="SetTipo"]');
+  if(colabSel && colabSel.value && !d.colabId){
+    const c = DATA.find(x=>x._id===parseInt(colabSel.value));
+    if(c){ d.colabId=c._id; d.colabNome=c.nome; d.colabUf=c.uf; }
   }
-  if(!d.tipo || d.tipo==='— Não identificado —'){
-    toast('⚠️ Selecione o tipo do documento antes de confirmar.','warn'); return;
+  if(tipoSel && tipoSel.value && (d.tipo==='— Não identificado —'||d.tipo==='—')){
+    d.tipo=tipoSel.value; d.cat=TIPO_CAT[tipoSel.value]||'Outros';
   }
-  const nome = d.colabNome;
-  const tipo = d.tipo;
+
+  if(!d.colabId){ toast('⚠️ Selecione o colaborador.','warn'); if(colabSel) colabSel.focus(); return; }
+  if(!d.tipo || d.tipo==='— Não identificado —'||d.tipo==='—'){ toast('⚠️ Selecione o tipo do documento.','warn'); if(tipoSel) tipoSel.focus(); return; }
+
   d.pending = false;
-  upAtualizarStatus(d.colabId, tipo, d.effFileName||d.fileName);
+  if(!d.docs) d.docs={};
+  upAtualizarStatus(d.colabId, d.tipo, d.effFileName||d.fileName);
   saveData();
   saveUploadDocs();
-  // Atualizar todas as abas afetadas
-  try{renderGeral();}catch(e){}
-  try{renderAdm();}catch(e){}
-  try{renderTermos();}catch(e){}
-  try{renderEquip();}catch(e){}
-  try{renderCert();}catch(e){}
-  try{renderDeclaracoes();}catch(e){}
-  try{renderPendencias();}catch(e){}
+  const nome=d.colabNome, tipo=d.tipo;
+  ['renderAdm','renderTermos','renderEquip','renderCert','renderDeclaracoes','renderPendencias','renderGeral']
+    .forEach(fn=>{ try{window[fn]&&window[fn]();}catch(e){} });
   upFilterDocs();
-  toast('✅ '+nome+' · '+tipo+' — marcado como Entregue!','ok');
+  toast('✅ '+nome+' · '+tipo+' — Entregue!','ok');
 }
 
 function upVisualizar(id){
