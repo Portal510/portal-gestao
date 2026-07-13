@@ -2905,9 +2905,9 @@ function renderDocs(){
     <td class="left" style="cursor:pointer;color:#1F4E79;font-weight:600" onclick="openDetail(${c._id})">${c.nome}${inativoBadge(c)}</td>
     <td style="font-size:11px">${c.cpf}</td>
     <td class="left"><span class="badge-cargo">${c.cargo}</span></td>
-    <td>${editBadge(c.docs['Termo TCU'],c._id,'docs.Termo TCU')}</td>
-    <td>${editBadge(c.docs['Cadastro TCU'],c._id,'docs.Cadastro TCU')}</td>
-    <td>${editBadge(c.docs['Decl. Não Parentesco'],c._id,'docs.Decl. Não Parentesco')}</td>
+    <td>${editBadge(c.docs?.['Termo TCU']||'Pendente',c._id,'docs.Termo TCU')}</td>
+    <td>${editBadge(c.docs?.['Cadastro TCU']||'Pendente',c._id,'docs.Cadastro TCU')}</td>
+    <td>${editBadge(c.docs?.['Decl. Não Parentesco']||'Pendente',c._id,'docs.Decl. Não Parentesco')}</td>
   </tr>`).join(''):`<tr><td colspan="7" class="empty">Nenhum resultado</td></tr>`;
   updateStatsDocs(rows);
 }
@@ -2920,16 +2920,16 @@ function renderAdm(){
     <td class="left" style="color:#999;font-size:11px">${i+1}</td>
     <td class="left" style="cursor:pointer;color:#1F4E79;font-weight:600" onclick="openDetail(${c._id})">${c.nome}${inativoBadge(c)}</td>
     <td class="left"><span class="badge-cargo">${c.cargo}</span></td>
-    <td>${editBadge(c.docs['Diploma/Superior'],c._id,'docs.Diploma/Superior')}</td>
+    <td>${editBadge(c.docs?.['Diploma/Superior']||'Pendente',c._id,'docs.Diploma/Superior')}</td>
     <td>${(c.cargo.includes('(TEL)') || c.cargo.includes('Cabeamento') || c.cargo.includes('Administração de parque'))
       ? editBadge('N/A',c._id,'docs.Especialização TI')
-      : editBadge(c.docs['Especialização TI'],c._id,'docs.Especialização TI')}</td>
-    <td>${editBadge(c.docs['Exp. Suporte'],c._id,'docs.Exp. Suporte')}</td>
-    <td>${editBadge(c.docs['Exp. Microcomputadores'],c._id,'docs.Exp. Microcomputadores')}</td>
+      : editBadge(c.docs?.['Especialização TI']||'Pendente',c._id,'docs.Especialização TI')}</td>
+    <td>${editBadge(c.docs?.['Exp. Suporte']||'Pendente',c._id,'docs.Exp. Suporte')}</td>
+    <td>${editBadge(c.docs?.['Exp. Microcomputadores']||'Pendente',c._id,'docs.Exp. Microcomputadores')}</td>
     <td class="left" style="font-size:11px;color:#666;max-width:200px">${c.exp_suporte}${c.exp_micro!=='N/A'?' | '+c.exp_micro:''}</td>
-    <td>${editBadge(c.docs['ASO Admissional'],c._id,'docs.ASO Admissional')}</td>
-    <td>${editBadge(c.docs['CTPS'],c._id,'docs.CTPS')}</td>
-    <td>${editBadge(c.docs['Contrato de Trabalho'],c._id,'docs.Contrato de Trabalho')}</td>
+    <td>${editBadge(c.docs?.['ASO Admissional']||'Pendente',c._id,'docs.ASO Admissional')}</td>
+    <td>${editBadge(c.docs?.['CTPS']||'Pendente',c._id,'docs.CTPS')}</td>
+    <td>${editBadge(c.docs?.['Contrato de Trabalho']||'Pendente',c._id,'docs.Contrato de Trabalho')}</td>
   </tr>`).join(''):`<tr><td colspan="11" class="empty">Nenhum resultado</td></tr>`;
   updateStatsAdm(rows);
 }
@@ -2942,11 +2942,11 @@ function renderTermos(){
     <td class="left" style="color:#999;font-size:11px">${i+1}</td>
     <td class="left" style="cursor:pointer;color:#1F4E79;font-weight:600" onclick="openDetail(${c._id})">${c.nome}${inativoBadge(c)}</td>
     <td class="left"><span class="badge-cargo">${c.cargo}</span></td>
-    <td>${editBadge(c.docs['Termo TCU'],c._id,'docs.Termo TCU')}</td>
-    <td>${editBadge(c.docs['Cadastro TCU'],c._id,'docs.Cadastro TCU')}</td>
-    <td>${editBadge(c.docs['Decl. Não Parentesco'],c._id,'docs.Decl. Não Parentesco')}</td>
-    <td>${editBadge(c.docs['Termo Vale Transporte'],c._id,'docs.Termo Vale Transporte')}</td>
-    <td>${editBadge(c.docs['Termo de Conduta T&S'],c._id,'docs.Termo de Conduta T&S')}</td>
+    <td>${editBadge(c.docs?.['Termo TCU']||'Pendente',c._id,'docs.Termo TCU')}</td>
+    <td>${editBadge(c.docs?.['Cadastro TCU']||'Pendente',c._id,'docs.Cadastro TCU')}</td>
+    <td>${editBadge(c.docs?.['Decl. Não Parentesco']||'Pendente',c._id,'docs.Decl. Não Parentesco')}</td>
+    <td>${editBadge(c.docs?.['Termo Vale Transporte']||'Pendente',c._id,'docs.Termo Vale Transporte')}</td>
+    <td>${editBadge(c.docs?.['Termo de Conduta T&S']||'Pendente',c._id,'docs.Termo de Conduta T&S')}</td>
   </tr>`).join(''):`<tr><td colspan="8" class="empty">Nenhum resultado</td></tr>`;
   updateStatsTermos(rows);
 }
@@ -2976,7 +2976,7 @@ function certGetStatus(c, certName){
     if(otherSatisfied) return 'N/A';
   }
   // Required and not satisfied
-  return 'Pendente';
+  return 'Pendente'; // required and not satisfied
 }
 
 // Initialize certs object for a colaborador based on their cargo
