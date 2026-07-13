@@ -6417,8 +6417,9 @@ function upFilterDocs(){
   if(busca)   docs = docs.filter(d=>d.colabNome.toLowerCase().includes(busca)||d.fileName.toLowerCase().includes(busca)||d.tipo.toLowerCase().includes(busca));
   if(filTipo) docs = docs.filter(d=>d.cat===filTipo);
   if(filColab)docs = docs.filter(d=>d.colabId===parseInt(filColab));
-  if(filStat==='Entregue') docs = docs.filter(d=>true); // all uploaded = entregue
-  if(filStat==='Pendente') docs = []; // uploaded docs are always entregue
+  if(filStat==='Entregue') docs = docs.filter(d => !d.pending);
+  else if(filStat==='Pendente') docs = docs.filter(d => d.pending===true);
+  // Default (no filter): show ALL including pending
 
   // Stats
   const totalUpl = uploadedDocs.length;
@@ -6527,6 +6528,7 @@ function upPendingSetColab(id, colabId){
   const c = DATA.find(x=>x._id===parseInt(colabId));
   if(!c) return;
   d.colabId = c._id; d.colabNome = c.nome; d.colabUf = c.uf;
+  d.colab = c; // keep reference
   saveUploadDocs(); upFilterDocs();
 }
 
@@ -6539,27 +6541,22 @@ function upPendingSetTipo(id, tipo){
 
 function upPendingConfirmar(id){
   const d = uploadedDocs.find(x=>x.id===id);
-  if(!d) return;
-  if(!d.colabId && d.colabNome==='— Não identificado —'){
-    alert('Selecione o colaborador antes de confirmar.'); return;
+  if(!d){ toast('Documento não encontrado.','warn'); return; }
+  if(!d.colabId){
+    toast('⚠️ Selecione o colaborador antes de confirmar.','warn'); return;
   }
   if(!d.tipo || d.tipo==='— Não identificado —'){
-    alert('Selecione o tipo do documento antes de confirmar.'); return;
+    toast('⚠️ Selecione o tipo do documento antes de confirmar.','warn'); return;
   }
-  // Mark as confirmed — apply status
   d.pending = false;
-  upAtualizarStatus(d.colabId, d.tipo, d.effFileName||d.fileName);
+  const effName = d.effFileName || d.fileName;
+  upAtualizarStatus(d.colabId, d.tipo, effName);
   saveData();
   saveUploadDocs();
-  // Re-render all affected tabs
-  try{ renderAdm(); }catch(e){}
-  try{ renderTermos(); }catch(e){}
-  try{ renderEquip(); }catch(e){}
-  try{ renderCert(); }catch(e){}
-  try{ renderDeclaracoes(); }catch(e){}
-  try{ renderPendencias(); }catch(e){}
   upFilterDocs();
-  toast('✅ '+d.colabNome+' · '+d.tipo+' — marcado como Entregue!','ok');
+  ['renderAdm','renderTermos','renderEquip','renderCert','renderDeclaracoes','renderPendencias']
+    .forEach(fn=>{ try{ window[fn]&&window[fn](); }catch(e){} });
+  toast('✅ '+d.colabNome+' · '+d.tipo+' — Entregue!','ok');
 }
 
 function upVisualizar(id){
@@ -6704,16 +6701,17 @@ function upBatchImport(files){
       pending:   true,
     };
     uploadedDocs.unshift(entry);
-    // Read file async for preview/download
-    const fr = new FileReader();
-    fr.onload = e => {
-      const i = uploadedDocs.findIndex(d=>d.id===id);
-      if(i>=0) uploadedDocs[i].dataUrl = e.target.result;
-      saveUploadDocs();
-    };
-    fr.readAsDataURL(file);
     saveUploadDocs();
     upFilterDocs();
+    // Read file async for preview/download (non-blocking)
+    try{
+      const fr = new FileReader();
+      fr.onload = e => {
+        const i = uploadedDocs.findIndex(d=>d.id===id);
+        if(i>=0){ uploadedDocs[i].dataUrl = e.target.result; saveUploadDocs(); upFilterDocs(); }
+      };
+      fr.readAsDataURL(file);
+    }catch(e){}
   }
 
 
