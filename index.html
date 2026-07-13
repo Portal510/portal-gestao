@@ -7699,6 +7699,8 @@ function gestaoToPayload(){
 // ── Apply our payload → DATA ──────────────
 function applyGestaoPayload(payload){
   if(!payload?.colaboradores) return 0;
+  // Nunca aplicar payload com menos colabs que DATA local — proteção contra corrupção
+  if(payload.colaboradores.length < DATA.length) return 0;
   // Skip if payload is stale (older than local DATA save)
   const payloadTs = payload.ts||0;
   const localTs   = parseInt(localStorage.getItem('ts_data_saved_at')||'0');
@@ -7772,8 +7774,14 @@ function syncFromLocalStorage(){
     if(raw){ const d=JSON.parse(raw); if(d?.COLL) n+=applyTsData(d); }
   }catch(e){}
   try{
+    // Só aplicar gestao_sync_cache se tiver mais colabs que DATA atual
     const raw=localStorage.getItem('gestao_sync_cache');
-    if(raw){ const d=JSON.parse(raw); n+=applyGestaoPayload(d); }
+    if(raw){
+      const d=JSON.parse(raw);
+      if(d && d.colaboradores && d.colaboradores.length >= DATA.length){
+        n+=applyGestaoPayload(d);
+      }
+    }
   }catch(e){}
   return n;
 }
@@ -9648,17 +9656,11 @@ function _portalInit(){
     const datEl=document.getElementById('uni-data');
     if(datEl&&!datEl.value) datEl.value=new Date().toISOString().slice(0,10);
   }catch(e){}
-  // ── Restaurar do Firebase se localStorage vazio ──────────────────────
-  const _localEmpty = !localStorage.getItem(DATA_KEY) || DATA.length < 5;
-  if(_localEmpty && typeof _fbRestoreIfEmpty === 'function'){
-    _fbRestoreIfEmpty().then(function(restored){
-      if(restored){
-        try{ renderGeral(); }catch(e){}
-        try{ renderPendencias(); }catch(e){}
-        try{ renderCert(); }catch(e){}
-        toast('☁️ Dados restaurados automaticamente do Firebase ('+DATA.length+' colaboradores)','ok');
-      }
-    });
+  // ── Se DATA insuficiente, usar COLAB base ─────────────────────────────
+  if(DATA.length < 10){
+    DATA = COLAB.map((c,i)=>({...c, _id:i}));
+    saveData();
+    console.log('[init] DATA reloaded from COLAB base: '+DATA.length);
   }
   try{ renderGeral(); }catch(e){ console.warn('renderGeral:',e); }
   try{ _addSyncBtn(); }catch(e){}
