@@ -33,35 +33,19 @@
     var ver=Date.now().toString();
     window._fbGestaoOwnVer=ver;
 
-    // Build slim payload — only changed fields to stay under Firestore 1MB limit
-    var slimPayload = {
+    // Salvar DATA completo (docs, certs, status, etc)
+    var fullPayload = {
       source:'portal-gestao', ts:payload.ts||Date.now(),
-      colaboradores: (payload.colaboradores||[]).map(function(c){
-        var slim={cpf:c.cpf,nome:c.nome,status:c.status};
-        if(c.email_inst&&c.email_inst!=='Pendente') slim.email_inst=c.email_inst;
-        if(c.email&&c.email!=='Pendente') slim.email=c.email;
-        if(c.celular&&c.celular!=='Pendente') slim.celular=c.celular;
-        if(c.cargo) slim.cargo=c.cargo;
-        if(c.uf) slim.uf=c.uf;
-        if(c.data_admissao) slim.data_admissao=c.data_admissao;
-        if(c.data_demissao) slim.data_demissao=c.data_demissao;
-        if(c.rg) slim.rg=c.rg;
-        if(c.genero) slim.genero=c.genero;
-        if(c.tipo_vinculo&&c.tipo_vinculo!=='Efetivo') slim.tipo_vinculo=c.tipo_vinculo;
-        var docsChanged={}, certsChanged={};
-        Object.entries(c.docs||{}).forEach(function(e){ if(e[1]&&e[1]!=='Pendente') docsChanged[e[0]]=e[1]; });
-        Object.entries(c.certs||{}).forEach(function(e){ if(e[1]&&e[1]!=='Pendente'&&e[1]!=='N/A') certsChanged[e[0]]=e[1]; });
-        if(Object.keys(docsChanged).length) slim.docs=docsChanged;
-        if(Object.keys(certsChanged).length) slim.certs=certsChanged;
-        if(c.certs_agenda&&Object.keys(c.certs_agenda).length) slim.certs_agenda=c.certs_agenda;
-        return slim;
-      })
+      colaboradores: (payload.colaboradores||[])
     };
-
-    var json=JSON.stringify(slimPayload);
+    var json=JSON.stringify(fullPayload);
+    // Se muito grande, remover apenas dataUrl de uploads (não deve ter, mas por segurança)
     if(json.length > 900000){
-      slimPayload.colaboradores.forEach(function(c){ delete c.docs; delete c.certs; delete c.certs_agenda; });
-      json=JSON.stringify(slimPayload);
+      var slimColabs = fullPayload.colaboradores.map(function(c){
+        var s=Object.assign({},c);
+        delete s.dataUrl; return s;
+      });
+      json=JSON.stringify({source:'portal-gestao',ts:fullPayload.ts,colaboradores:slimColabs});
     }
 
     var body=JSON.stringify({fields:{
@@ -2345,13 +2329,33 @@ const DATA_KEY = 'ts_portal_data_v2';
 // ── Save DATA to localStorage (formato completo — garante persistência) ──
 function saveData(){
   try{
-    // Remove entradas nulas ou sem nome
     DATA = DATA.filter(c => c && c.nome && typeof c.nome === 'string');
     DATA.sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt-BR',{sensitivity:'base'}));
     DATA.forEach((c,i)=>{ c._id=i; });
     _safeSetItem(DATA_KEY, JSON.stringify(DATA));
     localStorage.setItem('ts_data_saved_at', Date.now().toString());
+    // Salvar no Firebase em background
+    try{
+      if(typeof window._fbGestaoSave==='function')
+        window._fbGestaoSave({colaboradores:DATA, ts:Date.now()});
+    }catch(fe){}
   }catch(e){ console.warn('[saveData]',e); }
+}
+
+// Restaura DATA do Firebase se localStorage vazio ou corrompido
+async function _fbRestoreIfEmpty(){
+  try{
+    if(typeof window._fbGestaoLoad!=='function') return false;
+    const payload = await window._fbGestaoLoad();
+    if(!payload||!Array.isArray(payload.colaboradores)||payload.colaboradores.length<5) return false;
+    const valid = payload.colaboradores.filter(c=>c&&c.nome&&typeof c.nome==='string');
+    if(valid.length<5) return false;
+    _safeSetItem(DATA_KEY, JSON.stringify(valid));
+    localStorage.setItem('ts_data_saved_at', Date.now().toString());
+    DATA = valid.map((c,i)=>({...c,_id:i}));
+    console.log('[fbRestore] Restaurado '+valid.length+' colaboradores do Firebase');
+    return true;
+  }catch(e){ console.warn('[fbRestoreIfEmpty]',e); return false; }
 }
 
 // ── Load DATA from localStorage ──────────────────────
@@ -9579,6 +9583,18 @@ function _portalInit(){
     const datEl=document.getElementById('uni-data');
     if(datEl&&!datEl.value) datEl.value=new Date().toISOString().slice(0,10);
   }catch(e){}
+  // ── Restaurar do Firebase se localStorage vazio ──────────────────────
+  const _localEmpty = !localStorage.getItem(DATA_KEY) || DATA.length < 5;
+  if(_localEmpty && typeof _fbRestoreIfEmpty === 'function'){
+    _fbRestoreIfEmpty().then(function(restored){
+      if(restored){
+        try{ renderGeral(); }catch(e){}
+        try{ renderPendencias(); }catch(e){}
+        try{ renderCert(); }catch(e){}
+        toast('☁️ Dados restaurados automaticamente do Firebase ('+DATA.length+' colaboradores)','ok');
+      }
+    });
+  }
   try{ renderGeral(); }catch(e){ console.warn('renderGeral:',e); }
   try{ _addSyncBtn(); }catch(e){}
   try{ uploadedDocs.forEach(doc=>upAtualizarStatus(doc.colabId,doc.tipo,doc.fileName)); }catch(e){}
