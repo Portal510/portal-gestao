@@ -10028,7 +10028,7 @@ function _portalInit(){
         }
       });
       _safeSetItem(DATA_KEY, JSON.stringify(DATA));
-    }catch(e){});
+    }catch(e){}
     if(xlsxFixed) _safeSetItem(DATA_KEY, JSON.stringify(DATA));
   }catch(e){}
   try{ renderGeral(); }catch(e){ console.warn('renderGeral:',e); }
