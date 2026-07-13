@@ -9977,6 +9977,17 @@ function _portalInit(){
     saveData();
     console.log('[init] DATA reloaded from COLAB base: '+DATA.length);
   }
+  // ── Especialização TI: N/A para quem não tem Entregue ──────────────────
+  try{
+    let espFixed=false;
+    DATA.forEach(c=>{
+      if(!c||!c.docs) return;
+      if(c.docs['Especialização TI']!=='Entregue'){
+        c.docs['Especialização TI']='N/A'; espFixed=true;
+      }
+    });
+    if(espFixed) _safeSetItem(DATA_KEY, JSON.stringify(DATA));
+  }catch(e){}
   try{ renderGeral(); }catch(e){ console.warn('renderGeral:',e); }
   try{ _addSyncBtn(); }catch(e){}
   try{ uploadedDocs.forEach(doc=>upAtualizarStatus(doc.colabId,doc.tipo,doc.fileName)); }catch(e){}
