@@ -2775,7 +2775,7 @@ function colabImportXlsx(input){
           // Build certs and docs from CARGO_CERTS_MAP if available
           const certs = {};
           const docs = {
-            'Diploma/Superior':'Pendente','Especialização TI':'Pendente','Exp. Suporte':'Pendente',
+            'Diploma/Superior':'Pendente','Especialização TI':'N/A','Exp. Suporte':'Pendente',
             'Exp. Microcomputadores':'Pendente','ASO Admissional':'Pendente','CTPS':'Pendente',
             'Contrato de Trabalho':'Pendente','Termo TCU':'Pendente','Cadastro TCU':'Pendente',
             'Decl. Não Parentesco':'Pendente','Termo Vale Transporte':'Pendente','Termo de Conduta T&S':'Pendente'
@@ -2788,10 +2788,20 @@ function colabImportXlsx(input){
           const email_inst = email_val.includes('@tcu.gov.br') ? email_val : 'Pendente';
           const email_pes  = !email_val.includes('@tcu.gov.br') && email_val!=='Pendente' ? email_val : 'Pendente';
 
+          const celularVal = (()=>{
+            const cel = get(COL.celular,'').replace(/\D/g,'');
+            return cel.length>=8 ? cel : 'Pendente';
+          })();
+          const statusVal = (()=>{
+            const s=get(COL.status_col,'').toLowerCase();
+            if(s==='inativo'||s==='desligado') return 'inativo';
+            if(get(COL.demissao)) return 'inativo';
+            return 'ativo';
+          })();
           DATA.push({
             _id: DATA.length,
             nome, cpf, uf, cargo,
-            celular: 'Pendente',
+            celular: celularVal,
             email: email_pes,
             email_inst,
             data_admissao: parseDate(get(COL.admissao)),
@@ -2803,7 +2813,7 @@ function colabImportXlsx(input){
             tipo_vinculo: 'Efetivo',
             coberto:'', inicio_cobertura:'', fim_cobertura:'',
             celular_tablet:'Pendente', cracha:'Pendente', maleta:'Pendente', uniforme:'Pendente',
-            status: get(COL.demissao) ? 'inativo' : 'ativo',
+            status: statusVal,
             certs, docs,
             exp_suporte:'', exp_micro:'',
             conta_rede: get(COL.conta_rede,''),
