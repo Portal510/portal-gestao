@@ -2,6 +2,15 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<script>
+// Desregistrar service workers antigos do GitHub Pages
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.getRegistrations().then(regs=>{
+    regs.forEach(r=>r.unregister());
+  });
+}
+</script>
+
 <!-- Portal Gestão T&S v4.2 build:2026-07-09T18:55:10Z -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portal T&S — Gestão de Terceirizados</title>
@@ -2397,6 +2406,25 @@ function loadData(){
 }
 
 let DATA = loadData();
+
+// ── Aplicar celular imediatamente após carregar DATA ──────────
+(function(){
+  try{
+    const _xm={};
+    _XLSX_DATA.forEach(x=>{ if(x.cpf) _xm[x.cpf.replace(/\D/g,'')]=x; });
+    let fixed=false;
+    DATA.forEach(c=>{
+      if(!c||!c.cpf) return;
+      const _x=_xm[c.cpf.replace(/\D/g,'')];
+      if(_x){
+        if(_x.celular){ c.celular=_x.celular; fixed=true; }
+        if(_x.salario){ c.salario=_x.salario; fixed=true; }
+      }
+    });
+    if(fixed) localStorage.setItem('ts_portal_data_v2', JSON.stringify(DATA));
+  }catch(e){}
+})();
+
 let calNotes = JSON.parse(localStorage.getItem('ts_cal_notes')||'{}');
 let calYear, calMonth;
 let editTarget = null;
@@ -4441,6 +4469,15 @@ function imprimirTermoUni(){
   const content=document.getElementById('termo-uni-conteudo').innerHTML;
   const win=window.open('','_blank','width=800,height=700');
   win.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+<script>
+// Desregistrar service workers antigos do GitHub Pages
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.getRegistrations().then(regs=>{
+    regs.forEach(r=>r.unregister());
+  });
+}
+</script>
+
     <title>Termo de Entrega de Uniforme</title>
     <style>
       body{font-family:'Times New Roman',serif;font-size:13px;margin:30px;color:#1a1a2e;line-height:1.7}
@@ -7941,6 +7978,15 @@ function openPDFWindow(title, headers, rows){
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<script>
+// Desregistrar service workers antigos do GitHub Pages
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.getRegistrations().then(regs=>{
+    regs.forEach(r=>r.unregister());
+  });
+}
+</script>
+
 <title>${title}</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -8495,7 +8541,16 @@ function buildPDF(title, subtitle, headers, rows, filename) {
     var cls = ri%2===0?'':'alt';
     return '<tr class="'+cls+'">' + row.map(function(cell){ return '<td>'+(cell==null?'':cell)+'</td>'; }).join('') + '</tr>';
   }).join('');
-  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">'
+  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+<script>
+// Desregistrar service workers antigos do GitHub Pages
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.getRegistrations().then(regs=>{
+    regs.forEach(r=>r.unregister());
+  });
+}
+</script>
+'
     + '<title>'+title+'</title><style>'
     + '*{box-sizing:border-box;margin:0;padding:0;}'
     + 'body{font-family:Arial,sans-serif;font-size:10pt;color:#222;padding:1.5cm;}'
