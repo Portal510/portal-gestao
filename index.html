@@ -1142,7 +1142,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </div>
 
     <!-- Resultado da importação em lote / ZIP -->
-    <div id="up-batch-result" style="display:none;margin-top:12px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:14px;max-height:280px;overflow-y:auto"></div>
+    <div id="up-batch-result" style="display:none;margin-top:12px;background:#fff;border:1.5px solid #dee2e6;border-radius:10px;padding:16px;max-height:500px;overflow-y:auto;box-shadow:0 2px 8px rgba(0,0,0,.06)"></div>
   </div>
 
   <!-- Filters + Action buttons -->
@@ -6803,45 +6803,78 @@ function upBatchImport(files){
 }
 
 function showBatchResult(rows, matched, skipped, noColab, noTipo, total){
-  // Add unidentified files to uploadedDocs as pending
-  const noidRows = rows.filter(r=>['manual','no-colab','no-tipo'].includes(r.status));
-  if(noidRows.length) showQuickUploadResult(noidRows);
+  // Pending docs already added via addPendingDoc — update the list
+  upFilterDocs();
+
   const div = document.getElementById('up-batch-result');
-  const summary = `<div style="display:flex;gap:14px;margin-bottom:12px;flex-wrap:wrap">
-    <span style="color:#3fb950;font-weight:600">✅ ${matched} importados</span>
-    <span style="color:#d29922;font-weight:600">⚠️ ${noColab+noTipo} não identificados</span>
-    <span style="color:#6c757d">⏩ ${skipped} duplicados ignorados</span>
-    <span style="color:#6c757d">📁 ${total} total</span>
+  if(!div) return;
+  div.style.display = 'block';
+
+  const noid = noColab + noTipo;
+  const erros = rows.filter(r=>['manual','no-colab','no-tipo'].includes(r.status));
+  const ok    = rows.filter(r=>r.status==='ok');
+  const dups  = rows.filter(r=>r.status==='dup');
+
+  // Summary bar
+  let html2 = `<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #dee2e6">
+    <span style="font-weight:700;font-size:13px;color:#1F4E79">📊 Resultado do upload</span>
+    <span style="background:#D4EDDA;color:#155724;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600">✅ ${matched} importados</span>
+    ${noid>0?`<span style="background:#FCEBEB;color:#A32D2D;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600">⚠️ ${noid} não identificados</span>`:''}
+    ${dups.length>0?`<span style="background:#f0f2f5;color:#6c757d;padding:3px 10px;border-radius:12px;font-size:12px">⏩ ${dups.length} duplicados</span>`:''}
+    <span style="color:#6c757d;font-size:11px">📁 ${total} arquivo(s) total</span>
+    <button onclick="document.getElementById('up-batch-result').style.display='none'" style="margin-left:auto;background:none;border:none;cursor:pointer;color:#6c757d;font-size:16px" title="Fechar">✕</button>
   </div>`;
 
-  const rowsHtml = rows.map(r=>{
-    const color = r.status==='ok'?'#3fb950':r.status==='dup'?'#8b949e':r.status==='manual'?'#f85149':'#d29922';
-    const icon  = r.status==='ok'?'✅':r.status==='dup'?'⏩':r.status==='manual'?'❌':'⚠️';
-    const selectHtml = (r.status==='no-colab'||r.status==='no-tipo'||r.status==='manual') ? `
-      <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">
-        ${!r.colab?`<select class="up-select" style="font-size:11px;padding:3px 6px;background:#fff;border:1px solid #ced4da;color:#1a1a2e" onchange="upBatchSetColab(this,'${r.file.name}')">
-          <option value="">Selecionar colaborador…</option>
-          ${[...DATA].sort((a,b)=>a.nome.localeCompare(b.nome)).map(c=>`<option value="${c._id}">${c.nome} (${c.uf})</option>`).join('')}
-        </select>`:''}
-        ${!r.tipo?`<select class="up-select" style="font-size:11px;padding:3px 6px;background:#fff;border:1px solid #ced4da;color:#1a1a2e" onchange="upBatchSetTipo(this,'${r.file.name}')">
-          <option value="">Selecionar tipo…</option>
-          ${Object.keys(TIPO_TO_FIELD).map(t=>`<option value="${t}">${t}</option>`).join('')}
-        </select>`:''}
-        ${(!r.colab||!r.tipo)?`<button class="up-btn" style="font-size:11px;padding:3px 10px" onclick="upBatchConfirmRow('${r.file.name}')">Confirmar</button>`:''}
-      </div>` : '';
-    return `<div style="padding:6px 0;border-bottom:1px solid #dee2e6;font-size:12px">
-      <span style="color:${color}">${icon}</span>
-      <span style="color:#1a1a2e;margin-left:6px;font-weight:500">${r.file.name}</span>
-      <span style="color:#6c757d;margin-left:8px">${r.msg}</span>
-      ${selectHtml}
-    </div>`;
-  }).join('');
+  // ── Não identificados (erro) ──
+  if(erros.length){
+    html2 += `<div style="margin-bottom:10px">
+      <div style="font-size:12px;font-weight:700;color:#A32D2D;margin-bottom:6px">⚠️ Arquivos não identificados — preencha abaixo e clique Confirmar</div>`;
+    erros.forEach(r=>{
+      const fname = r.file?.name || r.fileName || '—';
+      html2 += `<div style="background:#FFF8F0;border:1px solid #F5C518;border-radius:6px;padding:8px 12px;margin-bottom:6px;font-size:12px">
+        <div style="font-weight:600;color:#7A3000;margin-bottom:6px">📄 ${fname}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          ${!r.colab?`<select class="up-select" style="font-size:11px;padding:3px 7px;max-width:240px" onchange="upBatchSetColab(this,'${fname}')">
+            <option value="">— Selecionar colaborador —</option>
+            ${[...DATA].sort((a,b)=>a.nome.localeCompare(b.nome)).map(c=>`<option value="${c._id}">${c.nome} (${c.uf})</option>`).join('')}
+          </select>`:`<span style="background:#E1F5EE;color:#155724;padding:2px 8px;border-radius:8px;font-size:11px">👤 ${r.colab.nome}</span>`}
+          ${!r.tipo?`<select class="up-select" style="font-size:11px;padding:3px 7px;max-width:200px" onchange="upBatchSetTipo(this,'${fname}')">
+            <option value="">— Selecionar tipo —</option>
+            ${Object.keys(TIPO_TO_FIELD).map(t=>`<option value="${t}">${t}</option>`).join('')}
+          </select>`:`<span style="background:#E8F0FE;color:#1A3A6B;padding:2px 8px;border-radius:8px;font-size:11px">📋 ${r.tipo}</span>`}
+          <button class="btn-primary" style="font-size:11px;padding:4px 12px;background:#1F4E79" onclick="upBatchConfirmRow('${fname}')">✓ Confirmar</button>
+        </div>
+      </div>`;
+    });
+    html2 += `</div>`;
+  }
 
-  div.innerHTML = summary + rowsHtml;
-  // store pending rows for manual fix
+  // ── Importados com sucesso ──
+  if(ok.length){
+    html2 += `<details style="margin-bottom:6px"><summary style="cursor:pointer;font-size:12px;font-weight:600;color:#155724;list-style:none">
+      ✅ ${ok.length} arquivo(s) importados com sucesso <span style="font-weight:400;color:#6c757d">(clique para ver)</span>
+    </summary><div style="margin-top:6px">`;
+    ok.forEach(r=>{
+      html2 += `<div style="font-size:11px;padding:3px 8px;color:#155724">• ${r.file?.name||r.fileName} — ${r.colab?.nome||''} · ${r.tipo||''}</div>`;
+    });
+    html2 += `</div></details>`;
+  }
+
+  // ── Duplicados ──
+  if(dups.length){
+    html2 += `<details><summary style="cursor:pointer;font-size:12px;color:#6c757d;list-style:none">
+      ⏩ ${dups.length} duplicado(s) ignorado(s)
+    </summary><div style="margin-top:6px">`;
+    dups.forEach(r=>{
+      html2 += `<div style="font-size:11px;padding:3px 8px;color:#6c757d">• ${r.file?.name||r.fileName}</div>`;
+    });
+    html2 += `</div></details>`;
+  }
+
+  div.innerHTML = html2;
   window._batchPendingRows = rows;
   window._batchPendingFiles = {};
-  rows.forEach(r=>{ window._batchPendingFiles[r.file.name]=r.file; });
+  rows.forEach(r=>{ if(r.file) window._batchPendingFiles[r.file.name||r.fileName]=r.file; });
 }
 
 // Manual fix for unidentified files
