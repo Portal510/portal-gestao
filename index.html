@@ -6684,6 +6684,38 @@ function upBatchImport(files){
   let matched=0, skipped=0, noColab=0, noTipo=0;
   const rows=[];
   let pending = arr.length;
+  // ── Adiciona arquivo não identificado ao uploadedDocs imediatamente ──
+  function addPendingDoc(file, colab, tipo){
+    const fName = file.name;
+    if(uploadedDocs.find(d=>d.fileName===fName&&d.pending)) return; // avoid dup
+    const id  = Date.now().toString()+Math.random().toString(36).slice(2,6);
+    const ext = fName.split('.').pop().toLowerCase();
+    const entry = {
+      id,
+      colabId:   colab?._id ?? null,
+      colabNome: colab?.nome ?? '— Não identificado —',
+      colabUf:   colab?.uf  ?? '—',
+      tipo:      tipo ?? '— Não identificado —',
+      cat:       tipo ? (TIPO_CAT[tipo]||'Outros') : 'Pendente',
+      fileName:  fName,
+      ext, size: file.size,
+      dataUpload: new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+      dataUrl:   null,
+      pending:   true,
+    };
+    uploadedDocs.unshift(entry);
+    // Read file async for preview/download
+    const fr = new FileReader();
+    fr.onload = e => {
+      const i = uploadedDocs.findIndex(d=>d.id===id);
+      if(i>=0) uploadedDocs[i].dataUrl = e.target.result;
+      saveUploadDocs();
+    };
+    fr.readAsDataURL(file);
+    saveUploadDocs();
+    upFilterDocs();
+  }
+
 
   arr.forEach(file=>{
     const colab = upGuessColab(file.name);
@@ -6693,18 +6725,21 @@ function upBatchImport(files){
     if(!colab && !tipo){
       rows.push({file, _fileObj:file, fileName:file.name, colab:null, tipo:null, status:'manual', msg:'Não identificado — precisa de seleção manual'});
       noColab++; noTipo++;
+      addPendingDoc(file, null, null);
       pending--; if(pending===0) showBatchResult(rows, matched, skipped, noColab, noTipo, arr.length);
       return;
     }
     if(!colab){
       rows.push({file, colab:null, tipo, status:'no-colab', msg:`Tipo: ${tipo} — colaborador não identificado`});
       noColab++;
+      addPendingDoc(file, null, tipo);
       pending--; if(pending===0) showBatchResult(rows, matched, skipped, noColab, noTipo, arr.length);
       return;
     }
     if(!tipo){
       rows.push({file, _fileObj:file, fileName:file.name, colab, tipo:null, status:'no-tipo', msg:`Colaborador: ${colab.nome} — tipo não identificado`});
       noTipo++;
+      addPendingDoc(file, colab, null);
       pending--; if(pending===0) showBatchResult(rows, matched, skipped, noColab, noTipo, arr.length);
       return;
     }
