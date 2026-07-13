@@ -5988,7 +5988,7 @@ function upDrop(e){
 // Load JSZip on demand
 function loadJSZip(){ return Promise.resolve(window.JSZip); }
 
-function upImportZip(file){
+function upImportZip(file, doneCallback){
   if(!file) return;
   const resultDiv=document.getElementById('up-batch-result');
   resultDiv.style.display='block';
@@ -6181,7 +6181,19 @@ function showZipResult(rows, zipName){
 function upHandleFiles(files){
   const zipFiles  = Array.from(files).filter(f=>f.name.toLowerCase().endsWith('.zip'));
   const otherFiles= Array.from(files).filter(f=>!f.name.toLowerCase().endsWith('.zip'));
-  if(zipFiles.length) zipFiles.forEach(zf=>upImportZip(zf));
+  if(zipFiles.length){
+    // Processar ZIPs sequencialmente — não em paralelo
+    (async()=>{
+      for(let i=0;i<zipFiles.length;i++){
+        const zf=zipFiles[i];
+        const div=document.getElementById('up-batch-result');
+        if(div){ div.style.display='block'; div.innerHTML=`<div style="color:#6c757d;font-size:13px">📦 ZIP ${i+1}/${zipFiles.length}: processando <b>${zf.name}</b>…</div>`; }
+        await new Promise(resolve=>{
+          upImportZip(zf, resolve); // pass resolve callback
+        });
+      }
+    })();
+  }
   if(!otherFiles.length) return;
 
   const tipo    = document.getElementById('up-tipo').value    || null;
@@ -6462,15 +6474,15 @@ function upFilterDocs(){
           <span style="margin-left:6px;color:#6c757d">· ${d.colabUf} · ${sizeStr} · ${d.dataUpload}</span>
         </div>
         ${isPending?`<div id="pend-form-${d.id}" style="display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;align-items:center">
-          <select class="up-select" style="font-size:11px;padding:3px 7px;max-width:230px" onchange="upPendingSetColab('${d.id}',this.value)">
+          <select class="up-select" style="font-size:11px;padding:3px 7px;max-width:230px" data-pid="${d.id}" onchange="upPendingSetColab(this.dataset.pid,this.value)">
             <option value="">${d.colabId!=null?'Alterar colaborador…':'— Selecionar colaborador —'}</option>
             ${[...DATA].sort((a,b)=>a.nome.localeCompare(b.nome)).map(c=>`<option value="${c._id}" ${c._id===d.colabId?'selected':''}>${c.nome} (${c.uf})</option>`).join('')}
           </select>
-          <select class="up-select" style="font-size:11px;padding:3px 7px;max-width:200px" onchange="upPendingSetTipo('${d.id}',this.value)">
+          <select class="up-select" style="font-size:11px;padding:3px 7px;max-width:200px" data-pid="${d.id}" onchange="upPendingSetTipo(this.dataset.pid,this.value)">
             <option value="">${d.tipo!=='— Não identificado —'?'Alterar tipo…':'— Selecionar tipo —'}</option>
             ${Object.keys(TIPO_TO_FIELD).map(t=>`<option value="${t}" ${t===d.tipo?'selected':''}>${t}</option>`).join('')}
           </select>
-          <button class="btn-primary" style="font-size:11px;padding:4px 12px;background:#375623;border-color:#375623" onclick="upPendingConfirmar('${d.id}')">✓ Confirmar</button>
+          <button class="btn-primary" style="font-size:11px;padding:4px 12px;background:#375623;border-color:#375623" data-pid="${d.id}" onclick="upPendingConfirmar(this.dataset.pid)">✓ Confirmar</button>
         </div>`:''}
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0">
