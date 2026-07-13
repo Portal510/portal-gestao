@@ -39,11 +39,16 @@
       colaboradores: (payload.colaboradores||[])
     };
     var json=JSON.stringify(fullPayload);
-    // Se muito grande, remover apenas dataUrl de uploads (não deve ter, mas por segurança)
+    // Se muito grande (>900KB), salvar versão reduzida mas preservando docs e certs
     if(json.length > 900000){
       var slimColabs = fullPayload.colaboradores.map(function(c){
-        var s=Object.assign({},c);
-        delete s.dataUrl; return s;
+        return {
+          _id:c._id, nome:c.nome, cpf:c.cpf, cargo:c.cargo, uf:c.uf,
+          status:c.status, email:c.email, email_inst:c.email_inst,
+          celular:c.celular, salario:c.salario, conta_rede:c.conta_rede,
+          data_admissao:c.data_admissao, data_demissao:c.data_demissao,
+          docs:c.docs, certs:c.certs
+        };
       });
       json=JSON.stringify({source:'portal-gestao',ts:fullPayload.ts,colaboradores:slimColabs});
     }
@@ -2472,6 +2477,19 @@ function populateUfFilter(tab){
 function renderGeral(){
   populateCargoFilter('filter-cargo-geral');
   populateUfFilter('geral');
+  // Se filtros foram limpos após restauração, resetar selects
+  if(localStorage.getItem('ts_filters_cleared')){
+    localStorage.removeItem('ts_filters_cleared');
+    ['filter-uf-geral','filter-cargo-geral','filter-status-geral','filter-sexo-geral',
+     'filter-pcd-geral','search-geral'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.value='';
+    });
+  }
+  // Validar se valor do UF filter ainda existe nas opções
+  const ufSel=document.getElementById('filter-uf-geral');
+  if(ufSel&&ufSel.value&&![...ufSel.options].some(o=>o.value===ufSel.value)) ufSel.value='';
+  const cargoSel=document.getElementById('filter-cargo-geral');
+  if(cargoSel&&cargoSel.value&&![...cargoSel.options].some(o=>o.value===cargoSel.value)) cargoSel.value='';
   const rows=filterData(
     (document.getElementById('search-geral')?.value||''),
     (document.getElementById('filter-cargo-geral')?.value||''),
@@ -7125,6 +7143,12 @@ function importarBackup(input){
       if(backup.ts_ind_hist)       _safeSetItem('ts_ind_hist',       JSON.stringify(backup.ts_ind_hist));
       if(backup.upload_meta)       _safeSetItem('ts_upload_docs',    JSON.stringify(backup.upload_meta));
 
+      // Limpar todos os filtros antes de recarregar
+      ['filter-uf-geral','filter-cargo-geral','filter-status-geral','filter-sexo-geral',
+       'filter-pcd-geral','search-geral'].forEach(id=>{
+        const el=document.getElementById(id); if(el) el.value='';
+      });
+      localStorage.setItem('ts_filters_cleared','1');
       alert(`✅ Backup restaurado!\n${totalColab} colaboradores carregados.\n\nO portal vai recarregar.`);
       location.reload();
 
