@@ -2885,7 +2885,7 @@ function renderEquip(){
     <td><b>${c.uf}</b></td>
     <td class="left" style="font-size:11px"><span class="badge-cargo">${c.cargo}</span></td>
     <td>${cargoNa(c.cargo,'sem_celular')?badge('N/A'):editBadge(c.celular_tablet,c._id,'celular_tablet')}</td>
-    <td style="font-size:11px">${c.celular!=='Pendente'?c.celular:badge('Pendente')}</td>
+    <td style="font-size:11px">${c.celular&&c.celular!=='Pendente'&&c.celular!==''?`<span style="font-size:11px">${c.celular}</span>`:badge('Pendente')}</td>
     <td>${editBadge(c.docs?.['Termo TCU']||'Pendente',c._id,'docs.Termo TCU')}</td>
     <td>${editBadge(c.docs?.['Cadastro TCU']||'Pendente',c._id,'docs.Cadastro TCU')}</td>
     <td>${editBadge(c.cracha,c._id,'cracha')}</td>
