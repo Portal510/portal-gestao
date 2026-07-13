@@ -6381,8 +6381,9 @@ function upAtualizarStatus(colabId, tipo, fileName){
   if(!c) return;
   const field = TIPO_TO_FIELD[tipo];
   if(!field) return;
-  if(field.cat==='docs' && c.docs && c.docs[field.key]!==undefined && c.docs[field.key]!=='N/A'){
-    c.docs[field.key] = 'Entregue';
+  if(field.cat==='docs'){
+    if(!c.docs) c.docs={};
+    c.docs[field.key] = 'Entregue'; // sempre marcar — sem verificar undefined
   }
   if(field.cat==='certs' && c.certs!==undefined){
     if(!c.certs) c.certs={};
@@ -6540,7 +6541,6 @@ function upPendingSetColab(id, colabId){
   const c = DATA.find(x=>x._id===parseInt(colabId));
   if(!c) return;
   d.colabId = c._id; d.colabNome = c.nome; d.colabUf = c.uf;
-  d.colab = c; // keep reference
   saveUploadDocs(); upFilterDocs();
 }
 
@@ -6553,22 +6553,29 @@ function upPendingSetTipo(id, tipo){
 
 function upPendingConfirmar(id){
   const d = uploadedDocs.find(x=>x.id===id);
-  if(!d){ toast('Documento não encontrado.','warn'); return; }
+  if(!d){ toast('Documento não encontrado — tente novamente.','warn'); return; }
   if(!d.colabId){
     toast('⚠️ Selecione o colaborador antes de confirmar.','warn'); return;
   }
   if(!d.tipo || d.tipo==='— Não identificado —'){
     toast('⚠️ Selecione o tipo do documento antes de confirmar.','warn'); return;
   }
+  const nome = d.colabNome;
+  const tipo = d.tipo;
   d.pending = false;
-  const effName = d.effFileName || d.fileName;
-  upAtualizarStatus(d.colabId, d.tipo, effName);
+  upAtualizarStatus(d.colabId, tipo, d.effFileName||d.fileName);
   saveData();
   saveUploadDocs();
+  // Atualizar todas as abas afetadas
+  try{renderGeral();}catch(e){}
+  try{renderAdm();}catch(e){}
+  try{renderTermos();}catch(e){}
+  try{renderEquip();}catch(e){}
+  try{renderCert();}catch(e){}
+  try{renderDeclaracoes();}catch(e){}
+  try{renderPendencias();}catch(e){}
   upFilterDocs();
-  ['renderAdm','renderTermos','renderEquip','renderCert','renderDeclaracoes','renderPendencias']
-    .forEach(fn=>{ try{ window[fn]&&window[fn](); }catch(e){} });
-  toast('✅ '+d.colabNome+' · '+d.tipo+' — Entregue!','ok');
+  toast('✅ '+nome+' · '+tipo+' — marcado como Entregue!','ok');
 }
 
 function upVisualizar(id){
