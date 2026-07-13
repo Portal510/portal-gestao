@@ -2,7 +2,6 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(s){s.unregister();});});}</script>
 
 <!-- Portal Gestão T&S v4.2 build:2026-07-09T18:55:10Z -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -4462,7 +4461,6 @@ function imprimirTermoUni(){
   const content=document.getElementById('termo-uni-conteudo').innerHTML;
   const win=window.open('','_blank','width=800,height=700');
   win.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(s){s.unregister();});});}</script>
 
     <title>Termo de Entrega de Uniforme</title>
     <style>
@@ -7964,7 +7962,6 @@ function openPDFWindow(title, headers, rows){
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(s){s.unregister();});});}</script>
 
 <title>${title}</title>
 <style>
@@ -8521,7 +8518,6 @@ function buildPDF(title, subtitle, headers, rows, filename) {
     return '<tr class="'+cls+'">' + row.map(function(cell){ return '<td>'+(cell==null?'':cell)+'</td>'; }).join('') + '</tr>';
   }).join('');
   var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(s){s.unregister();});});}</script>
 '
     + '<title>'+title+'</title><style>'
     + '*{box-sizing:border-box;margin:0;padding:0;}'
