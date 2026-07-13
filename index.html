@@ -439,7 +439,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <div class="header-sub">Gestão de Terceirizados — TCU</div>
   </div>
   <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-    <button onclick="atualizarTodasAbas()" title="Atualizar e sincronizar todas as abas do portal"
+    <button onclick="atualizarComFeedback()" title="Atualizar e sincronizar todas as abas do portal"
       style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;padding:5px 12px;border-radius:14px;cursor:pointer;font-size:11px;font-weight:600;white-space:nowrap">
       🔄 Atualizar
     </button>
@@ -6298,9 +6298,11 @@ function showQuickUploadResult(rows){
   if(noid>0){
     // Save unidentified files as "pending" entries in uploadedDocs so they appear in the list
     rows.filter(r=>['manual','no-colab','no-tipo'].includes(r.status)).forEach(r=>{
-      if(!r._fileObj && !r.dataUrl) return; // nothing to store
+      const fileObj = r._fileObj || r.file; // r.file from manual rows
+      if(!fileObj && !r.dataUrl) return; // nothing to store
       const id = Date.now().toString()+Math.random().toString(36).slice(2,6);
-      const ext = r.fileName.split('.').pop().toLowerCase();
+      const fName = r.fileName || (fileObj && fileObj.name) || 'arquivo';
+      const ext = fName.split('.').pop().toLowerCase();
       const pendingEntry = {
         id,
         colabId:   r.colab?._id ?? null,
@@ -6308,7 +6310,7 @@ function showQuickUploadResult(rows){
         colabUf:   r.colab?.uf   ?? '—',
         tipo:      r.tipo  ?? '— Não identificado —',
         cat:       r.tipo ? (TIPO_CAT[r.tipo]||'Outros') : 'Pendente',
-        fileName:  r.fileName,
+        fileName:  fName,
         ext,
         size:      r._fileObj?.size ?? 0,
         dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
@@ -6317,7 +6319,7 @@ function showQuickUploadResult(rows){
         _fileObj:  undefined,
       };
       // If we have a File object, read it as dataUrl
-      if(r._fileObj && !r.dataUrl){
+      if(fileObj && !r.dataUrl){
         const fr = new FileReader();
         fr.onload = e2 => {
           pendingEntry.dataUrl = e2.target.result;
@@ -6327,7 +6329,7 @@ function showQuickUploadResult(rows){
           saveUploadDocs();
           upFilterDocs();
         };
-        fr.readAsDataURL(r._fileObj);
+        fr.readAsDataURL(fileObj);
       }
       // Avoid duplicates
       if(!uploadedDocs.find(d=>d.fileName===r.fileName&&d.pending)){
@@ -6445,7 +6447,7 @@ function upFilterDocs(){
           <span style="margin-left:8px;color:${isPending?'#C55A11':'#58a6ff'};font-weight:600">${d.colabNome}</span>
           <span style="margin-left:6px;color:#6c757d">· ${d.colabUf} · ${sizeStr} · ${d.dataUpload}</span>
         </div>
-        ${isPending?`<div style="display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;align-items:center">
+        ${isPending?`<div id="pend-form-${d.id}" style="display:none;gap:6px;margin-top:7px;flex-wrap:wrap;align-items:center">
           <select class="up-select" style="font-size:11px;padding:3px 7px;max-width:230px" onchange="upPendingSetColab('${d.id}',this.value)">
             <option value="">${d.colabId!=null?'Alterar colaborador…':'— Selecionar colaborador —'}</option>
             ${[...DATA].sort((a,b)=>a.nome.localeCompare(b.nome)).map(c=>`<option value="${c._id}" ${c._id===d.colabId?'selected':''}>${c.nome} (${c.uf})</option>`).join('')}
@@ -6455,7 +6457,8 @@ function upFilterDocs(){
             ${Object.keys(TIPO_TO_FIELD).map(t=>`<option value="${t}" ${t===d.tipo?'selected':''}>${t}</option>`).join('')}
           </select>
           <button class="btn-primary" style="font-size:11px;padding:4px 12px;background:#375623;border-color:#375623" onclick="upPendingConfirmar('${d.id}')">✓ Confirmar</button>
-        </div>`:''}
+        </div>
+        <div style="font-size:10px;color:#C55A11;margin-top:4px;cursor:pointer" onclick="upPendingToggle('${d.id}')">▼ Clique para identificar</div>`:''}
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0">
         ${isPending
@@ -6474,6 +6477,12 @@ function upFilterDocs(){
 }
 
 // ── Pending doc manual fill ───────────────
+function upPendingToggle(id){
+  const form = document.getElementById('pend-form-'+id);
+  if(!form) return;
+  form.style.display = form.style.display==='none' ? 'flex' : 'none';
+}
+
 function upPendingSetColab(id, colabId){
   const d = uploadedDocs.find(x=>x.id===id);
   if(!d) return;
@@ -6695,6 +6704,9 @@ function upBatchImport(files){
 }
 
 function showBatchResult(rows, matched, skipped, noColab, noTipo, total){
+  // Add unidentified files to uploadedDocs as pending
+  const noidRows = rows.filter(r=>['manual','no-colab','no-tipo'].includes(r.status));
+  if(noidRows.length) showQuickUploadResult(noidRows);
   const div = document.getElementById('up-batch-result');
   const summary = `<div style="display:flex;gap:14px;margin-bottom:12px;flex-wrap:wrap">
     <span style="color:#3fb950;font-weight:600">✅ ${matched} importados</span>
@@ -7053,6 +7065,15 @@ function openReqModal(cargo, e){
 // ══════════════════════════════════════════
 // BACKUP / RESTAURAR DADOS
 // ══════════════════════════════════════════
+function atualizarComFeedback(){
+  const btn = document.querySelector('[onclick*="atualizarComFeedback"]');
+  if(btn){ btn.textContent='⏳ Atualizando…'; btn.disabled=true; }
+  setTimeout(()=>{
+    atualizarTodasAbas();
+    if(btn){ btn.textContent='🔄 Atualizar'; btn.disabled=false; }
+  }, 50);
+}
+
 function atualizarTodasAbas(){
   const fns=[
     ['renderGeral',()=>renderGeral()],
