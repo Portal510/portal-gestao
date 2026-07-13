@@ -1000,6 +1000,13 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
   <!-- Stats -->
   <div class="up-stats" id="up-stats"></div>
+  <div id="up-sem-upload" style="display:none;background:#FFF5F5;border:1px solid #f5c6cb;border-radius:8px;padding:14px 18px;margin-bottom:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:700;color:#A32D2D">📋 Colaboradores sem nenhum documento anexado</div>
+      <button onclick="document.getElementById('up-sem-upload').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:16px;color:#6c757d">✕</button>
+    </div>
+    <div id="up-sem-upload-lista" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+  </div>
 
   <!-- Upload Form -->
   <div class="up-section">
@@ -6421,8 +6428,14 @@ function upFilterDocs(){
     <div class="up-stat"><div class="n" style="color:#58a6ff">${totalUpl}</div><div class="l">Documentos</div></div>
     <div class="up-stat"><div class="n" style="color:#3fb950">${colabsUpl}</div><div class="l">Colaboradores</div></div>
     <div class="up-stat"><div class="n" style="color:#d29922">${tiposUpl}</div><div class="l">Tipos distintos</div></div>
-    <div class="up-stat"><div class="n" style="color:#f85149">${DATA.length-colabsUpl}</div><div class="l">Sem upload</div></div>
+    <div class="up-stat" onclick="upMostrarSemUpload()" title="Clique para ver quem está sem upload" style="cursor:pointer;border:1.5px solid #f85149;transition:box-shadow .15s" onmouseover="this.style.boxShadow='0 2px 8px rgba(248,81,73,.3)'" onmouseout="this.style.boxShadow=''">
+      <div class="n" style="color:#f85149">${DATA.length-colabsUpl}</div>
+      <div class="l">Sem upload <span style="font-size:10px">▼</span></div>
+    </div>
   `;
+  // Render sem-upload list if visible
+  const semUpDiv = document.getElementById('up-sem-upload');
+  if(semUpDiv && semUpDiv.style.display!=='none') upMostrarSemUpload(colabsComUpload);
 
   const lista = document.getElementById('up-lista');
   if(!docs.length){
@@ -6477,6 +6490,32 @@ function upFilterDocs(){
 }
 
 // ── Pending doc manual fill ───────────────
+function upMostrarSemUpload(colabsComUpload){
+  const div = document.getElementById('up-sem-upload');
+  const lista = document.getElementById('up-sem-upload-lista');
+  if(!div || !lista) return;
+  // Toggle
+  if(!colabsComUpload && div.style.display !== 'none'){
+    div.style.display = 'none'; return;
+  }
+  // Build set of colabs with uploads
+  const comUpload = colabsComUpload || new Set((window.uploadedDocs||[]).map(d=>d.colabId).filter(x=>x!=null));
+  const semUpload = DATA.filter(c => c && c.nome && c.status!=='inativo' && !comUpload.has(c._id));
+  if(!semUpload.length){
+    div.style.display = 'none';
+    toast('✅ Todos os colaboradores têm documentos anexados!','ok');
+    return;
+  }
+  lista.innerHTML = semUpload.map(c=>
+    `<span style="background:#fff;border:1px solid #f5c6cb;border-radius:16px;padding:3px 12px;font-size:12px;white-space:nowrap">
+      <span style="font-weight:600;color:#1F4E79">${c.nome}</span>
+      <span style="color:#6c757d;margin-left:4px">${c.cargo.replace('Analista de suporte ','').replace('Analista de suporte especializado ','')}</span>
+      <span style="color:#999;margin-left:4px">${c.uf}</span>
+    </span>`
+  ).join('');
+  div.style.display = 'block';
+}
+
 function upPendingToggle(id){
   const form = document.getElementById('pend-form-'+id);
   if(!form) return;
