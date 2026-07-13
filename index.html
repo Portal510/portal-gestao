@@ -6208,7 +6208,7 @@ function upHandleFiles(files){
     // Collaborator still unknown → ask user
     if(resolvedColabId===null){
       rows.push({
-        fileName:file.name, _fileObj:file,
+        fileName:file.name, _fileObj:file, file:file,
         status:'no-colab',
         msg: resolvedTipo ? `Tipo: ${resolvedTipo} — colaborador não identificado` : 'Colaborador não identificado',
         colab:null, tipo:resolvedTipo
@@ -6338,8 +6338,8 @@ function showQuickUploadResult(rows){
         };
         fr.readAsDataURL(fileObj);
       }
-      // Avoid duplicates
-      if(!uploadedDocs.find(d=>d.fileName===r.fileName&&d.pending)){
+      // Add immediately (with or without dataUrl) so card shows right away
+      if(!uploadedDocs.find(d=>d.fileName===fName&&d.pending)){
         uploadedDocs.unshift(pendingEntry);
       }
     });
@@ -6548,9 +6548,18 @@ function upPendingConfirmar(id){
   }
   // Mark as confirmed — apply status
   d.pending = false;
-  upAtualizarStatus(d.colabId, d.tipo, d.fileName);
-  saveUploadDocs(); upFilterDocs();
-  toast('Documento confirmado e marcado como Entregue!','ok');
+  upAtualizarStatus(d.colabId, d.tipo, d.effFileName||d.fileName);
+  saveData();
+  saveUploadDocs();
+  // Re-render all affected tabs
+  try{ renderAdm(); }catch(e){}
+  try{ renderTermos(); }catch(e){}
+  try{ renderEquip(); }catch(e){}
+  try{ renderCert(); }catch(e){}
+  try{ renderDeclaracoes(); }catch(e){}
+  try{ renderPendencias(); }catch(e){}
+  upFilterDocs();
+  toast('✅ '+d.colabNome+' · '+d.tipo+' — marcado como Entregue!','ok');
 }
 
 function upVisualizar(id){
@@ -6682,7 +6691,7 @@ function upBatchImport(files){
     const ext   = file.name.split('.').pop().toLowerCase();
 
     if(!colab && !tipo){
-      rows.push({file, colab:null, tipo:null, status:'manual', msg:'Não identificado — precisa de seleção manual'});
+      rows.push({file, _fileObj:file, fileName:file.name, colab:null, tipo:null, status:'manual', msg:'Não identificado — precisa de seleção manual'});
       noColab++; noTipo++;
       pending--; if(pending===0) showBatchResult(rows, matched, skipped, noColab, noTipo, arr.length);
       return;
@@ -6694,7 +6703,7 @@ function upBatchImport(files){
       return;
     }
     if(!tipo){
-      rows.push({file, colab, tipo:null, status:'no-tipo', msg:`Colaborador: ${colab.nome} — tipo não identificado`});
+      rows.push({file, _fileObj:file, fileName:file.name, colab, tipo:null, status:'no-tipo', msg:`Colaborador: ${colab.nome} — tipo não identificado`});
       noTipo++;
       pending--; if(pending===0) showBatchResult(rows, matched, skipped, noColab, noTipo, arr.length);
       return;
