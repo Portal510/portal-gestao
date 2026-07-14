@@ -2281,7 +2281,7 @@ function fmtCPF(v){
   return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4');
 }
 function fmtTel(v){
-  if(!v||v==='Pendente') return v;
+  if(!v||v==='Pendente'||v==='') return v||'';
   const d=v.replace(/\D/g,'');
   if(d.length===11) return '('+d.slice(0,2)+') '+d.slice(2,7)+'-'+d.slice(7);
   if(d.length===10) return '('+d.slice(0,2)+') '+d.slice(2,6)+'-'+d.slice(6);
@@ -3160,9 +3160,10 @@ function openEdit(id, field){
   // If Agendado, show date field with existing date
   const wrap=document.getElementById('edit-agenda-wrap');
   const dateInput=document.getElementById('edit-agenda-date');
-  if(cur==='Agendado' && field.startsWith('certs.')){
-    const certName=field.slice(6);
-    const existingDate=c.certs_agenda?.[certName]||'';
+  if(cur==='Agendado'){
+    const _key=field.startsWith('certs.')?field.slice(6):field.startsWith('docs.')?field.slice(5):field;
+    const _store=field.startsWith('certs.')?c.certs_agenda:c.docs_agenda;
+    const existingDate=(_store&&_store[_key])||'';
     if(dateInput) dateInput.value=existingDate;
     if(wrap) wrap.style.display='block';
   } else {
@@ -3185,6 +3186,12 @@ function saveEdit(){
     // Save agenda date if Agendado
     if(val==='Agendado'){
       const dt=document.getElementById('edit-agenda-date')?.value||'';
+      if(field.startsWith('docs.')){
+        if(!c.docs_agenda) c.docs_agenda={};
+        const _docKey=field.slice(5);
+        if(dt) c.docs_agenda[_docKey]=dt;
+        c.docs[_docKey]='Agendado';
+      } else {
       if(!c.certs_agenda) c.certs_agenda={};
       c.certs_agenda[certName]=dt;
     } else {
@@ -7770,7 +7777,19 @@ function enviarLembretePend(id){
   if(!emailTo){ alert('E-mail não cadastrado para '+c.nome); return; }
 
   // List all pending items (all categories together, numbered)
-  const listaItens = pends.map((p,i)=>'  '+(i+1)+'. '+p.label).join('\n');
+  // Build list with OR group info for certs
+  const listaItens = pends.map((p,i)=>{
+    if(p.cat==='certs'){
+      const groups=CERT_OR_GROUPS[c.cargo]||[];
+      for(const g of groups){
+        if(g.includes(p.label)&&g.length>1){
+          return '  '+(i+1)+'. Certificação: '+g.join(' OU ');
+        }
+      }
+      return '  '+(i+1)+'. Certificação: '+p.label;
+    }
+    return '  '+(i+1)+'. '+p.label;
+  }).join('\n');
 
   const assunto=encodeURIComponent('[TCU/T&S] Pendências de documentação — '+c.nome);
   const corpo=encodeURIComponent(
