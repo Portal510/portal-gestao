@@ -3177,29 +3177,33 @@ function saveEdit(){
   if(!editTarget) return;
   const {id,field}=editTarget;
   const val=document.getElementById('edit-val').value;
+  const dt=document.getElementById('edit-agenda-date')?.value||'';
   const c=DATA.find(x=>x._id===id);
+  if(!c) return;
 
-  if(field.startsWith('docs.')){ c.docs[field.slice(5)]=val; }
-  else if(field.startsWith('certs.')){
-    const certName=field.slice(6);
-    c.certs[certName]=val;
-    // Save agenda date if Agendado
+  if(field.startsWith('docs.')){
+    const key=field.slice(5);
+    if(!c.docs) c.docs={};
+    c.docs[key]=val;
     if(val==='Agendado'){
-      const dt=document.getElementById('edit-agenda-date')?.value||'';
-      if(field.startsWith('docs.')){
-        const _dk=field.slice(5);
-        if(!c.docs_agenda) c.docs_agenda={};
-        if(dt) c.docs_agenda[_dk]=dt;
-        c.docs[_dk]='Agendado';
-      } else {
-        if(!c.certs_agenda) c.certs_agenda={};
-        c.certs_agenda[certName]=dt;
-      }
+      if(!c.docs_agenda) c.docs_agenda={};
+      if(dt) c.docs_agenda[key]=dt;
     } else {
-      if(c.certs_agenda&&certName) delete c.certs_agenda[certName];
-      if(field.startsWith('docs.')){const _dk2=field.slice(5); if(c.docs_agenda) delete c.docs_agenda[_dk2]; c.docs[_dk2]=val;}
-      else c[field]=val;
+      if(c.docs_agenda) delete c.docs_agenda[key];
     }
+  } else if(field.startsWith('certs.')){
+    const certName=field.slice(6);
+    if(!c.certs) c.certs={};
+    c.certs[certName]=val;
+    if(val==='Agendado'){
+      if(!c.certs_agenda) c.certs_agenda={};
+      if(dt) c.certs_agenda[certName]=dt;
+    } else {
+      if(c.certs_agenda) delete c.certs_agenda[certName];
+    }
+  } else {
+    c[field]=val;
+  }
 
   saveData();
   closeModal('modal-edit');
