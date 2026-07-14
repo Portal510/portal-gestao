@@ -3434,6 +3434,25 @@ function openGeralEdit(id,field,currentVal){
   document.getElementById('geral-edit-label').textContent=FIELD_LABELS[field]||field;
   const inp=document.getElementById('geral-edit-input');
   inp.value=currentVal==='Pendente'?'':currentVal;
+  // Phone mask for celular field
+  inp.oninput=null;
+  inp.setAttribute('placeholder','');
+  inp.setAttribute('maxlength','500');
+  if(field==='celular'){
+    inp.setAttribute('placeholder','(xx) xxxxx-xxxx');
+    inp.setAttribute('maxlength','16');
+    inp.setAttribute('inputmode','tel');
+    inp.oninput=function(){
+      let d=this.value.replace(/\D/g,'');
+      if(d.length>11) d=d.slice(0,11);
+      if(d.length===0){ this.value=''; return; }
+      if(d.length<=2) this.value='('+d;
+      else if(d.length<=7) this.value='('+d.slice(0,2)+') '+d.slice(2);
+      else if(d.length<=11) this.value='('+d.slice(0,2)+') '+d.slice(2,7)+'-'+d.slice(7);
+    };
+    // Apply mask to current value
+    if(inp.value) inp.oninput.call(inp);
+  }
   document.getElementById('modal-geral-edit').classList.add('open');
   setTimeout(()=>inp.focus(),50);
 }
@@ -3441,6 +3460,10 @@ function openGeralEdit(id,field,currentVal){
 function saveGeralEdit(){
   const {id,field}=geralEditTarget;
   let val=document.getElementById('geral-edit-input').value.trim()||'Pendente';
+  // Store celular as digits only (fmtTel formats on display)
+  if(field==='celular' && val && val!=='Pendente'){
+    val=val.replace(/\D/g,'');
+  }
   const c=DATA.find(x=>x._id===id);
   // Normalize salary to "R$ x.xxx,xx"
   if(field==='salario' && val && val!=='Pendente'){
