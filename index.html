@@ -3187,19 +3187,19 @@ function saveEdit(){
     if(val==='Agendado'){
       const dt=document.getElementById('edit-agenda-date')?.value||'';
       if(field.startsWith('docs.')){
+        const _dk=field.slice(5);
         if(!c.docs_agenda) c.docs_agenda={};
-        const _docKey=field.slice(5);
-        if(dt) c.docs_agenda[_docKey]=dt;
-        c.docs[_docKey]='Agendado';
+        if(dt) c.docs_agenda[_dk]=dt;
+        c.docs[_dk]='Agendado';
       } else {
-      if(!c.certs_agenda) c.certs_agenda={};
-      c.certs_agenda[certName]=dt;
+        if(!c.certs_agenda) c.certs_agenda={};
+        c.certs_agenda[certName]=dt;
+      }
     } else {
-      // Clear agenda date if changing away from Agendado
-      if(c.certs_agenda) delete c.certs_agenda[certName];
+      if(c.certs_agenda&&certName) delete c.certs_agenda[certName];
+      if(field.startsWith('docs.')){const _dk2=field.slice(5); if(c.docs_agenda) delete c.docs_agenda[_dk2]; c.docs[_dk2]=val;}
+      else c[field]=val;
     }
-  }
-  else { c[field]=val; }
 
   saveData();
   closeModal('modal-edit');
