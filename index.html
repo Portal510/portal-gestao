@@ -2275,10 +2275,12 @@ const COLAB = JSON.parse(`[{"nome": "Abdias Francisco Rodrigues", "conta_rede": 
 
 // ── Field formatters ─────────────────────────────────────────────
 function fmtCPF(v){
-  if(!v) return '';
+  if(!v||v==='Pendente') return v||'';
   const d=v.replace(/\D/g,'');
-  if(d.length!==11) return v;
-  return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4');
+  if(d.length===11) return d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9);
+  return v;
+}
+,'$1.$2.$3-$4');
 }
 function fmtTel(v){
   if(!v||v==='Pendente'||v==='') return v||'';
@@ -2447,12 +2449,14 @@ function editBadge(v,id,field){ if(v===undefined||v===null||v==='') v='Pendente'
   else if(v==='N/A') cls='badge-na';
   else if(v==='Agendado'){
     cls='badge-sched';
-    if(c&&c.certs_agenda&&field.startsWith('certs.')){
-      const certName=field.slice(6);
-      const dt=c.certs_agenda[certName];
-      if(dt){ const p=dt.split('-'); label='📅 '+p[2]+'/'+p[1]+'/'+p[0]; }
-      else label='📅 Agendado';
+    let _agdt=null;
+    if(c&&field){
+      const _k=field.startsWith('certs.')?field.slice(6):field.startsWith('docs.')?field.slice(5):field;
+      if(c.certs_agenda&&c.certs_agenda[_k]) _agdt=c.certs_agenda[_k];
+      else if(c.docs_agenda&&c.docs_agenda[_k]) _agdt=c.docs_agenda[_k];
     }
+    if(_agdt){ const p=_agdt.split('-'); label='📅 '+p[2]+'/'+p[1]+'/'+p[0]; }
+    else label='📅 Agendado';
   }
   else cls='badge-pend';
   return '<span class="badge '+cls+' cell-edit" onclick="openEdit('+id+',\''+field+'\')">'+label+'</span>';
@@ -8328,25 +8332,6 @@ window.addEventListener('storage',e=>{
 });
 
 // ── Sync button ───────────────────────────
-function _addSyncBtn(){
-  if(document.getElementById('btn-sync-ts')) return;
-  const header=document.querySelector('.header');
-  if(!header) return;
-  const btn=document.createElement('button');
-  btn.id='btn-sync-ts';
-  btn.title='Sincronizar bidirecional: Portal Gestão ↔ Firebase ↔ Portal T&S';
-  btn.style.cssText='margin-left:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 14px;border-radius:16px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap';
-  btn.innerHTML='🔄 Sync T&S';
-  btn.onclick=()=>{
-    btn.innerHTML='⏳...'; btn.disabled=true;
-    runFullSync().then(({pulled,pushed})=>{
-      b.innerHTML='🔄 Sync T&S'; b.disabled=false;
-      alert('Sincronização concluída!\n\n↓ Recebido: '+pulled+' campo(s)\n↑ Enviado: '+pushed+' campo(s)');
-    }).catch(()=>{b.innerHTML='🔄 Sync T&S';b.disabled=false;});
-  };
-  const stats=document.querySelector('.header-stats');
-  if(stats) header.insertBefore(btn,stats); else header.appendChild(btn);
-}
 
 // ── Initial localStorage sync (silent) ───
 (function(){ try{syncFromLocalStorage();}catch(e){} })();
@@ -8894,9 +8879,8 @@ function rGerencial() {
   const wrap = document.getElementById('ger-table-wrap');
   if (!wrap) return;
 
-  // If COLL not loaded yet, load from Firebase and retry
-  // Try loading TS data in background, but render with DATA if COLL unavailable
-  if (!COLL.length) {
+  // Use DATA directly (COLL sync removed)
+  if (false) {
     loadTsDataForTabs().then(() => { if (COLL.length) rGerencial(); }).catch(()=>{});
   }
 
@@ -10122,7 +10106,7 @@ function _portalInit(){
     if(xlsxFixed) _safeSetItem(DATA_KEY, JSON.stringify(DATA));
   }catch(e){}
   try{ renderGeral(); }catch(e){ console.warn('renderGeral:',e); }
-  try{ _addSyncBtn(); }catch(e){}
+
   try{ uploadedDocs.forEach(doc=>upAtualizarStatus(doc.colabId,doc.tipo,doc.fileName)); }catch(e){}
 }
 
