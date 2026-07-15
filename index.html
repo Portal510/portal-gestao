@@ -3330,17 +3330,11 @@ function toggleSidebar(){
 }
 
 function showTab(id,el){
-  // Reset ALL filters on ALL tabs to prevent cross-tab bleed
-  ['equip','adm','termos','cert','upload','geral'].forEach(function(t){
-    ['filter-valor-','filter-cargo-','filter-uf-'].forEach(function(prefix){
-      var s=document.getElementById(prefix+t);
-      if(s) s.value='';
-    });
-  });
-  // Also clear search inputs
-  ['search-equip','search-adm','search-termos','search-cert'].forEach(function(id){
-    // Don't clear — keep search text
-  });
+  // Reset ALL filters on ALL tabs — prevent cross-tab bleed
+  document.querySelectorAll('select[id^="filter-"]').forEach(function(s){ s.value=''; });
+  document.querySelectorAll('select[id^="abono-f-"]').forEach(function(s){ if(s.id!=='abono-f-mes'&&s.id!=='abono-f-ano') s.value=''; });
+  var gerCargo=document.getElementById('ger-cargo'); if(gerCargo) gerCargo.value='';
+  var pcCargo=document.getElementById('pc-cargo'); if(pcCargo) pcCargo.value='';
   tabIds.forEach(t=>{
     const el2=document.getElementById('tab-'+t);
     if(el2) el2.style.display=t===id?'block':'none';
@@ -8625,10 +8619,7 @@ function abonoSetMesAtual(){
 function rAbono(){
   var tbody=document.getElementById('abono-tbody');if(!tbody)return;
 
-  // Try loading TS data in background, but don't block rendering
-  if(!COLL.length){
-    loadTsDataForTabs().then(()=>{ if(COLL.length) rAbono(); }).catch(()=>{});
-  }
+  // Firebase sync removed — use DATA directly
   // populate cargo filter
   var cargoSel=document.getElementById('abono-f-cargo');
   if(cargoSel&&cargoSel.options.length<=1){
@@ -8651,8 +8642,8 @@ function rAbono(){
   var curMes=fMes||meses[now.getMonth()];
   var curAno=fAno||String(now.getFullYear());
 
-  // Use DATA as source (fallback from COLL when Firebase not available)
-  var colabSource = (COLL && COLL.length) ? COLL : DATA;
+  // Always use DATA (Firebase sync removed)
+  var colabSource = DATA;
 
   var ativos=colabSource.filter(c=>{
     if(c.status==='inativo')return false;
@@ -8909,7 +8900,7 @@ function rGerencial() {
   }
 
   // Filter active collaborators
-  const colls = (COLL.length?COLL:DATA).filter(c =>
+  const colls = DATA.filter(c =>
     c.status === 'ativo' &&
     (!fCargo || c.cargo === fCargo || c.cargo === (CD[fCargo]?.label||''))
   );
