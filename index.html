@@ -2233,7 +2233,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <option value="N/A">N/A</option>
     </select>
     <div id="edit-agenda-wrap" style="display:none;margin-top:12px">
-      <label style="font-size:12px;color:#6c757d;display:block;margin-bottom:4px">📅 Data do agendamento da prova</label>
+      <label style="font-size:12px;color:#6c757d;display:block;margin-bottom:4px">📅 Data do agendamento</label>
       <input type="date" id="edit-agenda-date" style="width:100%;padding:8px 10px;border:1.5px solid #2E75B6;border-radius:6px;font-size:14px">
       <div style="font-size:11px;color:#6c757d;margin-top:4px">A data será exibida na tabela de certificações.</div>
     </div>
@@ -3144,7 +3144,21 @@ function updateStatsCert(rows){
 function onEditValChange(){
   const val=document.getElementById('edit-val').value;
   const wrap=document.getElementById('edit-agenda-wrap');
-  if(wrap) wrap.style.display=val==='Agendado'?'block':'none';
+  const dateInput=document.getElementById('edit-agenda-date');
+  if(val==='Agendado'){
+    if(wrap) wrap.style.display='block';
+    // Pre-fill with today if no date set
+    if(dateInput && !dateInput.value){
+      const today=new Date();
+      const y=today.getFullYear();
+      const m=String(today.getMonth()+1).padStart(2,'0');
+      const d=String(today.getDate()).padStart(2,'0');
+      dateInput.value=y+'-'+m+'-'+d;
+    }
+    if(dateInput) dateInput.focus();
+  } else {
+    if(wrap) wrap.style.display='none';
+  }
 }
 
 function openEdit(id, field){
