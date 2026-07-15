@@ -2471,7 +2471,7 @@ function filterData(search, cargo, opts){
   var fCargo  = cargo || '';
   var fUf     = gv('filter-uf-'+tab);
   var fStatus = tab==='geral' ? gv('filter-status-geral') : '';
-  var fValor  = tab ? gv('filter-valor-'+tab) : '';
+  var fValor  = (tab==='upload'||tab==='geral') ? gv('filter-valor-'+tab) : '';
 
   return DATA.filter(function(c){
     // ── Status (ativo/inativo) ──────────────
@@ -3330,6 +3330,11 @@ function toggleSidebar(){
 }
 
 function showTab(id,el){
+  // Reset valor filters on ALL tabs to prevent cross-tab bleed
+  ['equip','adm','termos','cert','upload','geral'].forEach(function(t){
+    var s=document.getElementById('filter-valor-'+t);
+    if(s) s.value='';
+  });
   tabIds.forEach(t=>{
     const el2=document.getElementById('tab-'+t);
     if(el2) el2.style.display=t===id?'block':'none';
