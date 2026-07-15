@@ -49,6 +49,7 @@
           docs:c.docs, certs:c.certs
         };
       });
+    if(abCur&&[...cargoSel.options].some(o=>o.value===abCur)) cargoSel.value=abCur;
       json=JSON.stringify({source:'portal-gestao',ts:fullPayload.ts,colaboradores:slimColabs});
     }
 
@@ -2228,6 +2229,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <option value="Pendente">Pendente</option>
       <option value="Entregue">Entregue</option>
       <option value="Agendado">Agendado</option>
+      <option value="N/A">N/A</option>
       <option value="Sim">Sim</option>
       <option value="Não">Não</option>
       <option value="N/A">N/A</option>
@@ -3928,7 +3930,9 @@ let comDetIdx=-1;
 
 function initComunicados(){
   const cargoSel=document.getElementById('sel-cargo-val');
-  if(cargoSel&&cargoSel.options.length<=1){
+  if(cargoSel){
+    var abCur=cargoSel.value;
+    cargoSel.innerHTML='<option value="">Todos os cargos</option>';
     [...new Set(DATA.map(c=>c.cargo))].sort().forEach(c=>{
       const o=document.createElement('option');o.value=c;o.textContent=c;cargoSel.appendChild(o);
     });
@@ -5781,7 +5785,9 @@ function renderPendCert(){
 
   // Populate cargo filter
   const cargoSel=document.getElementById('pc-cargo');
-  if(cargoSel&&cargoSel.options.length<=1){
+  if(cargoSel){
+    var abCur=cargoSel.value;
+    cargoSel.innerHTML='<option value="">Todos os cargos</option>';
     [...new Set(DATA.filter(c=>c&&c.nome&&c.status!=='inativo').map(c=>c.cargo))].sort()
       .forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;cargoSel.appendChild(o);});
   }
@@ -7670,8 +7676,8 @@ const CERT_OR_GROUPS = {
   'Analista de suporte especializado (AE)':[['HDI DAST','HDI CSR']],
   // AP: HDI DAST OU HDI SCA OU HDI CSR
   'Administração de parque tecnológico (AP)':[['HDI DAST','HDI SCA','HDI CSR']],
-  // Gestor de SD: precisa de 2 entre SCTL, SCM, SCD, XLA Foundation
-  'Gestor de Service desk':               [['HDI SCTL','HDI SCM','HDI SCD','XLA Foundation']],
+  // Gestor de SD: ITIL obrigatório + pelo menos 2 de {SCTL,SCM,SCD,XLA}
+  // Não tem OR group — todas as 4 ficam Pendente e usuário entrega as que tem
 };
 
 function certSatisfied(c, certName){
@@ -8622,9 +8628,12 @@ function rAbono(){
   // Firebase sync removed — use DATA directly
   // populate cargo filter
   var cargoSel=document.getElementById('abono-f-cargo');
-  if(cargoSel&&cargoSel.options.length<=1){
-    Object.keys(CD).sort((a,b)=>(CD[a].label||a).localeCompare(CD[b].label||b)).forEach(k=>{
-      var o=document.createElement('option');o.value=k;o.textContent=(CD[k]||{}).label||k;cargoSel.appendChild(o);
+  if(cargoSel){
+    var abCur=cargoSel.value;
+    cargoSel.innerHTML='<option value="">Todos os cargos</option>';
+    // Use full cargo name as value (matches c.cargo in DATA)
+    [...new Set(DATA.filter(c=>c&&c.nome&&c.status!=='inativo').map(c=>c.cargo).filter(Boolean))].sort().forEach(function(cargo){
+      var o=document.createElement('option');o.value=cargo;o.textContent=cargo;cargoSel.appendChild(o);
     });
   }
   var fMes=document.getElementById('abono-f-mes')?.value||'';
@@ -8891,18 +8900,19 @@ function rGerencial() {
 
   // Populate cargo select
   const cargoSel = document.getElementById('ger-cargo');
-  if (cargoSel && cargoSel.options.length <= 1) {
-    Object.keys(CD).sort((a,b)=>(CD[a].label||a).localeCompare(CD[b].label||b)).forEach(k => {
-      const o = document.createElement('option');
-      o.value = k; o.textContent = (CD[k]||{}).label || k;
-      cargoSel.appendChild(o);
+  if (cargoSel) {
+    const gerCur=cargoSel.value;
+    cargoSel.innerHTML='<option value="">Todos os cargos</option>';
+    [...new Set(DATA.filter(c=>c&&c.nome&&c.status==='ativo').map(c=>c.cargo).filter(Boolean))].sort().forEach(function(cargo){
+      const o=document.createElement('option'); o.value=cargo; o.textContent=cargo; cargoSel.appendChild(o);
     });
+    if(gerCur&&[...cargoSel.options].some(o=>o.value===gerCur)) cargoSel.value=gerCur;
   }
 
   // Filter active collaborators
   const colls = DATA.filter(c =>
     c.status === 'ativo' &&
-    (!fCargo || c.cargo === fCargo || c.cargo === (CD[fCargo]?.label||''))
+    (!fCargo || c.cargo === fCargo)
   );
 
   const dias = diasUteis(mes, ano);
