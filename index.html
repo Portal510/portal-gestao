@@ -2228,7 +2228,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <option value="Pendente">Pendente</option>
       <option value="Entregue">Entregue</option>
       <option value="Agendado">Agendado</option>
-      <option value="N/A">N/A</option>
       <option value="Sim">Sim</option>
       <option value="Não">Não</option>
       <option value="N/A">N/A</option>
@@ -3061,7 +3060,7 @@ function renderCert(){
     <td class="left" style="color:#999;font-size:11px">${i+1}</td>
     <td class="left" style="cursor:pointer;color:#1F4E79;font-weight:600" onclick="openDetail(${c._id})">${c.nome}${inativoBadge(c)}</td>
     <td class="left"><span class="badge-cargo">${c.cargo}</span></td>
-    ${CERT_ORDER.map(cert=>{ const s=certGetStatus(c,cert); return `<td>${editBadge(s,c._id,'certs.'+cert)}</td>`; }).join('')}
+    ${CERT_ORDER.map(cert=>{ const s=certGetStatus(c,cert); return `<td>${s==='N/A'?'<span class="badge badge-na">N/A</span>':editBadge(s,c._id,'certs.'+cert)}</td>`; }).join('')}
   </tr>`).join(''):`<tr><td colspan="15" class="empty">Nenhum resultado</td></tr>`;
   updateStatsCert(rows);
 }
