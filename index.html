@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portal T&S — Gestão de Terceirizados</title>
+<!-- build 2026-07-16 13:51 -->
 
 <!-- Firebase REST API — Portal T&S + Portal Gestão -->
 <script>
@@ -3341,7 +3342,7 @@ function showTab(id,el){
   });
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,'pend-cert':renderPendCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:()=>{try{renderDeclaracoes();}catch(e){}},requisitos:renderRequisitos,pendencias:renderPendencias,contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){}},gerencial:()=>{try{rGerencial();}catch(e){}},indicadores:()=>{try{indRender();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}}};
+  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,'pend-cert':renderPendCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:()=>{try{renderDeclaracoes();}catch(e){}},requisitos:renderRequisitos,pendencias:renderPendencias,contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){console.error('rAbono error:',e);}},gerencial:()=>{try{rGerencial();}catch(e){console.error('rGerencial error:',e);}},indicadores:()=>{try{indRender();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}}};
   if(renders[id]) renders[id]();
 }
 
