@@ -2508,7 +2508,7 @@ function populateCargoFilter(selId){
   sel.innerHTML='<option value="">Todos os cargos</option>';
   const cargos=[...new Set(DATA.filter(c=>c&&c.nome).map(c=>c.cargo).filter(Boolean))].sort();
   cargos.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
-  // Don't restore previous value — cleared on tab switch
+  if(cur&&[...sel.options].some(o=>o.value===cur)) sel.value=cur;
 }
 
 function populateUfFilter(tab){
@@ -2519,7 +2519,7 @@ function populateUfFilter(tab){
   sel.innerHTML='<option value="">Todas as UF</option>';
   const ufs=[...new Set(DATA.filter(c=>c&&c.nome).map(c=>c.uf).filter(Boolean))].sort();
   ufs.forEach(u=>{const o=document.createElement('option');o.value=u;o.textContent=u;sel.appendChild(o);});
-  // Don't restore previous value — cleared on tab switch
+  if(cur&&[...sel.options].some(o=>o.value===cur)) sel.value=cur;
 }
 
 function renderGeral(){
@@ -7456,17 +7456,26 @@ function renderRequisitos(){
 }
 
 function showColabCargo(cargo){
-  // Switch to geral tab and filter by cargo
+  // Switch to geral tab
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>{ if(t.textContent.includes('Geral')) t.classList.add('active'); });
+  document.querySelectorAll('.tab').forEach(t=>{ if(t.textContent.includes('Geral')||t.textContent.includes('Colaboradores')) t.classList.add('active'); });
   tabIds.forEach(t=>{ const el=document.getElementById('tab-'+t); if(el) el.style.display=t==='geral'?'block':'none'; });
-  // Set cargo filter
   setTimeout(()=>{
+    // Clear other filters first
+    const sf=document.getElementById('filter-status-geral'); if(sf) sf.value='';
+    const uf=document.getElementById('filter-uf-geral'); if(uf) uf.value='';
+    document.getElementById('search-geral').value='';
+    // Populate cargo filter then set value
+    populateCargoFilter('filter-cargo-geral');
     const sel=document.getElementById('filter-cargo-geral');
     if(sel) sel.value=cargo;
-    document.getElementById('search-geral').value='';
-    const sf=document.getElementById('filter-status-geral');
-    if(sf) sf.value='';
+    // Render with explicit cargo value
+    const body=document.getElementById('body-geral');
+    const rows=filterData('',cargo,{tab:'geral'});
+    if(body) body.innerHTML=rows.length?rows.map((c,i)=>{
+      const ativo=c.status!=='inativo';
+      return '<tr><td style="color:#999;font-size:11px">'+(i+1)+'</td><td><b style="color:#1F4E79">'+c.nome+'</b><br><span style="font-size:10px;color:#'+(ativo?'155724;background:#D4EDDA':'7A0000;background:#FCEBEB')+'';
+    }).join(''):'<tr><td colspan="20" style="text-align:center;padding:20px;color:#aaa">Nenhum colaborador encontrado</td></tr>';
     renderGeral();
     document.querySelector('.content').scrollTop=0;
   },50);
