@@ -519,6 +519,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <option value="Sim">PcD: Sim</option>
       <option value="Não">PcD: Não</option>
     </select>
+    <select id="filter-valor-geral" onchange="renderGeral()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status</option><option value="Pendente">Pendente</option><option value="Entregue">Entregue</option><option value="Agendado">Agendado</option><option value="N/A">N/A</option><option value="Sim">Sim</option><option value="Não">Não</option></select>
     <select id="filter-status-geral" onchange="renderGeral()">
       <option value="">Todos os status</option>
       <option value="ativo">● Ativos</option>
@@ -565,7 +566,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div class="stats-row" id="stats-equip"></div>
   <div class="toolbar">
     <input type="text" id="search-equip" placeholder="🔍 Buscar por nome…" oninput="renderEquip()">
-    <select id="filter-cargo-equip" onchange="renderEquip()"><option value="">Todos os cargos</option></select>
+    <select id="filter-campo-equip" onchange="renderEquip()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px;max-width:190px"><option value="">📋 Todos os campos</option><option value="celular_tablet">celular tablet</option><option value="cracha">cracha</option><option value="maleta">maleta</option><option value="uniforme">uniforme</option></select><select id="filter-valor-equip" onchange="renderEquip()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status</option><option value="Pendente">Pendente</option><option value="Entregue">Entregue</option><option value="Agendado">Agendado</option><option value="N/A">N/A</option><option value="Sim">Sim</option><option value="Não">Não</option></select>
+      <select id="filter-cargo-equip" onchange="renderEquip()"><option value="">Todos os cargos</option></select>
     <select id="filter-uf-equip" onchange="renderEquip()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todas as UF</option></select>
     <select id="filter-valor-equip" onchange="renderEquip()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status de campo</option>
       <option value="Pendente">⏳ Pendente</option>
@@ -603,7 +605,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div class="stats-row" id="stats-adm"></div>
   <div class="toolbar">
     <input type="text" id="search-adm" placeholder="🔍 Buscar por nome…" oninput="renderAdm()">
-    <select id="filter-cargo-adm" onchange="renderAdm()"><option value="">Todos os cargos</option></select>
+    <select id="filter-campo-adm" onchange="renderAdm()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px;max-width:190px"><option value="">📋 Todos os campos</option><option value="Diploma/Superior">Diploma/Superior</option><option value="Especialização TI">Especialização TI</option><option value="Exp. Suporte">Exp. Suporte</option><option value="Exp. Microcomputadores">Exp. Microcomputadores</option><option value="ASO Admissional">ASO Admissional</option><option value="CTPS">CTPS</option><option value="Contrato de Trabalho">Contrato de Trabalho</option></select><select id="filter-valor-adm" onchange="renderAdm()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status</option><option value="Pendente">Pendente</option><option value="Entregue">Entregue</option><option value="Agendado">Agendado</option><option value="N/A">N/A</option><option value="Sim">Sim</option><option value="Não">Não</option></select>
+      <select id="filter-cargo-adm" onchange="renderAdm()"><option value="">Todos os cargos</option></select>
     <select id="filter-uf-adm" onchange="renderAdm()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todas as UF</option></select>
     <select id="filter-valor-adm" onchange="renderAdm()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status de campo</option>
       <option value="Pendente">⏳ Pendente</option>
@@ -642,7 +645,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div class="stats-row" id="stats-termos"></div>
   <div class="toolbar">
     <input type="text" id="search-termos" placeholder="🔍 Buscar por nome…" oninput="renderTermos()">
-    <select id="filter-cargo-termos" onchange="renderTermos()"><option value="">Todos os cargos</option></select>
+    <select id="filter-campo-termos" onchange="renderTermos()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px;max-width:190px"><option value="">📋 Todos os campos</option><option value="Termo TCU">Termo TCU</option><option value="Cadastro TCU">Cadastro TCU</option><option value="Decl. Não Parentesco">Decl. Não Parentesco</option><option value="Termo Vale Transporte">Termo Vale Transporte</option><option value="Termo de Conduta T&S">Termo de Conduta T&S</option></select><select id="filter-valor-termos" onchange="renderTermos()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status</option><option value="Pendente">Pendente</option><option value="Entregue">Entregue</option><option value="Agendado">Agendado</option><option value="N/A">N/A</option><option value="Sim">Sim</option><option value="Não">Não</option></select>
+      <select id="filter-cargo-termos" onchange="renderTermos()"><option value="">Todos os cargos</option></select>
     <select id="filter-uf-termos" onchange="renderTermos()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todas as UF</option></select>
     <select id="filter-valor-termos" onchange="renderTermos()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status de campo</option>
       <option value="Pendente">⏳ Pendente</option>
@@ -677,7 +681,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div class="stats-row" id="stats-cert"></div>
   <div class="toolbar">
     <input type="text" id="search-cert" placeholder="🔍 Buscar por nome…" oninput="renderCert()">
-    <select id="filter-cargo-cert" onchange="renderCert()"><option value="">Todos os cargos</option></select>
+    <select id="filter-campo-cert" onchange="renderCert()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px;max-width:190px"><option value="">📋 Todos os campos</option><option value="HDI SCA">HDI SCA</option><option value="HDI CSR">HDI CSR</option><option value="M365 Fundamentals">M365 Fundamentals</option><option value="MD-100 ou MD-102">MD-100 ou MD-102</option><option value="HDI DAST">HDI DAST</option><option value="AZ-900">AZ-900</option><option value="ITIL Foundations v4">ITIL Foundations v4</option><option value="HDI SCTL">HDI SCTL</option><option value="HDI KCS">HDI KCS</option><option value="HDI SCM">HDI SCM</option><option value="HDI SCD">HDI SCD</option><option value="XLA Foundation">XLA Foundation</option></select><select id="filter-valor-cert" onchange="renderCert()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status</option><option value="Pendente">Pendente</option><option value="Entregue">Entregue</option><option value="Agendado">Agendado</option><option value="N/A">N/A</option><option value="Sim">Sim</option><option value="Não">Não</option></select>
+      <select id="filter-cargo-cert" onchange="renderCert()"><option value="">Todos os cargos</option></select>
     <select id="filter-uf-cert" onchange="renderCert()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todas as UF</option></select>
     <select id="filter-valor-cert" onchange="renderCert()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status de campo</option>
       <option value="Pendente">⏳ Pendente</option>
@@ -2470,7 +2475,8 @@ function filterData(search, cargo, opts){
   var fCargo  = cargo || '';
   var fUf     = gv('filter-uf-'+tab);
   var fStatus = tab==='geral' ? gv('filter-status-geral') : '';
-  var fValor  = (tab==='upload'||tab==='geral') ? gv('filter-valor-'+tab) : '';
+  var fValor  = gv('filter-valor-'+tab) || '';
+  var fCampo  = gv('filter-campo-'+tab) || '';
 
   return DATA.filter(function(c){
     // ── Status (ativo/inativo) ──────────────
@@ -2485,14 +2491,31 @@ function filterData(search, cargo, opts){
     // ── UF ─────────────────────────────────
     if(fUf && c.uf !== fUf) return false;
 
+    // ── Campo específico + Status ──────────────────────
+    if(fCampo && fValor){
+      // Filter by specific field + status
+      var fieldVal = null;
+      if(c.docs && c.docs[fCampo] !== undefined) fieldVal = c.docs[fCampo];
+      else if(c.certs && c.certs[fCampo] !== undefined) fieldVal = c.certs[fCampo];
+      else if(c[fCampo] !== undefined) fieldVal = c[fCampo];
+      if(fieldVal === null || fieldVal !== fValor) return false;
+    } else if(fCampo){
+      // Filter by specific field (any value except N/A)
+      var fv2 = null;
+      if(c.docs && c.docs[fCampo] !== undefined) fv2 = c.docs[fCampo];
+      else if(c.certs && c.certs[fCampo] !== undefined) fv2 = c.certs[fCampo];
+      else if(c[fCampo] !== undefined) fv2 = c[fCampo];
+      if(fv2 === null) return false;
+    } else if(fValor){
     // ── Valor de campo (Pendente/Entregue/Sim/Não/N\/A/Agendado) ──
-    if(fValor){
+    if(true){
       // Buscar em docs, certs, celular_tablet, cracha, maleta, uniforme
       var allVals = [];
       if(c.docs)  allVals = allVals.concat(Object.values(c.docs));
       if(c.certs) allVals = allVals.concat(Object.values(c.certs));
       ['celular_tablet','cracha','maleta','uniforme'].forEach(function(k){ if(c[k]) allVals.push(c[k]); });
       if(!allVals.some(function(v){ return v === fValor; })) return false;
+    }
     }
 
     // ── Busca por nome (apenas) ─────────────
@@ -3331,6 +3354,8 @@ function toggleSidebar(){
 function showTab(id,el){
   // Reset ALL filters on ALL tabs — prevent cross-tab bleed
   document.querySelectorAll('select[id^="filter-"]').forEach(function(s){ s.value=''; });
+  document.querySelectorAll('select[id^="filter-campo-"]').forEach(function(s){ s.value=''; });
+  document.querySelectorAll('select[id^="filter-valor-"]').forEach(function(s){ s.value=''; });
   document.querySelectorAll('select[id^="abono-f-"]').forEach(function(s){ if(s.id!=='abono-f-mes'&&s.id!=='abono-f-ano') s.value=''; });
   var gerCargo=document.getElementById('ger-cargo'); if(gerCargo) gerCargo.value='';
   var pcCargo=document.getElementById('pc-cargo'); if(pcCargo) pcCargo.value='';
