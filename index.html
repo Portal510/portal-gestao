@@ -2507,7 +2507,7 @@ function populateCargoFilter(selId){
   sel.innerHTML='<option value="">Todos os cargos</option>';
   const cargos=[...new Set(DATA.filter(c=>c&&c.nome).map(c=>c.cargo).filter(Boolean))].sort();
   cargos.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
-  // Don't restore previous value — cleared on tab switch
+  if(cur&&[...sel.options].some(o=>o.value===cur)) sel.value=cur;
 }
 
 function populateUfFilter(tab){
@@ -2518,7 +2518,7 @@ function populateUfFilter(tab){
   sel.innerHTML='<option value="">Todas as UF</option>';
   const ufs=[...new Set(DATA.filter(c=>c&&c.nome).map(c=>c.uf).filter(Boolean))].sort();
   ufs.forEach(u=>{const o=document.createElement('option');o.value=u;o.textContent=u;sel.appendChild(o);});
-  // Don't restore previous value — cleared on tab switch
+  if(cur&&[...sel.options].some(o=>o.value===cur)) sel.value=cur;
 }
 
 function renderGeral(){
