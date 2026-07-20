@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portal T&S — Gestão de Terceirizados</title>
-<!-- build 2026-07-16 13:51 -->
 
 <!-- Firebase REST API — Portal T&S + Portal Gestão -->
 <script>
@@ -519,7 +518,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <option value="Sim">PcD: Sim</option>
       <option value="Não">PcD: Não</option>
     </select>
-    <select id="filter-valor-geral" onchange="renderGeral()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status</option><option value="Pendente">Pendente</option><option value="Entregue">Entregue</option><option value="Agendado">Agendado</option><option value="N/A">N/A</option><option value="Sim">Sim</option><option value="Não">Não</option></select>
     <select id="filter-status-geral" onchange="renderGeral()">
       <option value="">Todos os status</option>
       <option value="ativo">● Ativos</option>
@@ -566,8 +564,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div class="stats-row" id="stats-equip"></div>
   <div class="toolbar">
     <input type="text" id="search-equip" placeholder="🔍 Buscar por nome…" oninput="renderEquip()">
-    <select id="filter-campo-equip" onchange="renderEquip()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px;max-width:190px"><option value="">📋 Todos os campos</option><option value="celular_tablet">celular tablet</option><option value="cracha">cracha</option><option value="maleta">maleta</option><option value="uniforme">uniforme</option></select><select id="filter-valor-equip" onchange="renderEquip()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status</option><option value="Pendente">Pendente</option><option value="Entregue">Entregue</option><option value="Agendado">Agendado</option><option value="N/A">N/A</option><option value="Sim">Sim</option><option value="Não">Não</option></select>
-      <select id="filter-cargo-equip" onchange="renderEquip()"><option value="">Todos os cargos</option></select>
+    <select id="filter-cargo-equip" onchange="renderEquip()"><option value="">Todos os cargos</option></select>
     <select id="filter-uf-equip" onchange="renderEquip()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todas as UF</option></select>
     <select id="filter-valor-equip" onchange="renderEquip()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status de campo</option>
       <option value="Pendente">⏳ Pendente</option>
@@ -605,8 +602,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div class="stats-row" id="stats-adm"></div>
   <div class="toolbar">
     <input type="text" id="search-adm" placeholder="🔍 Buscar por nome…" oninput="renderAdm()">
-    <select id="filter-campo-adm" onchange="renderAdm()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px;max-width:190px"><option value="">📋 Todos os campos</option><option value="Diploma/Superior">Diploma/Superior</option><option value="Especialização TI">Especialização TI</option><option value="Exp. Suporte">Exp. Suporte</option><option value="Exp. Microcomputadores">Exp. Microcomputadores</option><option value="ASO Admissional">ASO Admissional</option><option value="CTPS">CTPS</option><option value="Contrato de Trabalho">Contrato de Trabalho</option></select><select id="filter-valor-adm" onchange="renderAdm()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status</option><option value="Pendente">Pendente</option><option value="Entregue">Entregue</option><option value="Agendado">Agendado</option><option value="N/A">N/A</option><option value="Sim">Sim</option><option value="Não">Não</option></select>
-      <select id="filter-cargo-adm" onchange="renderAdm()"><option value="">Todos os cargos</option></select>
+    <select id="filter-cargo-adm" onchange="renderAdm()"><option value="">Todos os cargos</option></select>
     <select id="filter-uf-adm" onchange="renderAdm()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todas as UF</option></select>
     <select id="filter-valor-adm" onchange="renderAdm()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status de campo</option>
       <option value="Pendente">⏳ Pendente</option>
@@ -645,8 +641,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div class="stats-row" id="stats-termos"></div>
   <div class="toolbar">
     <input type="text" id="search-termos" placeholder="🔍 Buscar por nome…" oninput="renderTermos()">
-    <select id="filter-campo-termos" onchange="renderTermos()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px;max-width:190px"><option value="">📋 Todos os campos</option><option value="Termo TCU">Termo TCU</option><option value="Cadastro TCU">Cadastro TCU</option><option value="Decl. Não Parentesco">Decl. Não Parentesco</option><option value="Termo Vale Transporte">Termo Vale Transporte</option><option value="Termo de Conduta T&S">Termo de Conduta T&S</option></select><select id="filter-valor-termos" onchange="renderTermos()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status</option><option value="Pendente">Pendente</option><option value="Entregue">Entregue</option><option value="Agendado">Agendado</option><option value="N/A">N/A</option><option value="Sim">Sim</option><option value="Não">Não</option></select>
-      <select id="filter-cargo-termos" onchange="renderTermos()"><option value="">Todos os cargos</option></select>
+    <select id="filter-cargo-termos" onchange="renderTermos()"><option value="">Todos os cargos</option></select>
     <select id="filter-uf-termos" onchange="renderTermos()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todas as UF</option></select>
     <select id="filter-valor-termos" onchange="renderTermos()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status de campo</option>
       <option value="Pendente">⏳ Pendente</option>
@@ -681,8 +676,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div class="stats-row" id="stats-cert"></div>
   <div class="toolbar">
     <input type="text" id="search-cert" placeholder="🔍 Buscar por nome…" oninput="renderCert()">
-    <select id="filter-campo-cert" onchange="renderCert()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px;max-width:190px"><option value="">📋 Todos os campos</option><option value="HDI SCA">HDI SCA</option><option value="HDI CSR">HDI CSR</option><option value="M365 Fundamentals">M365 Fundamentals</option><option value="MD-100 ou MD-102">MD-100 ou MD-102</option><option value="HDI DAST">HDI DAST</option><option value="AZ-900">AZ-900</option><option value="ITIL Foundations v4">ITIL Foundations v4</option><option value="HDI SCTL">HDI SCTL</option><option value="HDI KCS">HDI KCS</option><option value="HDI SCM">HDI SCM</option><option value="HDI SCD">HDI SCD</option><option value="XLA Foundation">XLA Foundation</option></select><select id="filter-valor-cert" onchange="renderCert()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status</option><option value="Pendente">Pendente</option><option value="Entregue">Entregue</option><option value="Agendado">Agendado</option><option value="N/A">N/A</option><option value="Sim">Sim</option><option value="Não">Não</option></select>
-      <select id="filter-cargo-cert" onchange="renderCert()"><option value="">Todos os cargos</option></select>
+    <select id="filter-cargo-cert" onchange="renderCert()"><option value="">Todos os cargos</option></select>
     <select id="filter-uf-cert" onchange="renderCert()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todas as UF</option></select>
     <select id="filter-valor-cert" onchange="renderCert()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status de campo</option>
       <option value="Pendente">⏳ Pendente</option>
@@ -1207,7 +1201,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
 <!-- ═══════════════════ CARGOS E REQUISITOS ═══════════════════ -->
 <div id="tab-requisitos" style="display:none">
-<div class="dash-page">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
     <div>
       <div style="font-weight:700;font-size:16px;color:#1F4E79">📋 Cargos e Requisitos</div>
@@ -1227,11 +1220,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   </div>
   <div id="req-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px"></div>
 </div>
-</div>
 
 <!-- ═══════════════════ PENDÊNCIAS ═══════════════════ -->
 <div id="tab-pendencias" style="display:none">
-<div class="dash-page">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
     <div>
       <div style="font-weight:700;font-size:16px;color:#1F4E79">⚠️ Controle de Pendências</div>
@@ -1256,7 +1247,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   </div>
   <div id="pend-stats" style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap"></div>
   <div id="pend-lista"></div>
-</div>
 </div>
 
 <!-- ═══════════════════ SISTEMA CONTRATA ═══════════════════ -->
@@ -1308,7 +1298,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           <option value="">Todos os cargos</option>
         </select>
       </div>
-      <span style="display:inline-flex;border-radius:6px;overflow-x:auto;margin-left:auto;"><button class="btn g-only" onclick="expGerencial('xls')" style="font-size:10px;padding:4px 9px;border:1px solid var(--b600);border-right:.5px solid var(--b600);cursor:pointer;font-weight:600;background:#fff;color:var(--b600);border-radius:0;">⬇ XLSX</button><button class="btn g-only" onclick="expGerencial('pdf')" style="font-size:10px;padding:4px 9px;border:1px solid var(--b600);cursor:pointer;font-weight:600;background:#fff;color:var(--b600);border-radius:0;">📄 PDF</button></span>
+      <span style="display:inline-flex;border-radius:6px;overflow:hidden;margin-left:auto;"><button class="btn g-only" onclick="expGerencial('xls')" style="font-size:10px;padding:4px 9px;border:1px solid var(--b600);border-right:.5px solid var(--b600);cursor:pointer;font-weight:600;background:#fff;color:var(--b600);border-radius:0;">⬇ XLSX</button><button class="btn g-only" onclick="expGerencial('pdf')" style="font-size:10px;padding:4px 9px;border:1px solid var(--b600);cursor:pointer;font-weight:600;background:#fff;color:var(--b600);border-radius:0;">📄 PDF</button></span>
     </div>
     <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem;">
       <span style="font-size:10px;background:var(--g50);color:var(--g600);border-radius:4px;padding:2px 7px;font-weight:600;">P = Presente</span>
@@ -1336,12 +1326,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 <!-- ═══════════════════ ABONO ═══════════════════ -->
 <div id="tab-abono" style="display:none">
 <div class="dash-page">
-  <div class="ph">
-    <h2 class="ptitle">💰 Controle de Abono</h2>
-    <p class="psub">Abono de conectividade mensal por colaborador</p>
-  </div>
+  <div class="dh2" style="justify-content:space-between;flex-wrap:wrap;gap:.5rem;">
+    <div style="display:flex;align-items:center;gap:10px;"><div class="dhic" style="background:var(--g50);">💰</div>Controle de Abono</div>
     <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
-      <span style="display:inline-flex;border-radius:6px;overflow-x:auto;">
+      <span style="display:inline-flex;border-radius:6px;overflow:hidden;">
         <button class="btn g-only" onclick="expAbono('xls')" style="font-size:10px;padding:4px 9px;border:1px solid var(--b600);background:#fff;color:var(--b600);border-right:.5px solid var(--b600);border-radius:0;cursor:pointer;font-weight:600;">⬇ XLSX</button>
         <button class="btn g-only" onclick="expAbono('pdf')" style="font-size:10px;padding:4px 9px;border:1px solid var(--b600);background:#fff;color:var(--b600);border-radius:0;cursor:pointer;font-weight:600;">📄 PDF</button>
       </span>
@@ -1427,7 +1415,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
 <!-- ═══════════════════ DECLARAÇÕES ═══════════════════ -->
 <div id="tab-declaracoes" style="display:none">
-<div class="dash-page">
+<div style="padding:20px 24px">
 
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
     <div>
@@ -1477,7 +1465,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   </div>
 
   <!-- Tabela -->
-  <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;overflow-x:auto">
+  <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;overflow:hidden">
+    <div style="overflow-x:auto">
       <table style="width:100%;border-collapse:collapse;font-size:12px">
         <thead>
           <tr>
@@ -1500,7 +1489,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
 <!-- ═══════════════════ FÉRIAS ═══════════════════ -->
 <div id="tab-ferias" style="display:none">
-<div class="dash-page">
+<div style="padding:20px 24px">
 
   <!-- Header -->
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
@@ -1660,7 +1649,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 </div>
 <!-- ═══════════════════ INDICADORES ═══════════════════ -->
 <div id="tab-indicadores" style="display:none">
-<div class="dash-page">
+<div style="padding:20px 24px">
 
   <!-- Header -->
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px">
@@ -1717,7 +1706,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
 <!-- ═══════════════════ PENDÊNCIAS CERT/DIPLOMA ═══════════════════ -->
 <div id="tab-pend-cert" style="display:none">
-<div class="dash-page">
+<div style="padding:20px 24px">
 
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px">
     <div>
@@ -1754,7 +1743,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div id="pc-kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px"></div>
 
   <!-- Tabela -->
-  <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;overflow-x:auto">
+  <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;overflow:hidden">
+    <div style="overflow-x:auto">
       <table style="width:100%;border-collapse:collapse;font-size:12px">
         <thead>
           <tr>
@@ -1770,6 +1760,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         </thead>
         <tbody id="pc-tbody"></tbody>
       </table>
+    </div>
     <div id="pc-count" style="padding:8px 14px;font-size:11px;color:#6c757d;border-top:1px solid #dee2e6;background:#f8f9fb"></div>
   </div>
 
@@ -2479,7 +2470,6 @@ function filterData(search, cargo, opts){
   var fUf     = gv('filter-uf-'+tab);
   var fStatus = tab==='geral' ? gv('filter-status-geral') : '';
   var fValor  = gv('filter-valor-'+tab) || '';
-  var fCampo  = gv('filter-campo-'+tab) || '';
 
   return DATA.filter(function(c){
     // ── Status (ativo/inativo) ──────────────
@@ -2494,31 +2484,14 @@ function filterData(search, cargo, opts){
     // ── UF ─────────────────────────────────
     if(fUf && c.uf !== fUf) return false;
 
-    // ── Campo específico + Status ──────────────────────
-    if(fCampo && fValor){
-      // Filter by specific field + status
-      var fieldVal = null;
-      if(c.docs && c.docs[fCampo] !== undefined) fieldVal = c.docs[fCampo];
-      else if(c.certs && c.certs[fCampo] !== undefined) fieldVal = c.certs[fCampo];
-      else if(c[fCampo] !== undefined) fieldVal = c[fCampo];
-      if(fieldVal === null || fieldVal !== fValor) return false;
-    } else if(fCampo){
-      // Filter by specific field (any value except N/A)
-      var fv2 = null;
-      if(c.docs && c.docs[fCampo] !== undefined) fv2 = c.docs[fCampo];
-      else if(c.certs && c.certs[fCampo] !== undefined) fv2 = c.certs[fCampo];
-      else if(c[fCampo] !== undefined) fv2 = c[fCampo];
-      if(fv2 === null) return false;
-    } else if(fValor){
     // ── Valor de campo (Pendente/Entregue/Sim/Não/N\/A/Agendado) ──
-    if(true){
+    if(fValor){
       // Buscar em docs, certs, celular_tablet, cracha, maleta, uniforme
       var allVals = [];
       if(c.docs)  allVals = allVals.concat(Object.values(c.docs));
       if(c.certs) allVals = allVals.concat(Object.values(c.certs));
       ['celular_tablet','cracha','maleta','uniforme'].forEach(function(k){ if(c[k]) allVals.push(c[k]); });
       if(!allVals.some(function(v){ return v === fValor; })) return false;
-    }
     }
 
     // ── Busca por nome (apenas) ─────────────
@@ -2534,7 +2507,7 @@ function populateCargoFilter(selId){
   sel.innerHTML='<option value="">Todos os cargos</option>';
   const cargos=[...new Set(DATA.filter(c=>c&&c.nome).map(c=>c.cargo).filter(Boolean))].sort();
   cargos.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
-  if(cur&&[...sel.options].some(o=>o.value===cur)) sel.value=cur;
+  // Don't restore previous value — cleared on tab switch
 }
 
 function populateUfFilter(tab){
@@ -2545,7 +2518,7 @@ function populateUfFilter(tab){
   sel.innerHTML='<option value="">Todas as UF</option>';
   const ufs=[...new Set(DATA.filter(c=>c&&c.nome).map(c=>c.uf).filter(Boolean))].sort();
   ufs.forEach(u=>{const o=document.createElement('option');o.value=u;o.textContent=u;sel.appendChild(o);});
-  if(cur&&[...sel.options].some(o=>o.value===cur)) sel.value=cur;
+  // Don't restore previous value — cleared on tab switch
 }
 
 function renderGeral(){
@@ -3034,19 +3007,6 @@ function renderTermos(){
   updateStatsTermos(rows);
 }
 
-// Se qualquer uma do grupo estiver Entregue/Agendado, as outras não são pendência
-var CERT_OR_GROUPS = {
-  // TEL: HDI SCA OU HDI CSR (precisa de pelo menos uma)
-  'Analista de suporte telefônico (TEL)': [['HDI SCA','HDI CSR']],
-  // EST: HDI DAST OU HDI CSR
-  'Analista de suporte (EST)':            [['HDI DAST','HDI CSR']],
-  // AE: HDI DAST OU HDI CSR
-  'Analista de suporte especializado (AE)':[['HDI DAST','HDI CSR']],
-  // AP: HDI DAST OU HDI SCA OU HDI CSR
-  'Administração de parque tecnológico (AP)':[['HDI DAST','HDI SCA','HDI CSR']],
-  // Gestor de SD: precisa de 2 entre SCTL, SCM, SCD, XLA Foundation
-  'Gestor de Service desk':               [['HDI SCTL','HDI SCM','HDI SCD','XLA Foundation']],
-};
 var CARGO_CERTS_REQUIRED = {"Analista de suporte telefônico (TEL)": ["HDI SCA", "HDI CSR"], "Analista de suporte (BSB)": ["M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST"], "Analista de suporte (EST)": ["M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST", "HDI CSR"], "Analista de suporte especializado (AE)": ["M365 Fundamentals", "HDI DAST", "HDI CSR", "MD-100 ou MD-102"], "Analista de suporte especializado (AC)": ["M365 Fundamentals", "MD-100 ou MD-102", "AZ-900"], "Administração de parque tecnológico (AP)": ["HDI DAST", "HDI SCA", "HDI CSR"], "Supervisor de suporte (STEL)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (BSB)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (EST)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (SAE)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (SCHA)": ["ITIL Foundations v4"], "Gestor de conhecimento": ["HDI KCS"], "Gestor de Service desk": ["ITIL Foundations v4", "HDI SCTL", "HDI SCM", "HDI SCD", "XLA Foundation"]};
 var ALL_CERTS_LIST = ["HDI SCA", "HDI CSR", "M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST", "AZ-900", "ITIL Foundations v4", "HDI SCTL", "HDI KCS", "HDI SCM", "HDI SCD", "XLA Foundation"];
 
@@ -3370,8 +3330,6 @@ function toggleSidebar(){
 function showTab(id,el){
   // Reset ALL filters on ALL tabs — prevent cross-tab bleed
   document.querySelectorAll('select[id^="filter-"]').forEach(function(s){ s.value=''; });
-  document.querySelectorAll('select[id^="filter-campo-"]').forEach(function(s){ s.value=''; });
-  document.querySelectorAll('select[id^="filter-valor-"]').forEach(function(s){ s.value=''; });
   document.querySelectorAll('select[id^="abono-f-"]').forEach(function(s){ if(s.id!=='abono-f-mes'&&s.id!=='abono-f-ano') s.value=''; });
   var gerCargo=document.getElementById('ger-cargo'); if(gerCargo) gerCargo.value='';
   var pcCargo=document.getElementById('pc-cargo'); if(pcCargo) pcCargo.value='';
@@ -3381,7 +3339,7 @@ function showTab(id,el){
   });
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,'pend-cert':renderPendCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:()=>{try{renderDeclaracoes();}catch(e){}},requisitos:renderRequisitos,pendencias:renderPendencias,contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){console.error('rAbono error:',e);}},gerencial:()=>{try{rGerencial();}catch(e){console.error('rGerencial error:',e);}},indicadores:()=>{try{indRender();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}}};
+  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,'pend-cert':renderPendCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:()=>{try{renderDeclaracoes();}catch(e){}},requisitos:renderRequisitos,pendencias:renderPendencias,contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){}},gerencial:()=>{try{rGerencial();}catch(e){}},indicadores:()=>{try{indRender();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}}};
   if(renders[id]) renders[id]();
 }
 
@@ -5837,7 +5795,7 @@ function renderPendCert(){
   const prazoAlerta = diasRestantes <= 7;
   const prazoVencido = diasRestantes < 0;
 
-  const ALL_DOCS_DIPLOMA = ['Diploma/Superior']; // Especialização TI é N/A para todos
+  const ALL_DOCS_DIPLOMA = ['Diploma/Superior'];
 
   // Build list
   let rows = DATA.filter(c=>c&&c.nome&&typeof c.nome==='string'&&c.status!=='inativo');
@@ -7497,26 +7455,17 @@ function renderRequisitos(){
 }
 
 function showColabCargo(cargo){
-  // Switch to geral tab
+  // Switch to geral tab and filter by cargo
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>{ if(t.textContent.includes('Geral')||t.textContent.includes('Colaboradores')) t.classList.add('active'); });
+  document.querySelectorAll('.tab').forEach(t=>{ if(t.textContent.includes('Geral')) t.classList.add('active'); });
   tabIds.forEach(t=>{ const el=document.getElementById('tab-'+t); if(el) el.style.display=t==='geral'?'block':'none'; });
+  // Set cargo filter
   setTimeout(()=>{
-    // Clear other filters first
-    const sf=document.getElementById('filter-status-geral'); if(sf) sf.value='';
-    const uf=document.getElementById('filter-uf-geral'); if(uf) uf.value='';
-    document.getElementById('search-geral').value='';
-    // Populate cargo filter then set value
-    populateCargoFilter('filter-cargo-geral');
     const sel=document.getElementById('filter-cargo-geral');
     if(sel) sel.value=cargo;
-    // Render with explicit cargo value
-    const body=document.getElementById('body-geral');
-    const rows=filterData('',cargo,{tab:'geral'});
-    if(body) body.innerHTML=rows.length?rows.map((c,i)=>{
-      const ativo=c.status!=='inativo';
-      return '<tr><td style="color:#999;font-size:11px">'+(i+1)+'</td><td><b style="color:#1F4E79">'+c.nome+'</b><br><span style="font-size:10px;color:#'+(ativo?'155724;background:#D4EDDA':'7A0000;background:#FCEBEB')+'';
-    }).join(''):'<tr><td colspan="20" style="text-align:center;padding:20px;color:#aaa">Nenhum colaborador encontrado</td></tr>';
+    document.getElementById('search-geral').value='';
+    const sf=document.getElementById('filter-status-geral');
+    if(sf) sf.value='';
     renderGeral();
     document.querySelector('.content').scrollTop=0;
   },50);
@@ -7702,14 +7651,26 @@ const PEND_DOC_LABELS = {
   'Termo Vale Transporte':'Termo Vale Transporte',
   'Termo de Conduta T&S':'Termo de Conduta T&S',
 };
-const PEND_CAT_MAP = {
+var PEND_CAT_MAP = {
   docs:   ['Termo TCU','Cadastro TCU','Decl. Não Parentesco'],
   admissao:['Diploma/Superior','Especialização TI','Exp. Suporte','Exp. Microcomputadores','ASO Admissional','CTPS','Contrato de Trabalho'],
   termos: ['Termo Vale Transporte','Termo de Conduta T&S'],
 };
 
 // ── Grupos de certificações alternativas (OR) ─────────────────
-
+// Se qualquer uma do grupo estiver Entregue/Agendado, as outras não são pendência
+var CERT_OR_GROUPS = {
+  // TEL: HDI SCA OU HDI CSR (precisa de pelo menos uma)
+  'Analista de suporte telefônico (TEL)': [['HDI SCA','HDI CSR']],
+  // EST: HDI DAST OU HDI CSR
+  'Analista de suporte (EST)':            [['HDI DAST','HDI CSR']],
+  // AE: HDI DAST OU HDI CSR
+  'Analista de suporte especializado (AE)':[['HDI DAST','HDI CSR']],
+  // AP: HDI DAST OU HDI SCA OU HDI CSR
+  'Administração de parque tecnológico (AP)':[['HDI DAST','HDI SCA','HDI CSR']],
+  // Gestor de SD: precisa de 2 entre SCTL, SCM, SCD, XLA Foundation
+  'Gestor de Service desk':               [['HDI SCTL','HDI SCM','HDI SCD','XLA Foundation']],
+};
 
 function certSatisfied(c, certName){
   // Returns true if this cert is already covered by an OR group
