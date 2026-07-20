@@ -1336,8 +1336,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 <!-- ═══════════════════ ABONO ═══════════════════ -->
 <div id="tab-abono" style="display:none">
 <div class="dash-page">
-  <div class="dh2" style="justify-content:space-between;flex-wrap:wrap;gap:.5rem;">
-    <div style="display:flex;align-items:center;gap:10px;"><div class="dhic" style="background:var(--g50);">💰</div>Controle de Abono</div>
+  <div class="ph">
+    <h2 class="ptitle">💰 Controle de Abono</h2>
+    <p class="psub">Abono de conectividade mensal por colaborador</p>
+  </div>
     <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
       <span style="display:inline-flex;border-radius:6px;overflow-x:auto;">
         <button class="btn g-only" onclick="expAbono('xls')" style="font-size:10px;padding:4px 9px;border:1px solid var(--b600);background:#fff;color:var(--b600);border-right:.5px solid var(--b600);border-radius:0;cursor:pointer;font-weight:600;">⬇ XLSX</button>
@@ -5835,7 +5837,7 @@ function renderPendCert(){
   const prazoAlerta = diasRestantes <= 7;
   const prazoVencido = diasRestantes < 0;
 
-  const ALL_DOCS_DIPLOMA = ['Diploma/Superior','Especialização TI'];
+  const ALL_DOCS_DIPLOMA = ['Diploma/Superior']; // Especialização TI é N/A para todos
 
   // Build list
   let rows = DATA.filter(c=>c&&c.nome&&typeof c.nome==='string'&&c.status!=='inativo');
@@ -5965,7 +5967,7 @@ function pcEnviarEmail(id){
 function exportarPendCert(){
   const busca=(document.getElementById('pc-busca')?.value||'').toLowerCase();
   const fCargo=document.getElementById('pc-cargo')?.value||'';
-  const ALL_DOCS_DIPLOMA=['Diploma/Superior','Especialização TI'];
+  const ALL_DOCS_DIPLOMA=['Diploma/Superior'];
   const rows=DATA.filter(c=>c&&c.nome&&c.status!=='inativo').map(c=>{
     const diplomaPend=ALL_DOCS_DIPLOMA.filter(d=>c.docs&&(c.docs[d]==='Pendente'||!c.docs[d]));
     const required=CARGO_CERTS_REQUIRED[c.cargo]||[];
