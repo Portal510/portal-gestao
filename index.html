@@ -10083,6 +10083,13 @@ function _portalInit(){
       }).catch(function(){});
     }
   }
+  // ── Carregar do Firebase se vazio (sync entre navegadores) ────────────
+  if(!localStorage.getItem(DATA_KEY)||DATA.length<10){
+    if(typeof window._fbGestaoLoad==='function'){
+      window._fbGestaoLoad().then(function(p){
+        if(p&&p.colaboradores&&p.colaboradores.length>10){
+          var v=p.colaboradores.filter(function(c){return c&&c.nome;});
+          if(v.length>10){DATA=v.map(function(c,i){return Object.assign({},c,{_id:i});});_safeSetItem(DATA_KEY,JSON.stringify(DATA));console.log('[init] Firebase: '+v.length+' colabs');try{renderGeral();}catch(e){}}}}).catch(function(){});}}
   // ── Se DATA insuficiente, usar COLAB base ─────────────────────────────
   if(DATA.length < 10){
     DATA = COLAB.map((c,i)=>({...c, _id:i}));
