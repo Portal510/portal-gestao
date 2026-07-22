@@ -2446,6 +2446,9 @@ function badge(v){
   return `<span>${v}</span>`;
 }
 function editBadge(v,id,field){ if(v===undefined||v===null||v==='') v='Pendente';
+  const _ec=DATA.find(x=>x._id===id);
+  const _ek=field.startsWith('docs.')?field.slice(5):field.startsWith('certs.')?field.slice(6):field;
+  const _ev=_ec&&_ec.docs_envios&&_ec.docs_envios[_ek]?_ec.docs_envios[_ek]:[];
   // Check for Agendado date
   const c=DATA.find(x=>x._id===id);
   let label=v, cls='';
@@ -6500,6 +6503,11 @@ function upAtualizarStatus(colabId, tipo, fileName){
   if(!c) return;
   const field = TIPO_TO_FIELD[tipo];
   if(!field) return;
+  // Registrar data do envio
+  const _now=new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  if(!c.docs_envios) c.docs_envios={};
+  if(!c.docs_envios[field.key]) c.docs_envios[field.key]=[];
+  c.docs_envios[field.key].push(_now);
   if(field.cat==='docs'){
     if(!c.docs) c.docs={};
     c.docs[field.key] = 'Entregue'; // sempre marcar — sem verificar undefined
