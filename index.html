@@ -227,7 +227,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
 .sidebar-toggle.collapsed{left:0}
 
 /* CONTENT */
-.content{flex:1;padding:20px 24px;overflow-y:auto;overflow-x:hidden;height:100%}
+.content{flex:1;padding:20px 24px;overflow-y:auto;overflow-x:auto;height:100%}
 
 /* RESPONSIVE */
 @media(max-width:768px){
@@ -6082,6 +6082,18 @@ async function upSincronizarBaixar(){
   docs.forEach(d=>{ if(d.tipo&&d.tipo!=='—') upAtualizarStatus(d.colabId,d.tipo,d.fileName); });
   saveData();
   // Refresh tabs
+    // ── Inicializar display das abas ──────────────────────────────────
+  tabIds.forEach(function(t){
+    var el=document.getElementById('tab-'+t);
+    if(el) el.style.display = (t==='geral') ? 'block' : 'none';
+  });
+  // Marcar aba Colaboradores como ativa
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.classList.remove('active');
+    if(t.textContent&&(t.textContent.includes('Colaboradores')||t.textContent.includes('Geral'))){
+      t.classList.add('active');
+    }
+  });
   try{ renderGeral(); }catch(e){}
   // Generate ZIP
   try{
