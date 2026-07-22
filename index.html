@@ -3339,18 +3339,12 @@ function toggleSidebar(){
 }
 
 function showTab(id,el){
-  // Reset ALL filters on ALL tabs — prevent cross-tab bleed
-  document.querySelectorAll('select[id^="filter-"]').forEach(function(s){ s.value=''; });
-  document.querySelectorAll('select[id^="abono-f-"]').forEach(function(s){ if(s.id!=='abono-f-mes'&&s.id!=='abono-f-ano') s.value=''; });
-  var gerCargo=document.getElementById('ger-cargo'); if(gerCargo) gerCargo.value='';
-  var pcCargo=document.getElementById('pc-cargo'); if(pcCargo) pcCargo.value='';
   tabIds.forEach(t=>{
     const el2=document.getElementById('tab-'+t);
     if(el2) el2.style.display=t===id?'block':'none';
   });
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,'pend-cert':renderPendCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:()=>{try{renderDeclaracoes();}catch(e){}},requisitos:renderRequisitos,pendencias:renderPendencias,contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){}},gerencial:()=>{try{rGerencial();}catch(e){}},indicadores:()=>{try{indRender();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}}};
   if(renders[id]) renders[id]();
 }
 
