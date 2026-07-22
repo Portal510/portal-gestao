@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portal T&S — Gestão de Terceirizados</title>
+<!-- portal-gestao v20260722_232024 -->
 
 <!-- Firebase REST API — Portal T&S + Portal Gestão -->
 <script>
@@ -4544,6 +4545,7 @@ function imprimirTermoUni(){
   win.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
 
     <title>Termo de Entrega de Uniforme</title>
+<!-- portal-gestao v20260722_232024 -->
     <style>
       body{font-family:'Times New Roman',serif;font-size:13px;margin:30px;color:#1a1a2e;line-height:1.7}
       table{width:100%;border-collapse:collapse;margin:10px 0}
@@ -7525,6 +7527,7 @@ function openPDFWindow(title, headers, rows){
 <meta charset="UTF-8">
 
 <title>${title}</title>
+<!-- portal-gestao v20260722_232024 -->
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:Arial,sans-serif;font-size:11px;color:#1a1a2e;padding:20px}
@@ -8060,7 +8063,8 @@ function buildPDF(title, subtitle, headers, rows, filename) {
     return '<tr class="'+cls+'">' + row.map(function(cell){ return '<td>'+(cell==null?'':cell)+'</td>'; }).join('') + '</tr>';
   }).join('');
   var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">'
-    + '<title>'+title+'</title><style>'
+    + '<title>'+title+'</title>
+<!-- portal-gestao v20260722_232024 --><style>'
     + '*{box-sizing:border-box;margin:0;padding:0;}'
     + 'body{font-family:Arial,sans-serif;font-size:10pt;color:#222;padding:1.5cm;}'
     + '.header{display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:.75rem;border-bottom:2px solid #042C53;margin-bottom:1rem;}'
