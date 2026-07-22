@@ -2467,7 +2467,7 @@ function editBadge(v,id,field){ if(v===undefined||v===null||v==='') v='Pendente'
     else label='📅 Agendado';
   }
   else cls='badge-pend';
-  return '<span class="badge '+cls+' cell-edit" onclick="openEdit('+id+',\''+field+'\')">'+label+'</span>';
+  const _eb_tip=_ev.length>0?' title="'+_ev.map((d,i)=>i+1+'. '+d).join(' | ')+'"':''; return '<span class="badge '+cls+' cell-edit" onclick="openEdit('+id+',\''+field+'\')"'+_eb_tip+'>'+label+(_ev.length>1?'<sup style="font-size:9px;margin-left:2px">('+_ev.length+')</sup>':'')+'</span>';
 }
 
 // ── Filtro único para todas as abas ─────────────────────
