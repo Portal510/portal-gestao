@@ -3339,20 +3339,6 @@ function toggleSidebar(){
 }
 
 
-// ── Global renders map ──────────────────────────────────────────────
-const renders={
-  geral:renderGeral, equipamentos:renderEquip, admissao:renderAdm,
-  termos:renderTermos, certif:renderCert, 'pend-cert':renderPendCert,
-  calendario:renderCal, comunicados:initComunicados, predef:renderPreDef,
-  uniforme:initUniforme, upload:initUpload,
-  declaracoes:function(){try{renderDeclaracoes();}catch(e){console.error('declaracoes:',e);}},
-  requisitos:renderRequisitos, pendencias:renderPendencias, contrata:renderContrata,
-  abono:function(){try{rAbono();}catch(e){console.error('abono:',e);}},
-  gerencial:function(){try{rGerencial();}catch(e){console.error('gerencial:',e);}},
-  indicadores:function(){try{indRender();}catch(e){console.error('indicadores:',e);}},
-  ferias:function(){try{ferRender();}catch(e){console.error('ferias:',e);}}
-};
-
 function showTab(id,el){
   tabIds.forEach(t=>{
     const el2=document.getElementById('tab-'+t);
@@ -9276,6 +9262,20 @@ function indRender(){
     </div>`;
   }).join('');
 }
+
+// ── Global renders map ──────────────────────────────────────────────
+const renders={
+  geral:renderGeral, equipamentos:renderEquip, admissao:renderAdm,
+  termos:renderTermos, certif:renderCert, 'pend-cert':renderPendCert,
+  calendario:renderCal, comunicados:initComunicados, predef:renderPreDef,
+  uniforme:initUniforme, upload:initUpload,
+  declaracoes:function(){try{renderDeclaracoes();}catch(e){console.error('declaracoes:',e);}},
+  requisitos:renderRequisitos, pendencias:renderPendencias, contrata:renderContrata,
+  abono:function(){try{rAbono();}catch(e){console.error('abono:',e);}},
+  gerencial:function(){try{rGerencial();}catch(e){console.error('gerencial:',e);}},
+  indicadores:function(){try{indRender();}catch(e){console.error('indicadores:',e);}},
+  ferias:function(){try{ferRender();}catch(e){console.error('ferias:',e);}}
+};
 
 function indRenderEvolucao(services){
   const div=document.getElementById('ind-evolucao-chart');
