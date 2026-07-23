@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portal T&S — Gestão de Terceirizados</title>
+<!-- build 2026-07-16 13:51 -->
 
 <!-- Firebase REST API — Portal T&S + Portal Gestão -->
 <script>
@@ -227,7 +228,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
 .sidebar-toggle.collapsed{left:0}
 
 /* CONTENT */
-.content{flex:1;padding:20px 24px;overflow-y:auto;overflow-x:auto;height:100%}
+.content{flex:1;padding:20px 24px;overflow-y:auto;overflow-x:hidden;height:100%}
 
 /* RESPONSIVE */
 @media(max-width:768px){
@@ -518,6 +519,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <option value="Sim">PcD: Sim</option>
       <option value="Não">PcD: Não</option>
     </select>
+    <select id="filter-valor-geral" onchange="renderGeral()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status</option><option value="Pendente">Pendente</option><option value="Entregue">Entregue</option><option value="Agendado">Agendado</option><option value="N/A">N/A</option><option value="Sim">Sim</option><option value="Não">Não</option></select>
     <select id="filter-status-geral" onchange="renderGeral()">
       <option value="">Todos os status</option>
       <option value="ativo">● Ativos</option>
@@ -557,14 +559,15 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </tr></thead>
     <tbody id="body-geral"></tbody>
   </table></div>
-
+</div>
 
 <!-- ═══════════════════ EQUIPAMENTOS ═══════════════════ -->
 <div id="tab-equipamentos" style="display:none">
   <div class="stats-row" id="stats-equip"></div>
   <div class="toolbar">
     <input type="text" id="search-equip" placeholder="🔍 Buscar por nome…" oninput="renderEquip()">
-    <select id="filter-cargo-equip" onchange="renderEquip()"><option value="">Todos os cargos</option></select>
+    <select id="filter-campo-equip" onchange="renderEquip()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px;max-width:190px"><option value="">📋 Todos os campos</option><option value="celular_tablet">celular tablet</option><option value="cracha">cracha</option><option value="maleta">maleta</option><option value="uniforme">uniforme</option></select><select id="filter-valor-equip" onchange="renderEquip()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status</option><option value="Pendente">Pendente</option><option value="Entregue">Entregue</option><option value="Agendado">Agendado</option><option value="N/A">N/A</option><option value="Sim">Sim</option><option value="Não">Não</option></select>
+      <select id="filter-cargo-equip" onchange="renderEquip()"><option value="">Todos os cargos</option></select>
     <select id="filter-uf-equip" onchange="renderEquip()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todas as UF</option></select>
     <select id="filter-valor-equip" onchange="renderEquip()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status de campo</option>
       <option value="Pendente">⏳ Pendente</option>
@@ -594,7 +597,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </thead>
     <tbody id="body-equip"></tbody>
   </table></div>
-
+</div>
 
 <!-- ═══════════════════ DOCUMENTOS ═══════════════════ -->
 <!-- ═══════════════════ ADMISSÃO ═══════════════════ -->
@@ -602,7 +605,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div class="stats-row" id="stats-adm"></div>
   <div class="toolbar">
     <input type="text" id="search-adm" placeholder="🔍 Buscar por nome…" oninput="renderAdm()">
-    <select id="filter-cargo-adm" onchange="renderAdm()"><option value="">Todos os cargos</option></select>
+    <select id="filter-campo-adm" onchange="renderAdm()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px;max-width:190px"><option value="">📋 Todos os campos</option><option value="Diploma/Superior">Diploma/Superior</option><option value="Especialização TI">Especialização TI</option><option value="Exp. Suporte">Exp. Suporte</option><option value="Exp. Microcomputadores">Exp. Microcomputadores</option><option value="ASO Admissional">ASO Admissional</option><option value="CTPS">CTPS</option><option value="Contrato de Trabalho">Contrato de Trabalho</option></select><select id="filter-valor-adm" onchange="renderAdm()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status</option><option value="Pendente">Pendente</option><option value="Entregue">Entregue</option><option value="Agendado">Agendado</option><option value="N/A">N/A</option><option value="Sim">Sim</option><option value="Não">Não</option></select>
+      <select id="filter-cargo-adm" onchange="renderAdm()"><option value="">Todos os cargos</option></select>
     <select id="filter-uf-adm" onchange="renderAdm()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todas as UF</option></select>
     <select id="filter-valor-adm" onchange="renderAdm()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status de campo</option>
       <option value="Pendente">⏳ Pendente</option>
@@ -634,14 +638,15 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </thead>
     <tbody id="body-adm"></tbody>
   </table></div>
-
+</div>
 
 <!-- ═══════════════════ TERMOS ═══════════════════ -->
 <div id="tab-termos" style="display:none">
   <div class="stats-row" id="stats-termos"></div>
   <div class="toolbar">
     <input type="text" id="search-termos" placeholder="🔍 Buscar por nome…" oninput="renderTermos()">
-    <select id="filter-cargo-termos" onchange="renderTermos()"><option value="">Todos os cargos</option></select>
+    <select id="filter-campo-termos" onchange="renderTermos()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px;max-width:190px"><option value="">📋 Todos os campos</option><option value="Termo TCU">Termo TCU</option><option value="Cadastro TCU">Cadastro TCU</option><option value="Decl. Não Parentesco">Decl. Não Parentesco</option><option value="Termo Vale Transporte">Termo Vale Transporte</option><option value="Termo de Conduta T&S">Termo de Conduta T&S</option></select><select id="filter-valor-termos" onchange="renderTermos()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status</option><option value="Pendente">Pendente</option><option value="Entregue">Entregue</option><option value="Agendado">Agendado</option><option value="N/A">N/A</option><option value="Sim">Sim</option><option value="Não">Não</option></select>
+      <select id="filter-cargo-termos" onchange="renderTermos()"><option value="">Todos os cargos</option></select>
     <select id="filter-uf-termos" onchange="renderTermos()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todas as UF</option></select>
     <select id="filter-valor-termos" onchange="renderTermos()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status de campo</option>
       <option value="Pendente">⏳ Pendente</option>
@@ -669,14 +674,15 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </thead>
     <tbody id="body-termos"></tbody>
   </table></div>
-
+</div>
 
 <!-- ═══════════════════ CERTIFICAÇÕES ═══════════════════ -->
 <div id="tab-certif" style="display:none">
   <div class="stats-row" id="stats-cert"></div>
   <div class="toolbar">
     <input type="text" id="search-cert" placeholder="🔍 Buscar por nome…" oninput="renderCert()">
-    <select id="filter-cargo-cert" onchange="renderCert()"><option value="">Todos os cargos</option></select>
+    <select id="filter-campo-cert" onchange="renderCert()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px;max-width:190px"><option value="">📋 Todos os campos</option><option value="HDI SCA">HDI SCA</option><option value="HDI CSR">HDI CSR</option><option value="M365 Fundamentals">M365 Fundamentals</option><option value="MD-100 ou MD-102">MD-100 ou MD-102</option><option value="HDI DAST">HDI DAST</option><option value="AZ-900">AZ-900</option><option value="ITIL Foundations v4">ITIL Foundations v4</option><option value="HDI SCTL">HDI SCTL</option><option value="HDI KCS">HDI KCS</option><option value="HDI SCM">HDI SCM</option><option value="HDI SCD">HDI SCD</option><option value="XLA Foundation">XLA Foundation</option></select><select id="filter-valor-cert" onchange="renderCert()" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status</option><option value="Pendente">Pendente</option><option value="Entregue">Entregue</option><option value="Agendado">Agendado</option><option value="N/A">N/A</option><option value="Sim">Sim</option><option value="Não">Não</option></select>
+      <select id="filter-cargo-cert" onchange="renderCert()"><option value="">Todos os cargos</option></select>
     <select id="filter-uf-cert" onchange="renderCert()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todas as UF</option></select>
     <select id="filter-valor-cert" onchange="renderCert()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:12px"><option value="">Todos os status de campo</option>
       <option value="Pendente">⏳ Pendente</option>
@@ -710,7 +716,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </thead>
     <tbody id="body-cert"></tbody>
   </table></div>
-
+</div>
 
 <!-- ═══════════════════ CALENDÁRIO ═══════════════════ -->
 <div id="tab-calendario" style="display:none">
@@ -745,7 +751,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       </div>
     </div>
   </div>
-
+</div>
 
 <!-- ═══════════════════ COMUNICADOS ═══════════════════ -->
 <div id="tab-comunicados" style="display:none">
@@ -822,7 +828,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <div style="text-align:center;padding:30px;color:#aaa;font-size:13px">Nenhum comunicado registrado ainda.</div>
     </div>
   </div>
-
+</div>
 
 <!-- ═══════════════════ E-MAILS PRÉ-DEFINIDOS ═══════════════════ -->
 <div id="tab-predef" style="display:none">
@@ -1197,7 +1203,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
   <!-- Doc list -->
   <div id="up-lista"></div>
-
+</div>
 
 <!-- ═══════════════════ CARGOS E REQUISITOS ═══════════════════ -->
 <div id="tab-requisitos" style="display:none">
@@ -1219,7 +1225,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </div>
   </div>
   <div id="req-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px"></div>
-
+</div>
 
 <!-- ═══════════════════ PENDÊNCIAS ═══════════════════ -->
 <div id="tab-pendencias" style="display:none">
@@ -1247,7 +1253,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   </div>
   <div id="pend-stats" style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap"></div>
   <div id="pend-lista"></div>
-
+</div>
 
 <!-- ═══════════════════ SISTEMA CONTRATA ═══════════════════ -->
 <div id="tab-contrata" style="display:none">
@@ -1265,7 +1271,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div id="contrata-lista">
     <div style="text-align:center;padding:40px;color:#aaa">Nenhum colaborador na fila.</div>
   </div>
-
+</div>
 
 <!-- ═══════════════════ GERENCIAL ═══════════════════ -->
 <div id="tab-gerencial" style="display:none">
@@ -1298,7 +1304,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           <option value="">Todos os cargos</option>
         </select>
       </div>
-      <span style="display:inline-flex;border-radius:6px;overflow:hidden;margin-left:auto;"><button class="btn g-only" onclick="expGerencial('xls')" style="font-size:10px;padding:4px 9px;border:1px solid var(--b600);border-right:.5px solid var(--b600);cursor:pointer;font-weight:600;background:#fff;color:var(--b600);border-radius:0;">⬇ XLSX</button><button class="btn g-only" onclick="expGerencial('pdf')" style="font-size:10px;padding:4px 9px;border:1px solid var(--b600);cursor:pointer;font-weight:600;background:#fff;color:var(--b600);border-radius:0;">📄 PDF</button></span>
+      <span style="display:inline-flex;border-radius:6px;overflow-x:auto;margin-left:auto;"><button class="btn g-only" onclick="expGerencial('xls')" style="font-size:10px;padding:4px 9px;border:1px solid var(--b600);border-right:.5px solid var(--b600);cursor:pointer;font-weight:600;background:#fff;color:var(--b600);border-radius:0;">⬇ XLSX</button><button class="btn g-only" onclick="expGerencial('pdf')" style="font-size:10px;padding:4px 9px;border:1px solid var(--b600);cursor:pointer;font-weight:600;background:#fff;color:var(--b600);border-radius:0;">📄 PDF</button></span>
     </div>
     <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem;">
       <span style="font-size:10px;background:var(--g50);color:var(--g600);border-radius:4px;padding:2px 7px;font-weight:600;">P = Presente</span>
@@ -1315,7 +1321,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <div id="ger-table-wrap" style="overflow-x:auto;padding:.5rem;"></div>
   </div>
 </div>
-
+</div>
 
 
 <!-- ════════════════════════════════════════════════════
@@ -1329,7 +1335,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div class="dh2" style="justify-content:space-between;flex-wrap:wrap;gap:.5rem;">
     <div style="display:flex;align-items:center;gap:10px;"><div class="dhic" style="background:var(--g50);">💰</div>Controle de Abono</div>
     <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
-      <span style="display:inline-flex;border-radius:6px;overflow:hidden;">
+      <span style="display:inline-flex;border-radius:6px;overflow-x:auto;">
         <button class="btn g-only" onclick="expAbono('xls')" style="font-size:10px;padding:4px 9px;border:1px solid var(--b600);background:#fff;color:var(--b600);border-right:.5px solid var(--b600);border-radius:0;cursor:pointer;font-weight:600;">⬇ XLSX</button>
         <button class="btn g-only" onclick="expAbono('pdf')" style="font-size:10px;padding:4px 9px;border:1px solid var(--b600);background:#fff;color:var(--b600);border-radius:0;cursor:pointer;font-weight:600;">📄 PDF</button>
       </span>
@@ -1410,7 +1416,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </div>
   </div>
 </div>
-
+</div>
 
 
 <!-- ═══════════════════ DECLARAÇÕES ═══════════════════ -->
@@ -1465,8 +1471,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   </div>
 
   <!-- Tabela -->
-  <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;overflow:hidden">
-    <div style="overflow-x:auto">
+  <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;overflow-x:auto">
       <table style="width:100%;border-collapse:collapse;font-size:12px">
         <thead>
           <tr>
@@ -1485,7 +1490,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
 
 </div>
-
+</div>
 
 <!-- ═══════════════════ FÉRIAS ═══════════════════ -->
 <div id="tab-ferias" style="display:none">
@@ -1702,7 +1707,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   </div>
 
 </div>
-
+</div>
 
 <!-- ═══════════════════ PENDÊNCIAS CERT/DIPLOMA ═══════════════════ -->
 <div id="tab-pend-cert" style="display:none">
@@ -1743,8 +1748,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div id="pc-kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px"></div>
 
   <!-- Tabela -->
-  <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;overflow:hidden">
-    <div style="overflow-x:auto">
+  <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;overflow-x:auto">
       <table style="width:100%;border-collapse:collapse;font-size:12px">
         <thead>
           <tr>
@@ -1760,15 +1764,14 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         </thead>
         <tbody id="pc-tbody"></tbody>
       </table>
-    </div>
     <div id="pc-count" style="padding:8px 14px;font-size:11px;color:#6c757d;border-top:1px solid #dee2e6;background:#f8f9fb"></div>
   </div>
 
 </div>
+</div>
 
-
-<!-- /content -->
-<!-- /portal-layout -->
+</div><!-- /content -->
+</div><!-- /portal-layout -->
 
 <!-- ══ TERMO UNIFORME MODAL ══ -->
 <div class="modal-bg" id="modal-termo-uni">
@@ -1875,14 +1878,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       style="width:100%;margin-top:8px;padding:12px;background:linear-gradient(135deg,#1F4E79,#2E75B6);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer">
       Entrar →
     </button>
-    <div style="margin-top:20px;padding:14px;background:#f0f4ff;border-radius:8px;border:1px solid #c8d8f0">
-      <div style="font-size:11px;font-weight:700;color:#1F4E79;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Credenciais de Acesso</div>
-      <div style="font-size:12px;color:#444;line-height:1.8">
-        <div>👤 <b>priscila</b> / <code style="background:#fff;padding:1px 5px;border-radius:4px;color:#C55A11">Gestao@2025</code></div>
-        <div>👤 <b>gestao</b> / <code style="background:#fff;padding:1px 5px;border-radius:4px;color:#C55A11">ts@2025</code></div>
-        <div>👤 <b>admin</b> / <code style="background:#fff;padding:1px 5px;border-radius:4px;color:#C55A11">tcu@2025</code></div>
-      </div>
-    </div>
     <div style="text-align:center;margin-top:16px;font-size:11px;color:#aaa">Central de Serviços de TI — TCU · Contrato T&S</div>
   </div>
 </div>
@@ -2357,13 +2352,14 @@ function saveData(){
     DATA.forEach((c,i)=>{ c._id=i; });
     _safeSetItem(DATA_KEY, JSON.stringify(DATA));
     localStorage.setItem('ts_data_saved_at', Date.now().toString());
-    try{ if(typeof window._fbGestaoSave==='function') window._fbGestaoSave({colaboradores:DATA,ts:Date.now()}); }catch(fe){}
+    // Salvar cópia de segurança no Firebase (documento separado 'gestao-data')
+    try{ _fbBackupData(); }catch(fe){}
   }catch(e){ console.warn('[saveData]',e); }
 }
 
 // Restaura DATA do Firebase se localStorage vazio ou corrompido
 // Firebase backup desativado (rede bloqueia acesso)
-function _fbBackupData(){ try{ if(typeof window._fbGestaoSave==='function') window._fbGestaoSave({colaboradores:DATA,ts:Date.now()}); }catch(e){} }
+function _fbBackupData(){ /* no-op */ }
 
 async function _fbRestoreIfEmpty(){
   try{
@@ -2446,9 +2442,6 @@ function badge(v){
   return `<span>${v}</span>`;
 }
 function editBadge(v,id,field){ if(v===undefined||v===null||v==='') v='Pendente';
-  const _ec=DATA.find(x=>x._id===id);
-  const _ek=field.startsWith('docs.')?field.slice(5):field.startsWith('certs.')?field.slice(6):field;
-  const _ev=_ec&&_ec.docs_envios&&_ec.docs_envios[_ek]?_ec.docs_envios[_ek]:[];
   // Check for Agendado date
   const c=DATA.find(x=>x._id===id);
   let label=v, cls='';
@@ -2467,7 +2460,7 @@ function editBadge(v,id,field){ if(v===undefined||v===null||v==='') v='Pendente'
     else label='📅 Agendado';
   }
   else cls='badge-pend';
-  const _eb_tip=_ev.length>0?' title="'+_ev.map((d,i)=>i+1+'. '+d).join(' | ')+'"':''; return '<span class="badge '+cls+' cell-edit" onclick="openEdit('+id+',\''+field+'\')"'+_eb_tip+'>'+label+(_ev.length>1?'<sup style="font-size:9px;margin-left:2px">('+_ev.length+')</sup>':'')+'</span>';
+  return '<span class="badge '+cls+' cell-edit" onclick="openEdit('+id+',\''+field+'\')">'+label+'</span>';
 }
 
 // ── Filtro único para todas as abas ─────────────────────
@@ -2481,6 +2474,7 @@ function filterData(search, cargo, opts){
   var fUf     = gv('filter-uf-'+tab);
   var fStatus = tab==='geral' ? gv('filter-status-geral') : '';
   var fValor  = gv('filter-valor-'+tab) || '';
+  var fCampo  = gv('filter-campo-'+tab) || '';
 
   return DATA.filter(function(c){
     // ── Status (ativo/inativo) ──────────────
@@ -2495,14 +2489,31 @@ function filterData(search, cargo, opts){
     // ── UF ─────────────────────────────────
     if(fUf && c.uf !== fUf) return false;
 
+    // ── Campo específico + Status ──────────────────────
+    if(fCampo && fValor){
+      // Filter by specific field + status
+      var fieldVal = null;
+      if(c.docs && c.docs[fCampo] !== undefined) fieldVal = c.docs[fCampo];
+      else if(c.certs && c.certs[fCampo] !== undefined) fieldVal = c.certs[fCampo];
+      else if(c[fCampo] !== undefined) fieldVal = c[fCampo];
+      if(fieldVal === null || fieldVal !== fValor) return false;
+    } else if(fCampo){
+      // Filter by specific field (any value except N/A)
+      var fv2 = null;
+      if(c.docs && c.docs[fCampo] !== undefined) fv2 = c.docs[fCampo];
+      else if(c.certs && c.certs[fCampo] !== undefined) fv2 = c.certs[fCampo];
+      else if(c[fCampo] !== undefined) fv2 = c[fCampo];
+      if(fv2 === null) return false;
+    } else if(fValor){
     // ── Valor de campo (Pendente/Entregue/Sim/Não/N\/A/Agendado) ──
-    if(fValor){
+    if(true){
       // Buscar em docs, certs, celular_tablet, cracha, maleta, uniforme
       var allVals = [];
       if(c.docs)  allVals = allVals.concat(Object.values(c.docs));
       if(c.certs) allVals = allVals.concat(Object.values(c.certs));
       ['celular_tablet','cracha','maleta','uniforme'].forEach(function(k){ if(c[k]) allVals.push(c[k]); });
       if(!allVals.some(function(v){ return v === fValor; })) return false;
+    }
     }
 
     // ── Busca por nome (apenas) ─────────────
@@ -3018,8 +3029,8 @@ function renderTermos(){
   updateStatsTermos(rows);
 }
 
-var CARGO_CERTS_REQUIRED = {"Analista de suporte telefônico (TEL)": ["HDI SCA", "HDI CSR"], "Analista de suporte (BSB)": ["M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST"], "Analista de suporte (EST)": ["M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST", "HDI CSR"], "Analista de suporte especializado (AE)": ["M365 Fundamentals", "HDI DAST", "HDI CSR", "MD-100 ou MD-102"], "Analista de suporte especializado (AC)": ["M365 Fundamentals", "MD-100 ou MD-102", "AZ-900"], "Administração de parque tecnológico (AP)": ["HDI DAST", "HDI SCA", "HDI CSR"], "Supervisor de suporte (STEL)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (BSB)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (EST)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (SAE)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (SCHA)": ["ITIL Foundations v4"], "Gestor de conhecimento": ["HDI KCS"], "Gestor de Service desk": ["ITIL Foundations v4", "HDI SCTL", "HDI SCM", "HDI SCD", "XLA Foundation"]};
-var ALL_CERTS_LIST = ["HDI SCA", "HDI CSR", "M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST", "AZ-900", "ITIL Foundations v4", "HDI SCTL", "HDI KCS", "HDI SCM", "HDI SCD", "XLA Foundation"];
+const CARGO_CERTS_REQUIRED = {"Analista de suporte telefônico (TEL)": ["HDI SCA", "HDI CSR"], "Analista de suporte (BSB)": ["M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST"], "Analista de suporte (EST)": ["M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST", "HDI CSR"], "Analista de suporte especializado (AE)": ["M365 Fundamentals", "HDI DAST", "HDI CSR", "MD-100 ou MD-102"], "Analista de suporte especializado (AC)": ["M365 Fundamentals", "MD-100 ou MD-102", "AZ-900"], "Administração de parque tecnológico (AP)": ["HDI DAST", "HDI SCA", "HDI CSR"], "Supervisor de suporte (STEL)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (BSB)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (EST)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (SAE)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (SCHA)": ["ITIL Foundations v4"], "Gestor de conhecimento": ["HDI KCS"], "Gestor de Service desk": ["ITIL Foundations v4", "HDI SCTL", "HDI SCM", "HDI SCD", "XLA Foundation"]};
+const ALL_CERTS_LIST = ["HDI SCA", "HDI CSR", "M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST", "AZ-900", "ITIL Foundations v4", "HDI SCTL", "HDI KCS", "HDI SCM", "HDI SCD", "XLA Foundation"];
 
 // Returns effective status of a cert for a colaborador
 // N/A if cargo doesn't need it; Entregue/Agendado/Pendente based on saved value
@@ -3337,7 +3348,6 @@ function toggleSidebar(){
   btn.style.left=collapsed?'0':'220px';
   try{localStorage.setItem('sidebar_collapsed',collapsed?'1':'0');}catch(e){}
 }
-
 
 function showTab(id,el){
   // Reset ALL filters on ALL tabs — prevent cross-tab bleed
@@ -5809,7 +5819,7 @@ function renderPendCert(){
   const prazoAlerta = diasRestantes <= 7;
   const prazoVencido = diasRestantes < 0;
 
-  const ALL_DOCS_DIPLOMA = ['Diploma/Superior'];
+  const ALL_DOCS_DIPLOMA = ['Diploma/Superior','Especialização TI'];
 
   // Build list
   let rows = DATA.filter(c=>c&&c.nome&&typeof c.nome==='string'&&c.status!=='inativo');
@@ -5939,7 +5949,7 @@ function pcEnviarEmail(id){
 function exportarPendCert(){
   const busca=(document.getElementById('pc-busca')?.value||'').toLowerCase();
   const fCargo=document.getElementById('pc-cargo')?.value||'';
-  const ALL_DOCS_DIPLOMA=['Diploma/Superior'];
+  const ALL_DOCS_DIPLOMA=['Diploma/Superior','Especialização TI'];
   const rows=DATA.filter(c=>c&&c.nome&&c.status!=='inativo').map(c=>{
     const diplomaPend=ALL_DOCS_DIPLOMA.filter(d=>c.docs&&(c.docs[d]==='Pendente'||!c.docs[d]));
     const required=CARGO_CERTS_REQUIRED[c.cargo]||[];
@@ -6077,18 +6087,6 @@ async function upSincronizarBaixar(){
   docs.forEach(d=>{ if(d.tipo&&d.tipo!=='—') upAtualizarStatus(d.colabId,d.tipo,d.fileName); });
   saveData();
   // Refresh tabs
-    // ── Inicializar display das abas ──────────────────────────────────
-  tabIds.forEach(function(t){
-    var el=document.getElementById('tab-'+t);
-    if(el) el.style.display = (t==='geral') ? 'block' : 'none';
-  });
-  // Marcar aba Colaboradores como ativa
-  document.querySelectorAll('.tab').forEach(function(t){
-    t.classList.remove('active');
-    if(t.textContent&&(t.textContent.includes('Colaboradores')||t.textContent.includes('Geral'))){
-      t.classList.add('active');
-    }
-  });
   try{ renderGeral(); }catch(e){}
   // Generate ZIP
   try{
@@ -6315,7 +6313,542 @@ function showZipResult(rows, zipName){
 
 // ── End ZIP Import ─────────────────────────
 
+function upHandleFiles(files){
+  const zipFiles  = Array.from(files).filter(f=>f.name.toLowerCase().endsWith('.zip'));
+  const otherFiles= Array.from(files).filter(f=>!f.name.toLowerCase().endsWith('.zip'));
+  if(zipFiles.length){
+    // Processar ZIPs sequencialmente — não em paralelo
+    (async()=>{
+      for(let i=0;i<zipFiles.length;i++){
+        const zf=zipFiles[i];
+        const div=document.getElementById('up-batch-result');
+        if(div){ div.style.display='block'; div.innerHTML=`<div style="color:#6c757d;font-size:13px">📦 ZIP ${i+1}/${zipFiles.length}: processando <b>${zf.name}</b>…</div>`; }
+        await new Promise(resolve=>{
+          upImportZip(zf, resolve); // pass resolve callback
+        });
+      }
+    })();
+  }
+  if(!otherFiles.length) return;
 
+  const tipo    = document.getElementById('up-tipo').value    || null;
+  const colabId = parseInt(document.getElementById('up-colab').value);
+
+  // Both fields are optional — try auto-detect from filename for anything missing
+  const rows = [];
+  let pending = otherFiles.length;
+
+  otherFiles.forEach(file=>{
+    let resolvedTipo    = tipo;
+    let resolvedColabId = isNaN(colabId) ? null : colabId;
+
+    // Auto-detect missing values from filename
+    if(!resolvedColabId){
+      const g = upGuessColab(file.name);
+      if(g) resolvedColabId = g._id;
+    }
+    if(!resolvedTipo){
+      const g = upGuessType(file.name);
+      if(g) resolvedTipo = g;
+    }
+
+    // Collaborator still unknown → ask user
+    if(resolvedColabId===null){
+      rows.push({
+        fileName:file.name, _fileObj:file, file:file,
+        status:'no-colab',
+        msg: resolvedTipo ? `Tipo: ${resolvedTipo} — colaborador não identificado` : 'Colaborador não identificado',
+        colab:null, tipo:resolvedTipo
+      });
+      pending--;
+      if(pending===0) showQuickUploadResult(rows);
+      return;
+    }
+
+    // tipo is fully optional — import without it
+    const colab = DATA.find(x=>x._id===resolvedColabId);
+    if(!colab){ pending--; if(pending===0) showQuickUploadResult(rows); return; }
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    const id  = Date.now().toString()+Math.random().toString(36).slice(2,6);
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      const dup = uploadedDocs.find(d=>
+        d.colabId===resolvedColabId &&
+        d.tipo===(resolvedTipo||'—') &&
+        !d.pending
+      );
+      if(dup){
+        // File already exists for this colab+tipo — add with dup flag visible in list
+        rows.push({fileName:file.name,status:'dup',msg:`Duplicado — ${colab.nome} já possui "${resolvedTipo||'este tipo'}" importado`,colab,tipo:resolvedTipo});
+        // Still add to list but flagged as duplicate
+        const id2=Date.now().toString()+Math.random().toString(36).slice(2,6);
+        const ext2=file.name.split('.').pop().toLowerCase();
+        const reader2=new FileReader();
+        reader2.onload=(e2)=>{
+          uploadedDocs.unshift({
+            id:id2,colabId:resolvedColabId,colabNome:colab.nome,colabUf:colab.uf,
+            tipo:resolvedTipo||'—',cat:TIPO_CAT[resolvedTipo]||'Outros',
+            fileName:file.name,ext:ext2,size:file.size,
+            dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+            dataUrl:e2.target.result,
+            duplicate:true,
+          });
+          saveUploadDocs();
+          pending--;
+          if(pending===0){
+            saveData();
+            try{ renderEquip(); }catch(e){}
+            try{ renderAdm(); }catch(e){}
+            try{ renderTermos(); }catch(e){}
+            try{ renderCert(); }catch(e){}
+            try{ renderPendencias(); }catch(e){}
+            upFilterDocs(); showQuickUploadResult(rows);
+          }
+        };
+        reader2.readAsDataURL(file);
+        return;
+      }
+      uploadedDocs.unshift({
+          id, colabId:resolvedColabId, colabNome:colab.nome, colabUf:colab.uf,
+          tipo:resolvedTipo||'—', cat:TIPO_CAT[resolvedTipo]||'Outros',
+          fileName:file.name, ext, size:file.size,
+          dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+          dataUrl:e.target.result,
+        });
+        if(resolvedTipo) upAtualizarStatus(resolvedColabId, resolvedTipo, upGetEffectiveFileName(file.name, resolvedTipo||''));
+        rows.push({fileName:file.name,status:'ok',msg:`✅ ${colab.nome}${resolvedTipo?' · '+resolvedTipo:''}`,colab,tipo:resolvedTipo});
+      saveUploadDocs();
+      pending--;
+      // Feedback por arquivo processado
+      toast(`📎 ${pending} restante(s)…`+(pending===0?' Concluído!':''),'ok');
+      if(pending===0){
+        saveData();
+        // Atualizar automaticamente as abas de controle
+        try{ renderEquip(); }catch(e){}
+        try{ renderAdm(); }catch(e){}
+        try{ renderTermos(); }catch(e){}
+        try{ renderCert(); }catch(e){}
+        try{ renderPendencias(); }catch(e){}
+        try{ renderDeclaracoes(); }catch(e){}
+        upFilterDocs();
+        toast(`✅ ${rows.length} arquivo(s) importado(s) com sucesso!`,'ok');
+        showQuickUploadResult(rows);
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+  document.getElementById('up-file-input').value='';
+}
+
+function showQuickUploadResult(rows){
+  if(!rows.length) return;
+  const ok  = rows.filter(r=>r.status==='ok').length;
+  const dup = rows.filter(r=>r.status==='dup').length;
+  const noid= rows.filter(r=>['manual','no-colab','no-tipo'].includes(r.status)).length;
+
+  if(ok>0) try{ showSyncToast && showSyncToast(ok,0); }catch(e){}
+
+  if(noid>0){
+    // Save unidentified files as "pending" entries in uploadedDocs so they appear in the list
+    rows.filter(r=>['manual','no-colab','no-tipo'].includes(r.status)).forEach(r=>{
+      const fileObj = r._fileObj || r.file; // r.file from manual rows
+      if(!fileObj && !r.dataUrl) return; // nothing to store
+      const id = Date.now().toString()+Math.random().toString(36).slice(2,6);
+      const fName = r.fileName || (fileObj && fileObj.name) || 'arquivo';
+      const ext = fName.split('.').pop().toLowerCase();
+      const pendingEntry = {
+        id,
+        colabId:   r.colab?._id ?? null,
+        colabNome: r.colab?.nome  ?? '— Não identificado —',
+        colabUf:   r.colab?.uf   ?? '—',
+        tipo:      r.tipo  ?? '— Não identificado —',
+        cat:       r.tipo ? (TIPO_CAT[r.tipo]||'Outros') : 'Pendente',
+        fileName:  fName,
+        ext,
+        size:      r._fileObj?.size ?? 0,
+        dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+        dataUrl:   r.dataUrl || null,
+        pending:   true,   // flag: precisa de preenchimento manual
+        _fileObj:  undefined,
+      };
+      // If we have a File object, read it as dataUrl
+      if(fileObj && !r.dataUrl){
+        const fr = new FileReader();
+        fr.onload = e2 => {
+          pendingEntry.dataUrl = e2.target.result;
+          // Update existing entry
+          const idx = uploadedDocs.findIndex(d=>d.id===id);
+          if(idx>=0) uploadedDocs[idx].dataUrl = e2.target.result;
+          saveUploadDocs();
+          upFilterDocs();
+        };
+        fr.readAsDataURL(fileObj);
+      }
+      // Add immediately (with or without dataUrl) so card shows right away
+      if(!uploadedDocs.find(d=>d.fileName===fName&&d.pending)){
+        uploadedDocs.unshift(pendingEntry);
+      }
+    });
+    saveUploadDocs();
+    upFilterDocs();
+
+    // Show brief info panel (not blocking)
+    const resultDiv=document.getElementById('up-batch-result');
+    if(resultDiv){
+      resultDiv.style.display='block';
+      resultDiv.innerHTML=`
+        <div style="font-size:13px;font-weight:600;color:#7A5000;margin-bottom:6px">
+          ⚠️ ${noid} arquivo(s) não identificado(s) automaticamente foram adicionados à lista como <b>Pendente</b>.
+        </div>
+        <div style="font-size:12px;color:#6c757d">
+          Clique no ícone ✏️ em cada linha para definir o colaborador e tipo manualmente, ou em 🗑 para excluir.
+        </div>`;
+    }
+    window._batchPendingRows = rows;
+    window._batchPendingFiles = {};
+    rows.forEach(r=>{ if(r._fileObj) window._batchPendingFiles[r.fileName]=r._fileObj; });
+  }
+}
+
+function upAtualizarStatus(colabId, tipo, fileName){
+  const c = DATA.find(x=>x._id===colabId);
+  if(!c) return;
+  const field = TIPO_TO_FIELD[tipo];
+  if(!field) return;
+  if(field.cat==='docs'){
+    if(!c.docs) c.docs={};
+    c.docs[field.key] = 'Entregue'; // sempre marcar — sem verificar undefined
+  }
+  if(field.cat==='certs' && c.certs!==undefined){
+    if(!c.certs) c.certs={};
+    c.certs[field.key] = 'Entregue';
+    // If part of OR group, set others in group to N/A
+    const groups = CERT_OR_GROUPS[c.cargo]||[];
+    groups.forEach(group=>{ if(group.includes(field.key)){ group.forEach(other=>{ if(other!==field.key && c.certs[other]==='Pendente') c.certs[other]='N/A'; }); } });
+  }
+  if(field.cat==='decl'){
+    const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    // Extract month from fileName
+    // Handles: "DF – Lucas Sena – Junho.pdf"  and  "DF - Lucas - Junho_Lucas.pdf"
+    // Take only the part before the first underscore (in case of composite names)
+    const rawName = (fileName||'').replace(/\.[^.]+$/,'');
+    const src = rawName.split('_')[0]; // ignore suffix after _
+    let mes = meses[new Date().getMonth()]; // default: current month
+    let ano = String(new Date().getFullYear());
+    meses.forEach(m=>{ if(src.toLowerCase().includes(m.toLowerCase())) mes=m; });
+    const yearMatch = src.match(/20\d\d/);
+    if(yearMatch) ano = yearMatch[0];
+    const key = declKey(c.nome, mes, ano);
+    if(!DECL_DATA[key]) DECL_DATA[key]={};
+    DECL_DATA[key][field.key]='Entregue';
+    _declSave();
+    // Always refresh declarações tab
+    try{ renderDeclaracoes(); }catch(e){}
+    return;
+  }
+  if(field.cat==='equip' && c[field.key]!==undefined && c[field.key]!=='N/A'){
+    const isTel = c.cargo && c.cargo.includes('(TEL)');
+    if(isTel && (field.key==='maleta'||field.key==='uniforme')) return;
+    c[field.key] = 'Sim';
+  }
+  saveData();
+}
+
+function upFilterDocs(){
+  const busca   = (document.getElementById('up-busca')?.value||'').toLowerCase();
+  const filTipo = document.getElementById('up-fil-tipo')?.value||'';
+  const filColab= document.getElementById('up-fil-colab')?.value||'';
+  const filStat = document.getElementById('up-fil-status')?.value||'';
+
+  let docs = [...uploadedDocs];
+  if(busca)   docs = docs.filter(d=>d.colabNome.toLowerCase().includes(busca)||d.fileName.toLowerCase().includes(busca)||d.tipo.toLowerCase().includes(busca));
+  if(filTipo) docs = docs.filter(d=>d.cat===filTipo);
+  if(filColab)docs = docs.filter(d=>d.colabId===parseInt(filColab));
+  if(filStat==='Entregue') docs = docs.filter(d => !d.pending);
+  else if(filStat==='Pendente') docs = docs.filter(d => d.pending===true);
+  // Default (no filter): show ALL including pending
+
+  // Stats
+  const totalUpl = uploadedDocs.length;
+  const colabsUpl = new Set(uploadedDocs.map(d=>d.colabId)).size;
+  const tiposUpl  = new Set(uploadedDocs.map(d=>d.tipo)).size;
+  document.getElementById('up-stats').innerHTML=`
+    <div class="up-stat"><div class="n" style="color:#58a6ff">${totalUpl}</div><div class="l">Documentos</div></div>
+    <div class="up-stat"><div class="n" style="color:#3fb950">${colabsUpl}</div><div class="l">Colaboradores</div></div>
+    <div class="up-stat"><div class="n" style="color:#d29922">${tiposUpl}</div><div class="l">Tipos distintos</div></div>
+    <div class="up-stat" onclick="upMostrarSemUpload()" title="Clique para ver quem está sem upload" style="cursor:pointer;border:1.5px solid #f85149;transition:box-shadow .15s" onmouseover="this.style.boxShadow='0 2px 8px rgba(248,81,73,.3)'" onmouseout="this.style.boxShadow=''">
+      <div class="n" style="color:#f85149">${DATA.length-colabsUpl}</div>
+      <div class="l">Sem upload <span style="font-size:10px">▼</span></div>
+    </div>
+  `;
+  // Render sem-upload list if visible
+  const semUpDiv = document.getElementById('up-sem-upload');
+  if(semUpDiv && semUpDiv.style.display!=='none') upMostrarSemUpload(colabsComUpload);
+
+  const lista = document.getElementById('up-lista');
+  if(!docs.length){
+    lista.innerHTML=`<div class="up-empty"><div class="eicon">📬</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:6px">${uploadedDocs.length?'Nenhum resultado.':'Nenhum documento carregado.'}</div>
+      <div style="font-size:13px">${uploadedDocs.length?'Ajuste os filtros.':'Defina o tipo, selecione o colaborador e importe os arquivos acima.'}</div>
+    </div>`;
+    return;
+  }
+
+  lista.innerHTML = docs.map(d=>{
+    const icon = FILE_ICONS[d.ext]||FILE_ICONS.default;
+    const sizeStr = d.size>1048576 ? (d.size/1048576).toFixed(1)+'MB' : Math.round(d.size/1024)+'KB';
+    const isPending = d.pending === true;
+    const isDup = d.duplicate === true;
+    return `<div class="up-card" style="${isPending?'border-left:3px solid #C55A11;background:#FFF8F0;':isDup?'border-left:3px solid #a32d2d;background:#FFF5F5;':''}">
+      <div class="up-card-icon">${icon}</div>
+      <div class="up-card-info">
+        <div class="up-card-nome" title="${d.fileName}">${d.fileName}${isDup?' <span style="background:#FFE0E0;color:#a32d2d;font-size:10px;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:6px">⚠️ DUPLICADO</span>':''}</div>
+        <div class="up-card-meta" style="margin-top:4px">
+          <span class="up-badge up-badge-tipo" style="${isPending?'background:#FFE0C0;color:#7A3000':isDup?'background:#FFE0E0;color:#a32d2d':''}">${d.tipo==='— Não identificado —'?'⚠️ Não identificado':d.tipo}</span>
+          <span style="margin-left:8px;color:${isPending?'#C55A11':'#58a6ff'};font-weight:600">${d.colabNome}</span>
+          <span style="margin-left:6px;color:#6c757d">· ${d.colabUf} · ${sizeStr} · ${d.dataUpload}</span>
+        </div>
+        ${(isPending||d.tipo==='—'||d.tipo==='— Não identificado —'||!d.colabId)?`<div id="pend-form-${d.id}" style="display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;align-items:center">
+          <select class="up-select" style="font-size:11px;padding:3px 7px;max-width:230px" data-pid="${d.id}" onchange="upPendingSetColab(this.dataset.pid,this.value)">
+            <option value="">${d.colabId!=null?'Alterar colaborador…':'— Selecionar colaborador —'}</option>
+            ${[...DATA].sort((a,b)=>a.nome.localeCompare(b.nome)).map(c=>`<option value="${c._id}" ${c._id===d.colabId?'selected':''}>${c.nome} (${c.uf})</option>`).join('')}
+          </select>
+          <select class="up-select" style="font-size:11px;padding:3px 7px;max-width:200px" data-pid="${d.id}" onchange="upPendingSetTipo(this.dataset.pid,this.value)">
+            <option value="">${d.tipo!=='— Não identificado —'?'Alterar tipo…':'— Selecionar tipo —'}</option>
+            ${Object.keys(TIPO_TO_FIELD).map(t=>`<option value="${t}" ${t===d.tipo?'selected':''}>${t}</option>`).join('')}
+          </select>
+          <button class="btn-primary" style="font-size:11px;padding:4px 12px;background:#375623;border-color:#375623" data-pid="${d.id}" onclick="upPendingConfirmar(this.dataset.pid)">✓ Confirmar</button>
+        </div>`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0">
+        ${isPending
+          ? `<span class="up-badge" style="background:#FFE0C0;color:#7A3000;font-weight:600">⏳ Pendente</span>`
+          : isDup
+            ? `<span class="up-badge" style="background:#FFE0E0;color:#a32d2d;font-weight:600">⚠️ Duplicado</span>`
+            : `<span class="up-badge up-badge-ok">✅ Entregue</span>`}
+        <div style="display:flex;gap:6px;margin-top:4px">
+          ${d.dataUrl?`<button class="up-btn" onclick="upDownloadFile('${d.id}')" title="Baixar com nome padronizado">⬇</button>`:''}
+          ${d.dataUrl?`<button class="up-btn" onclick="upVisualizar('${d.id}')" title="Visualizar">👁</button>`:''}
+          <button class="up-btn up-btn-danger" onclick="upRemover('${d.id}')" title="Remover">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Pending doc manual fill ───────────────
+function upMostrarSemUpload(colabsComUpload){
+  const div = document.getElementById('up-sem-upload');
+  const lista = document.getElementById('up-sem-upload-lista');
+  if(!div || !lista) return;
+  // Toggle
+  if(!colabsComUpload && div.style.display !== 'none'){
+    div.style.display = 'none'; return;
+  }
+  // Build set of colabs with uploads
+  const comUpload = colabsComUpload || new Set((window.uploadedDocs||[]).map(d=>d.colabId).filter(x=>x!=null));
+  const semUpload = DATA.filter(c => c && c.nome && c.status!=='inativo' && !comUpload.has(c._id));
+  if(!semUpload.length){
+    div.style.display = 'none';
+    toast('✅ Todos os colaboradores têm documentos anexados!','ok');
+    return;
+  }
+  lista.innerHTML = semUpload.map(c=>
+    `<span style="background:#fff;border:1px solid #f5c6cb;border-radius:16px;padding:3px 12px;font-size:12px;white-space:nowrap">
+      <span style="font-weight:600;color:#1F4E79">${c.nome}</span>
+      <span style="color:#6c757d;margin-left:4px">${c.cargo.replace('Analista de suporte ','').replace('Analista de suporte especializado ','')}</span>
+      <span style="color:#999;margin-left:4px">${c.uf}</span>
+    </span>`
+  ).join('');
+  div.style.display = 'block';
+}
+
+function upPendingToggle(id){
+  const form = document.getElementById('pend-form-'+id);
+  if(!form) return;
+  form.style.display = form.style.display==='none' ? 'flex' : 'none';
+}
+
+function upPendingSetColab(id, colabId){
+  const d = uploadedDocs.find(x=>x.id===id);
+  if(!d) return;
+  const c = DATA.find(x=>x._id===parseInt(colabId));
+  if(!c) return;
+  d.colabId = c._id; d.colabNome = c.nome; d.colabUf = c.uf;
+  saveUploadDocs();
+  // Update the name badge in the card without full re-render
+  document.querySelectorAll('[data-pid="'+id+'"]').forEach(el=>{
+    const nameSpan = el.closest('.up-card')?.querySelector('.up-card-nome + div span:nth-child(2)');
+    // Just save — no full re-render to avoid resetting other selects
+  });
+  // Don't call upFilterDocs — would reset tipo select
+  console.log('[setColab] id='+id+' colabId='+c._id+' nome='+c.nome); return; upFilterDocs();
+}
+
+function upPendingSetTipo(id, tipo){
+  const d = uploadedDocs.find(x=>x.id===id);
+  if(!d) return;
+  d.tipo = tipo; d.cat = TIPO_CAT[tipo]||'Outros';
+  saveUploadDocs();
+  console.log('[setTipo] id='+id+' tipo='+tipo); return; upFilterDocs();
+}
+
+function upPendingConfirmar(id){
+  const d = uploadedDocs.find(x=>x.id===id);
+  if(!d){ toast('Documento não encontrado.','warn'); return; }
+
+  // Read current select values from DOM (in case user changed but didn't trigger onchange)
+  const colabSel = document.querySelector('[data-pid="'+id+'"][onchange*="SetColab"]');
+  const tipoSel  = document.querySelector('[data-pid="'+id+'"][onchange*="SetTipo"]');
+  if(colabSel && colabSel.value && !d.colabId){
+    const c = DATA.find(x=>x._id===parseInt(colabSel.value));
+    if(c){ d.colabId=c._id; d.colabNome=c.nome; d.colabUf=c.uf; }
+  }
+  if(tipoSel && tipoSel.value && (d.tipo==='— Não identificado —'||d.tipo==='—')){
+    d.tipo=tipoSel.value; d.cat=TIPO_CAT[tipoSel.value]||'Outros';
+  }
+
+  if(!d.colabId){ toast('⚠️ Selecione o colaborador.','warn'); if(colabSel) colabSel.focus(); return; }
+  if(!d.tipo || d.tipo==='— Não identificado —'||d.tipo==='—'){ toast('⚠️ Selecione o tipo do documento.','warn'); if(tipoSel) tipoSel.focus(); return; }
+
+  d.pending = false;
+  if(!d.docs) d.docs={};
+  upAtualizarStatus(d.colabId, d.tipo, d.effFileName||d.fileName);
+  saveData();
+  saveUploadDocs();
+  const nome=d.colabNome, tipo=d.tipo;
+  ['renderAdm','renderTermos','renderEquip','renderCert','renderDeclaracoes','renderPendencias','renderGeral']
+    .forEach(fn=>{ try{window[fn]&&window[fn]();}catch(e){} });
+  upFilterDocs();
+  toast('✅ '+nome+' · '+tipo+' — Entregue!','ok');
+}
+
+function upVisualizar(id){
+  const doc = uploadedDocs.find(d=>d.id===id);
+  if(!doc||!doc.dataUrl) return;
+  const win = window.open('','_blank');
+  if(doc.ext==='pdf'){
+    win.document.write(`<html><body style="margin:0"><embed src="${doc.dataUrl}" width="100%" height="100%" type="application/pdf"></body></html>`);
+  } else {
+    win.document.write(`<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${doc.dataUrl}" style="max-width:100%;max-height:100vh;object-fit:contain"></body></html>`);
+  }
+  win.document.close();
+}
+
+function upDownload(id){
+  const doc = uploadedDocs.find(d=>d.id===id);
+  if(!doc||!doc.dataUrl) return;
+  const a = document.createElement('a');
+  a.href = doc.dataUrl;
+  a.download = doc.fileName;
+  a.click();
+}
+
+function upRemover(id){
+  const doc = uploadedDocs.find(d=>d.id===id);
+  if(!doc) return;
+  if(!confirm(`Remover "${doc.fileName}"?\nO status voltará para Pendente.`)) return;
+  uploadedDocs = uploadedDocs.filter(d=>d.id!==id);
+  saveUploadDocs();
+  // Revert status only if no other upload of same tipo+colab exists
+  const still = uploadedDocs.find(d=>d.colabId===doc.colabId && d.tipo===doc.tipo);
+  if(!still){
+    const c = DATA.find(x=>x._id===doc.colabId);
+    const field = TIPO_TO_FIELD[doc.tipo];
+    if(c && field){
+      if(field.cat==='docs' && c.docs[field.key]==='Entregue') c.docs[field.key]='Pendente';
+      if(field.cat==='certs' && c.certs[field.key]==='Entregue') c.certs[field.key]='Pendente';
+      if(field.cat==='equip' && c[field.key]==='Sim') c[field.key]='Pendente';
+      saveData();
+    }
+  }
+  upFilterDocs();
+}
+
+// ── Batch import (pasta completa) ─────────
+// Normaliza string removendo acentos e caixa
+function normStr(s){
+  return s.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9\s]/g,' ')
+    .replace(/\s+/g,' ').trim();
+}
+
+// Tenta identificar o colaborador a partir do nome do arquivo
+function upGuessColab(filename){
+  const base = normStr(filename.replace(/\.[^.]+$/,''));
+  const words = base.split(' ');
+
+  let bestMatch=null, bestScore=0;
+  DATA.forEach(c=>{
+    const nNorm = normStr(c.nome);
+    const nWords = nNorm.split(' ');
+    // Count overlapping words (ignore short words)
+    const score = nWords.filter(w=>w.length>2 && words.includes(w)).length;
+    // Bonus: first+last name match
+    const bonus = (words.includes(nWords[0]) && words.includes(nWords[nWords.length-1])) ? 2 : 0;
+    const total = score + bonus;
+    if(total > bestScore){ bestScore=total; bestMatch=c; }
+  });
+  return bestScore >= 2 ? bestMatch : null;
+}
+
+// Tenta identificar o tipo de documento a partir do nome do arquivo
+const TIPO_KEYWORDS = {
+  'Diploma/Superior':       ['diploma','superior','graduacao','faculdade','bacharel','licenciatura','tecnologo','historico escolar'],
+  'Especialização TI':      ['especializacao','pos graduacao','pos-graduacao','mba','especializacao ti','especializacao em ti'],
+  'Exp. Suporte':           ['experiencia suporte','exp suporte','comprovante experiencia','carteira trabalho','ctps suporte','declaracao experiencia'],
+  'Exp. Microcomputadores': ['experiencia micro','exp micro','microcomputador','computador'],
+  'ASO Admissional':        ['aso','atestado saude','exame admissional','saude ocupacional','admissional'],
+  'CTPS':                   ['ctps','carteira trabalho','carteira de trabalho','clt'],
+  'Contrato de Trabalho':   ['contrato trabalho','contrato de trabalho','contrato emprego'],
+  'Termo TCU':              ['termo tcu','termo responsabilidade tcu','termo de responsabilidade'],
+  'Cadastro TCU':           ['cadastro tcu','cadastro terceirizado','cadastro de terceirizado'],
+  'Decl. Não Parentesco':   ['parentesco','nao parentesco','declaracao parentesco','declaracao de nao parentesco'],
+  'Termo Vale Transporte':  ['vale transporte','vt','termo vt','termo vale'],
+  'Termo de Conduta T&S':   ['conduta','termo conduta','codigo conduta','ts conduta'],
+  'HDI SCA':                ['hdi sca','sca'],
+  'HDI CSR':                ['hdi csr','csr'],
+  'M365 Fundamentals':      ['m365','microsoft 365','ms365','fundamentals','ms-900'],
+  'MD-100 ou MD-102':       ['md100','md102','md-100','md-102','desktop administrator'],
+  'HDI DAST':               ['dast','desktop advanced'],
+  'AZ-900':                 ['az900','az-900','azure fundamentals'],
+  'ITIL Foundations v4':    ['itil','itil v4','itil4','itil foundation'],
+  'HDI SCTL':               ['sctl','team lead','team leader'],
+  'HDI KCS':                ['kcs','knowledge centered'],
+  'HDI SCM':                ['scm','support center manager'],
+  'HDI SCD':                ['scd','support center director'],
+  'Termo Maleta':              ['maleta','termo maleta','ferramenta'],
+  'Decl. Desktop/Internet':    ['desktop internet','internet desktop','conectividade','ajuste custo','custo desktop','custo internet','decl desktop','decl internet'],
+  'Decl. Locação Equipamento': ['locacao equip','locação equip','equipamento locacao','decl locacao','decl celular','celular locacao','locação de equip','locacao de equip','declaração locação','declaracao locacao','decl locação'],
+  'XLA Foundation':         ['xla','xla foundation'],
+};
+
+function upGuessType(filename){
+  const base = normStr(filename.replace(/\.[^.]+$/,''));
+  let bestType=null, bestScore=0;
+  Object.entries(TIPO_KEYWORDS).forEach(([tipo, keywords])=>{
+    const score = keywords.filter(kw=>base.includes(normStr(kw))).length;
+    if(score > bestScore){ bestScore=score; bestType=tipo; }
+  });
+  return bestScore > 0 ? bestType : null;
+}
+
+
+// ── Ampulheta em qualquer botão ──────────────────────────
+function withSpinner(btn, asyncFn){
+  if(!btn) { asyncFn(); return; }
+  const orig = btn.innerHTML;
+  btn.innerHTML = '⏳'; btn.disabled = true;
+  Promise.resolve().then(asyncFn).finally(()=>{
+    setTimeout(()=>{ btn.innerHTML=orig; btn.disabled=false; }, 400);
+  });
+}
+// Wrapper para onclick inline: withBtn(this, fn)
+function withBtn(btn, fn){ withSpinner(btn, fn); }
+
+// ── Upload unificado: docs + ZIPs juntos ──────────────────
 async function upHandleFiles(files){
   const arr = Array.from(files);
   if(!arr.length) return;
@@ -6853,16 +7386,16 @@ function upLimparTudo(){
 // ══════════════════════════════════════════
 // CARGOS E REQUISITOS
 // ══════════════════════════════════════════
-var REQUISITOS_DATA = [{"cargo": "Analista de suporte telefônico (TEL)", "grupo": "Suporte Telefônico", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação HDI SCA ou HDI CSR", "Experiência mínima de 3 anos em suporte técnico/help desk", "Experiência mínima de 2 anos em operação de microcomputadores", "Treinamento inicial de 40 horas (capacitação prevista em contrato)"], "certs": ["HDI SCA", "HDI CSR"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "3 anos", "exp_micro": "2 anos"}, {"cargo": "Analista de suporte (BSB)", "grupo": "Suporte Brasília", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação Microsoft 365 Certified: Fundamentals", "Certificação MD-100 ou MD-102", "Certificação HDI DAST", "Experiência mínima de 5 anos em suporte técnico", "Experiência mínima de 2 anos em operação de microcomputadores"], "certs": ["M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "5 anos", "exp_micro": "2 anos"}, {"cargo": "Analista de suporte (EST)", "grupo": "Suporte Estados", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação Microsoft 365 Certified: Fundamentals", "Certificação MD-100 ou MD-102", "Certificação HDI DAST ou HDI CSR", "Experiência mínima de 3 anos em suporte técnico", "Experiência mínima de 2 anos em operação de microcomputadores", "Certificado em curso de montagem/configuração de microcomputadores (≥20h)"], "certs": ["M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST", "HDI CSR"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "3 anos", "exp_micro": "2 anos"}, {"cargo": "Analista de suporte especializado (AE)", "grupo": "Atendimentos Especiais", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação Microsoft 365 Certified: Fundamentals", "Certificação HDI DAST ou HDI CSR", "Certificação MD-100 ou MD-102", "Experiência mínima de 5 anos em suporte técnico", "Experiência mínima de 4 anos em operação de microcomputadores", "Certificado curso montagem/configuração microcomputadores (≥20h)", "Treinamento inicial de 40 horas", "Conhecimentos básicos: Windows, Mac OS e Linux", "Conhecimentos básicos: ecossistemas Apple e Android"], "certs": ["M365 Fundamentals", "HDI DAST", "HDI CSR", "MD-100 ou MD-102"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "5 anos", "exp_micro": "4 anos"}, {"cargo": "Cabeamento estruturado (CE)", "grupo": "Cabeamento", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Experiência mínima de 5 anos em suporte técnico", "Experiência mínima de 5 anos em operação de microcomputadores", "Certificado curso montagem/configuração microcomputadores (≥20h)", "Treinamento inicial de 40 horas", "Curso geral de redes e cabeamento estruturado"], "certs": [], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "5 anos", "exp_micro": "5 anos"}, {"cargo": "Analista de suporte especializado (AC)", "grupo": "Administração de Contas", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação Microsoft 365 Certified: Fundamentals", "Certificação MD-100 ou MD-102", "Certificação AZ-900 (Microsoft Azure Fundamentals)", "Experiência mínima de 5 anos em suporte técnico", "Experiência mínima de 4 anos em operação de microcomputadores", "Treinamento inicial de 40 horas", "Conhecimentos: Microsoft Office, Teams, SharePoint e Azure"], "certs": ["M365 Fundamentals", "MD-100 ou MD-102", "AZ-900"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "5 anos", "exp_micro": "4 anos"}, {"cargo": "Administração de parque tecnológico (AP)", "grupo": "Parque Tecnológico", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação HDI DAST ou HDI SCA ou HDI CSR", "Experiência mínima de 5 anos em suporte técnico", "Experiência mínima de 4 anos em operação de microcomputadores", "Certificado curso montagem/configuração microcomputadores (≥20h)", "Treinamento inicial de 40 horas"], "certs": ["HDI DAST", "HDI SCA", "HDI CSR"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "5 anos", "exp_micro": "4 anos"}, {"cargo": "Supervisor de suporte (STEL)", "grupo": "Supervisão TEL", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação ITIL Foundations v4 ou posterior", "Certificação HDI SCTL (Support Center Team Leader)", "Experiência mínima de 4 anos em suporte/help desk", "Experiência mínima de 3 anos em supervisão de serviços de atendimento TI (ou 1 ano no contrato atual)", "Experiência mínima de 2 anos em operação de microcomputadores"], "certs": ["ITIL Foundations v4", "HDI SCTL"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "4 anos suporte + 3 anos supervisão", "exp_micro": "N/A"}, {"cargo": "Supervisor de suporte (BSB)", "grupo": "Supervisão BSB", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação ITIL Foundations v4 ou posterior", "Certificação HDI SCTL (Support Center Team Lead)", "Experiência mínima de 4 anos em suporte/help desk", "Experiência mínima de 3 anos em supervisão/gerência de suporte TI (ou 1 ano no contrato atual)"], "certs": ["ITIL Foundations v4", "HDI SCTL"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "4 anos suporte + 3 anos supervisão", "exp_micro": "N/A"}, {"cargo": "Supervisor de suporte (EST)", "grupo": "Supervisão EST", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação ITIL Foundations v4 ou posterior", "Certificação HDI SCTL (Support Center Team Lead)", "Experiência mínima de 4 anos em suporte/help desk", "Experiência mínima de 3 anos em supervisão/gerência de suporte TI (ou 1 ano no contrato atual)"], "certs": ["ITIL Foundations v4", "HDI SCTL"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "4 anos suporte + 3 anos supervisão", "exp_micro": "N/A"}, {"cargo": "Supervisor de suporte (SAE)", "grupo": "Supervisão AE", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação ITIL Foundations v4 ou posterior", "Certificação HDI SCTL (Support Center Team Lead)", "Experiência mínima de 4 anos em suporte/help desk", "Experiência mínima de 3 anos em supervisão/gerência de suporte TI (ou 1 ano no contrato atual)"], "certs": ["ITIL Foundations v4", "HDI SCTL"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "4 anos suporte + 3 anos supervisão", "exp_micro": "N/A"}, {"cargo": "Supervisor de suporte (SCHA)", "grupo": "Supervisão Chamados", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação ITIL Foundations v4 ou posterior", "Experiência mínima de 4 anos em suporte/help desk", "Experiência mínima de 3 anos em supervisão/gerência de suporte TI (ou 1 ano no contrato atual)"], "certs": ["ITIL Foundations v4"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "4 anos suporte + 3 anos supervisão", "exp_micro": "N/A"}, {"cargo": "Gestor de conhecimento", "grupo": "Gestão do Conhecimento", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação HDI KCS (Knowledge Centered Support)", "Experiência mínima de 4 anos em suporte técnico/help desk", "Experiência mínima de 3 anos em supervisão/gerência de suporte TI"], "certs": ["HDI KCS"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "4 anos suporte + 3 anos supervisão", "exp_micro": "N/A"}, {"cargo": "Gestor de Service desk", "grupo": "Gestão do Service Desk", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação ITIL versão 4", "Duas certificações HDI: SCTL, SCM, SCD ou XLA Foundation", "Experiência mínima de 6 anos em suporte técnico/help desk", "Experiência mínima de 5 anos em supervisão/gerência de suporte TI"], "certs": ["ITIL Foundations v4", "HDI SCTL", "HDI SCM", "HDI SCD", "XLA Foundation"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "6 anos suporte + 5 anos supervisão", "exp_micro": "N/A"}];
+const REQUISITOS_DATA = [{"cargo": "Analista de suporte telefônico (TEL)", "grupo": "Suporte Telefônico", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação HDI SCA ou HDI CSR", "Experiência mínima de 3 anos em suporte técnico/help desk", "Experiência mínima de 2 anos em operação de microcomputadores", "Treinamento inicial de 40 horas (capacitação prevista em contrato)"], "certs": ["HDI SCA", "HDI CSR"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "3 anos", "exp_micro": "2 anos"}, {"cargo": "Analista de suporte (BSB)", "grupo": "Suporte Brasília", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação Microsoft 365 Certified: Fundamentals", "Certificação MD-100 ou MD-102", "Certificação HDI DAST", "Experiência mínima de 5 anos em suporte técnico", "Experiência mínima de 2 anos em operação de microcomputadores"], "certs": ["M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "5 anos", "exp_micro": "2 anos"}, {"cargo": "Analista de suporte (EST)", "grupo": "Suporte Estados", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação Microsoft 365 Certified: Fundamentals", "Certificação MD-100 ou MD-102", "Certificação HDI DAST ou HDI CSR", "Experiência mínima de 3 anos em suporte técnico", "Experiência mínima de 2 anos em operação de microcomputadores", "Certificado em curso de montagem/configuração de microcomputadores (≥20h)"], "certs": ["M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST", "HDI CSR"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "3 anos", "exp_micro": "2 anos"}, {"cargo": "Analista de suporte especializado (AE)", "grupo": "Atendimentos Especiais", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação Microsoft 365 Certified: Fundamentals", "Certificação HDI DAST ou HDI CSR", "Certificação MD-100 ou MD-102", "Experiência mínima de 5 anos em suporte técnico", "Experiência mínima de 4 anos em operação de microcomputadores", "Certificado curso montagem/configuração microcomputadores (≥20h)", "Treinamento inicial de 40 horas", "Conhecimentos básicos: Windows, Mac OS e Linux", "Conhecimentos básicos: ecossistemas Apple e Android"], "certs": ["M365 Fundamentals", "HDI DAST", "HDI CSR", "MD-100 ou MD-102"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "5 anos", "exp_micro": "4 anos"}, {"cargo": "Cabeamento estruturado (CE)", "grupo": "Cabeamento", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Experiência mínima de 5 anos em suporte técnico", "Experiência mínima de 5 anos em operação de microcomputadores", "Certificado curso montagem/configuração microcomputadores (≥20h)", "Treinamento inicial de 40 horas", "Curso geral de redes e cabeamento estruturado"], "certs": [], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "5 anos", "exp_micro": "5 anos"}, {"cargo": "Analista de suporte especializado (AC)", "grupo": "Administração de Contas", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação Microsoft 365 Certified: Fundamentals", "Certificação MD-100 ou MD-102", "Certificação AZ-900 (Microsoft Azure Fundamentals)", "Experiência mínima de 5 anos em suporte técnico", "Experiência mínima de 4 anos em operação de microcomputadores", "Treinamento inicial de 40 horas", "Conhecimentos: Microsoft Office, Teams, SharePoint e Azure"], "certs": ["M365 Fundamentals", "MD-100 ou MD-102", "AZ-900"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "5 anos", "exp_micro": "4 anos"}, {"cargo": "Administração de parque tecnológico (AP)", "grupo": "Parque Tecnológico", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação HDI DAST ou HDI SCA ou HDI CSR", "Experiência mínima de 5 anos em suporte técnico", "Experiência mínima de 4 anos em operação de microcomputadores", "Certificado curso montagem/configuração microcomputadores (≥20h)", "Treinamento inicial de 40 horas"], "certs": ["HDI DAST", "HDI SCA", "HDI CSR"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "5 anos", "exp_micro": "4 anos"}, {"cargo": "Supervisor de suporte (STEL)", "grupo": "Supervisão TEL", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação ITIL Foundations v4 ou posterior", "Certificação HDI SCTL (Support Center Team Leader)", "Experiência mínima de 4 anos em suporte/help desk", "Experiência mínima de 3 anos em supervisão de serviços de atendimento TI (ou 1 ano no contrato atual)", "Experiência mínima de 2 anos em operação de microcomputadores"], "certs": ["ITIL Foundations v4", "HDI SCTL"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "4 anos suporte + 3 anos supervisão", "exp_micro": "N/A"}, {"cargo": "Supervisor de suporte (BSB)", "grupo": "Supervisão BSB", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação ITIL Foundations v4 ou posterior", "Certificação HDI SCTL (Support Center Team Lead)", "Experiência mínima de 4 anos em suporte/help desk", "Experiência mínima de 3 anos em supervisão/gerência de suporte TI (ou 1 ano no contrato atual)"], "certs": ["ITIL Foundations v4", "HDI SCTL"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "4 anos suporte + 3 anos supervisão", "exp_micro": "N/A"}, {"cargo": "Supervisor de suporte (EST)", "grupo": "Supervisão EST", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação ITIL Foundations v4 ou posterior", "Certificação HDI SCTL (Support Center Team Lead)", "Experiência mínima de 4 anos em suporte/help desk", "Experiência mínima de 3 anos em supervisão/gerência de suporte TI (ou 1 ano no contrato atual)"], "certs": ["ITIL Foundations v4", "HDI SCTL"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "4 anos suporte + 3 anos supervisão", "exp_micro": "N/A"}, {"cargo": "Supervisor de suporte (SAE)", "grupo": "Supervisão AE", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação ITIL Foundations v4 ou posterior", "Certificação HDI SCTL (Support Center Team Lead)", "Experiência mínima de 4 anos em suporte/help desk", "Experiência mínima de 3 anos em supervisão/gerência de suporte TI (ou 1 ano no contrato atual)"], "certs": ["ITIL Foundations v4", "HDI SCTL"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "4 anos suporte + 3 anos supervisão", "exp_micro": "N/A"}, {"cargo": "Supervisor de suporte (SCHA)", "grupo": "Supervisão Chamados", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação ITIL Foundations v4 ou posterior", "Experiência mínima de 4 anos em suporte/help desk", "Experiência mínima de 3 anos em supervisão/gerência de suporte TI (ou 1 ano no contrato atual)"], "certs": ["ITIL Foundations v4"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "4 anos suporte + 3 anos supervisão", "exp_micro": "N/A"}, {"cargo": "Gestor de conhecimento", "grupo": "Gestão do Conhecimento", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação HDI KCS (Knowledge Centered Support)", "Experiência mínima de 4 anos em suporte técnico/help desk", "Experiência mínima de 3 anos em supervisão/gerência de suporte TI"], "certs": ["HDI KCS"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "4 anos suporte + 3 anos supervisão", "exp_micro": "N/A"}, {"cargo": "Gestor de Service desk", "grupo": "Gestão do Service Desk", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação ITIL versão 4", "Duas certificações HDI: SCTL, SCM, SCD ou XLA Foundation", "Experiência mínima de 6 anos em suporte técnico/help desk", "Experiência mínima de 5 anos em supervisão/gerência de suporte TI"], "certs": ["ITIL Foundations v4", "HDI SCTL", "HDI SCM", "HDI SCD", "XLA Foundation"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "6 anos suporte + 5 anos supervisão", "exp_micro": "N/A"}];
 
-var REQ_GRUPO_MAP = {
+const REQ_GRUPO_MAP = {
   'Suporte': ['Analista de suporte telefônico (TEL)','Analista de suporte (BSB)','Analista de suporte (EST)','Analista de suporte especializado (AE)'],
   'Supervisor': ['Supervisor de suporte (STEL)','Supervisor de suporte (BSB)','Supervisor de suporte (EST)','Supervisor de suporte (SAE)','Supervisor de suporte (SCHA)'],
   'Gestor': ['Gestor de conhecimento','Gestor de Service desk'],
   'Especializado': ['Cabeamento estruturado (CE)','Analista de suporte especializado (AC)','Administração de parque tecnológico (AP)'],
 };
 
-var GRUPO_COLORS = {
+const GRUPO_COLORS = {
   'Suporte Telefônico': '#E8F0FE',
   'Suporte Brasília': '#EAF5EA',
   'Suporte Estados': '#EAF5EA',
@@ -6878,7 +7411,7 @@ var GRUPO_COLORS = {
   'Gestão do Conhecimento': '#E8F0FE',
   'Gestão do Service Desk': '#E3F2FD',
 };
-var GRUPO_BORDER = {
+const GRUPO_BORDER = {
   'Suporte Telefônico':'#2E75B6','Suporte Brasília':'#375623','Suporte Estados':'#375623',
   'Atendimentos Especiais':'#C55A11','Cabeamento':'#7030A0','Administração de Contas':'#C55A11',
   'Parque Tecnológico':'#C55A11','Supervisão TEL':'#a32d2d','Supervisão BSB':'#a32d2d',
@@ -6946,17 +7479,26 @@ function renderRequisitos(){
 }
 
 function showColabCargo(cargo){
-  // Switch to geral tab and filter by cargo
+  // Switch to geral tab
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>{ if(t.textContent.includes('Geral')) t.classList.add('active'); });
+  document.querySelectorAll('.tab').forEach(t=>{ if(t.textContent.includes('Geral')||t.textContent.includes('Colaboradores')) t.classList.add('active'); });
   tabIds.forEach(t=>{ const el=document.getElementById('tab-'+t); if(el) el.style.display=t==='geral'?'block':'none'; });
-  // Set cargo filter
   setTimeout(()=>{
+    // Clear other filters first
+    const sf=document.getElementById('filter-status-geral'); if(sf) sf.value='';
+    const uf=document.getElementById('filter-uf-geral'); if(uf) uf.value='';
+    document.getElementById('search-geral').value='';
+    // Populate cargo filter then set value
+    populateCargoFilter('filter-cargo-geral');
     const sel=document.getElementById('filter-cargo-geral');
     if(sel) sel.value=cargo;
-    document.getElementById('search-geral').value='';
-    const sf=document.getElementById('filter-status-geral');
-    if(sf) sf.value='';
+    // Render with explicit cargo value
+    const body=document.getElementById('body-geral');
+    const rows=filterData('',cargo,{tab:'geral'});
+    if(body) body.innerHTML=rows.length?rows.map((c,i)=>{
+      const ativo=c.status!=='inativo';
+      return '<tr><td style="color:#999;font-size:11px">'+(i+1)+'</td><td><b style="color:#1F4E79">'+c.nome+'</b><br><span style="font-size:10px;color:#'+(ativo?'155724;background:#D4EDDA':'7A0000;background:#FCEBEB')+'';
+    }).join(''):'<tr><td colspan="20" style="text-align:center;padding:20px;color:#aaa">Nenhum colaborador encontrado</td></tr>';
     renderGeral();
     document.querySelector('.content').scrollTop=0;
   },50);
@@ -7105,8 +7647,6 @@ function importarBackup(input){
         const el=document.getElementById(id); if(el) el.value='';
       });
       localStorage.setItem('ts_filters_cleared','1');
-      // Save to Firebase for cross-browser sync
-      try{ if(typeof window._fbGestaoSave==='function') window._fbGestaoSave({colaboradores:JSON.parse(localStorage.getItem('ts_portal_data_v2')||'[]'),ts:Date.now()}); }catch(fe){}
       alert(`✅ Backup restaurado!\n${totalColab} colaboradores carregados.\n\nO portal vai recarregar.`);
       location.reload();
 
@@ -7144,7 +7684,7 @@ const PEND_DOC_LABELS = {
   'Termo Vale Transporte':'Termo Vale Transporte',
   'Termo de Conduta T&S':'Termo de Conduta T&S',
 };
-var PEND_CAT_MAP = {
+const PEND_CAT_MAP = {
   docs:   ['Termo TCU','Cadastro TCU','Decl. Não Parentesco'],
   admissao:['Diploma/Superior','Especialização TI','Exp. Suporte','Exp. Microcomputadores','ASO Admissional','CTPS','Contrato de Trabalho'],
   termos: ['Termo Vale Transporte','Termo de Conduta T&S'],
@@ -7152,7 +7692,7 @@ var PEND_CAT_MAP = {
 
 // ── Grupos de certificações alternativas (OR) ─────────────────
 // Se qualquer uma do grupo estiver Entregue/Agendado, as outras não são pendência
-var CERT_OR_GROUPS = {
+const CERT_OR_GROUPS = {
   // TEL: HDI SCA OU HDI CSR (precisa de pelo menos uma)
   'Analista de suporte telefônico (TEL)': [['HDI SCA','HDI CSR']],
   // EST: HDI DAST OU HDI CSR
@@ -7334,13 +7874,12 @@ function enviarLembretePend(id){
   const assunto=encodeURIComponent('[TCU/T&S] Pendências de documentação — '+c.nome);
   const corpo=encodeURIComponent(
     'Prezado(a) '+c.nome+',\n\n'+
-    'Identificamos que os seguintes documentos permanecem pendentes em seu cadastro referente ao Contrato T&S/TCU:\n\n'+
+    'Identificamos que os seguintes documentos ainda constam como PENDENTES em seu cadastro no Contrato T&S/TCU:\n\n'+
     listaItens+'\n\n'+
-    'Observação: Caso não possua ainda a certificação prevista para o cargo, solicitamos o envio do comprovante de agendamento.\n\n'+
-    'Reforçamos que o prazo para entrega das certificações, conforme edital, é de 90 dias a partir da data de admissão.\n\n'+
-    'Solicitamos a regularização da situação em até 5 (cinco) dias úteis, por meio do preenchimento do formulário disponível no link abaixo:\n\n'+
-    'Documentação – Formulário: https://forms.office.com/r/wrE4eJnCBj\n\n'+
-    'Em caso de dúvidas, favor entrar em contato com sua supervisão imediata.\n\n'+
+    'Solicitamos que regularize a situação em até 5 (cinco) dias úteis, inserindo o forms abaixo:\n\n'+
+    'Documentação – Preencher o formulário:\n'+
+    'https://forms.office.com/r/wrE4eJnCBj\n\n'+
+    'Em caso de dúvidas, entre em contato com sua supervisão imediata.\n\n'+
     'Atenciosamente,\n'+
     'Priscila Pamplona Torres\n'+
     'Gestora do Service Desk — Central de Serviços de TI\n'+
@@ -9566,24 +10105,6 @@ function _portalInit(){
     const datEl=document.getElementById('uni-data');
     if(datEl&&!datEl.value) datEl.value=new Date().toISOString().slice(0,10);
   }catch(e){}
-  // ── Carregar do Firebase se localStorage vazio
-  if(!localStorage.getItem(DATA_KEY)||DATA.length<10){
-    if(typeof window._fbGestaoLoad==='function'){
-      window._fbGestaoLoad().then(function(p){
-        if(p&&Array.isArray(p.colaboradores)&&p.colaboradores.length>10){
-          var v=p.colaboradores.filter(function(c){return c&&c.nome;});
-          if(v.length>10){DATA=v.map(function(c,i){return Object.assign({},c,{_id:i});});_safeSetItem(DATA_KEY,JSON.stringify(DATA));console.log('[init] Firebase: '+DATA.length+' colabs');try{renderGeral();}catch(e){}}
-        }
-      }).catch(function(){});
-    }
-  }
-  // ── Carregar do Firebase se vazio (sync entre navegadores) ────────────
-  if(!localStorage.getItem(DATA_KEY)||DATA.length<10){
-    if(typeof window._fbGestaoLoad==='function'){
-      window._fbGestaoLoad().then(function(p){
-        if(p&&p.colaboradores&&p.colaboradores.length>10){
-          var v=p.colaboradores.filter(function(c){return c&&c.nome;});
-          if(v.length>10){DATA=v.map(function(c,i){return Object.assign({},c,{_id:i});});_safeSetItem(DATA_KEY,JSON.stringify(DATA));console.log('[init] Firebase: '+v.length+' colabs');try{renderGeral();}catch(e){}}}}).catch(function(){});}}
   // ── Se DATA insuficiente, usar COLAB base ─────────────────────────────
   if(DATA.length < 10){
     DATA = COLAB.map((c,i)=>({...c, _id:i}));
