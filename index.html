@@ -5805,12 +5805,9 @@ function renderPendCert(){
 
   // Populate cargo filter
   const cargoSel=document.getElementById('pc-cargo');
-  if(cargoSel){
-    const _cc=cargoSel.value;
-    cargoSel.innerHTML='<option value="">Todos os cargos</option>';
-    [...new Set(DATA.filter(c=>c&&c.nome&&c.status!=='inativo').map(c=>c.cargo).filter(Boolean))].sort()
+  if(cargoSel&&cargoSel.options.length<=1){
+    [...new Set(DATA.filter(c=>c&&c.nome&&c.status!=='inativo').map(c=>c.cargo))].sort()
       .forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;cargoSel.appendChild(o);});
-    if(_cc&&[...cargoSel.options].some(o=>o.value===_cc)) cargoSel.value=_cc;
   }
 
   const busca  = (document.getElementById('pc-busca')?.value||'').toLowerCase();
@@ -5940,7 +5937,1957 @@ function pcEnviarEmail(id){
   const assunto=encodeURIComponent('[TCU/T&S] Pendências de Certificação e Diploma — '+c.nome);
   const corpo=encodeURIComponent(
     'Prezado(a) '+c.nome+',\n\n'+
-    'Identificamos que os seguintes documentos ainda constam como PENDENTES em seu cadastro no Contrato T&S/TCU:\n\n'+
+    'Identificamos que os seguintes documentos/certificações ainda constam como PENDENTES em seu cadastro no Contrato T&S/TCU:\n\n'+
+    lista+'\n\n'+
+    'Solicitamos que regularize a situação em até o prazo final de '+prazoFmt+'.\n\n'+
+    'Para entregar a documentação, acesse o formulário abaixo:\n'+
+    'https://forms.office.com/r/wrE4eJnCBj\n\n'+
+    'Em caso de dúvidas, entre em contato com sua supervisão imediata.\n\n'+
+    'Atenciosamente,\nPriscila Pamplona Torres\nGestora do Service Desk — TCU | Contrato T&S'
+  );
+  window.location.href='mailto:'+email+'?subject='+assunto+'&body='+corpo;
+}
+
+function exportarPendCert(){
+  const busca=(document.getElementById('pc-busca')?.value||'').toLowerCase();
+  const fCargo=document.getElementById('pc-cargo')?.value||'';
+  const ALL_DOCS_DIPLOMA=['Diploma/Superior','Especialização TI'];
+  const rows=DATA.filter(c=>c&&c.nome&&c.status!=='inativo').map(c=>{
+    const diplomaPend=ALL_DOCS_DIPLOMA.filter(d=>c.docs&&(c.docs[d]==='Pendente'||!c.docs[d]));
+    const required=CARGO_CERTS_REQUIRED[c.cargo]||[];
+    const certsPend=required.filter(cert=>{
+      const val=c.certs&&c.certs[cert];
+      if(val==='Entregue'||val==='Agendado') return false;
+      const groups=CERT_OR_GROUPS[c.cargo]||[];
+      for(const g of groups){if(!g.includes(cert)) continue;if(g.some(o=>o!==cert&&(c.certs&&(c.certs[o]==='Entregue'||c.certs[o]==='Agendado')))) return false;}
+      return true;
+    });
+    return {c,diplomaPend,certsPend,total:diplomaPend.length+certsPend.length};
+  }).filter(r=>r.total>0&&(!busca||r.c.nome.toLowerCase().includes(busca))&&(!fCargo||r.c.cargo===fCargo));
+  rows.sort((a,b)=>a.c.nome.localeCompare(b.c.nome,'pt-BR'));
+  const prazo=document.getElementById('pc-novo-prazo')?.value||'2026-07-27';
+  const hdrs=['Nome','Cargo','UF','Diploma Pendente','Certificações Pendentes','Prazo'];
+  const data=rows.map(r=>[r.c.nome,r.c.cargo,r.c.uf,r.diplomaPend.join('; ')||'OK',r.certsPend.join('; ')||'OK',prazo.split('-').reverse().join('/')]);
+  _exportXlsXML(hdrs,data,'Pendencias_Cert_Diploma');
+}
+// ══════════════════════════════════════════
+const RESET_FIELDS = {
+  equipamentos: {
+    dataFields: ['celular_tablet','cracha','maleta','uniforme'],
+    docFields:  ['Termo TCU','Cadastro TCU'],
+  },
+  admissao: {
+    docFields: ['Diploma/Superior','Especialização TI','Exp. Suporte',
+                'Exp. Microcomputadores','ASO Admissional','CTPS','Contrato de Trabalho'],
+  },
+  termos: {
+    docFields: ['Termo Vale Transporte','Termo de Conduta T&S','Decl. Não Parentesco'],
+  },
+  certif: {
+    certFields: ['HDI SCA','HDI CSR','M365 Fundamentals','MD-100 ou MD-102','HDI DAST',
+                 'AZ-900','ITIL Foundations v4','HDI SCTL','HDI KCS','HDI SCM','HDI SCD','XLA Foundation'],
+  },
+};
+
+function resetarPendente(tab){
+  const labels = {
+    equipamentos: 'Equipamentos (Celular/Tablet, Crachá, Maleta, Uniforme)',
+    admissao:     'Admissão (Diploma, ASO, CTPS, Experiências...)',
+    termos:       'Termos (Vale Transporte, Conduta T&S, Não Parentesco)',
+    certif:       'Certificações (todas as 12)',
+  };
+  if(!confirm('⚠️ Resetar ' + (labels[tab]||tab) + '?\n\nTodos os campos desta aba voltarão para "Pendente" em todos os colaboradores ativos.\n\nContinuar?')) return;
+
+  const cfg = RESET_FIELDS[tab] || {};
+  let count = 0;
+
+  DATA.filter(c => c.status !== 'inativo').forEach(c => {
+    (cfg.dataFields||[]).forEach(f => {
+      if(c[f] !== undefined && c[f] !== 'N/A') { c[f] = 'Pendente'; count++; }
+    });
+    (cfg.docFields||[]).forEach(k => {
+      if(c.docs && c.docs[k] !== undefined && c.docs[k] !== 'N/A') { c.docs[k] = 'Pendente'; count++; }
+    });
+    (cfg.certFields||[]).forEach(k => {
+      if(c.certs && c.certs[k] !== undefined && c.certs[k] !== 'N/A') { c.certs[k] = 'Pendente'; count++; }
+    });
+  });
+
+  saveData();
+
+  const refreshMap = { equipamentos:renderEquip, admissao:renderAdm, termos:renderTermos, certif:renderCert };
+  try{ if(refreshMap[tab]) refreshMap[tab](); }catch(e){}
+
+  alert('✅ Reset concluído!\n\n' + count + ' campo(s) voltaram para "Pendente".\nPronto para iniciar novo ciclo.');
+}
+
+// ── Config Download toggle ────────────────
+function toggleConfigDownload(){
+  const p=document.getElementById('up-config-panel');
+  if(p) p.style.display=p.style.display==='none'?'block':'none';
+}
+
+function getZipEstrutura(){
+  const sel=document.querySelector('input[name="zip-estrutura"]:checked');
+  return sel?sel.value:'uf_nome_tipo';
+}
+
+function buildZipPath(doc){
+  const c=DATA.find(x=>x._id===doc.colabId)||{nome:'Desconhecido',uf:'XX',cargo:'Outro'};
+  const tipo=doc.tipo&&doc.tipo!=='—'?doc.tipo:'Documentos';
+  const ext=doc.ext||doc.fileName.split('.').pop();
+  // Standardized filename
+  const tipoAbrev=tipo.replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_').slice(0,20);
+  const nomeArq=`${tipoAbrev}_${c.nome.replace(/[^a-zA-Z0-9 ]/g,'').replace(/\s+/g,'_')}.${ext}`;
+  const estrutura=getZipEstrutura();
+  switch(estrutura){
+    case 'uf_nome_tipo':   return `${c.uf}/${c.nome}/${tipo}/${nomeArq}`;
+    case 'cargo_nome':     return `${c.cargo.split('(')[0].trim()}/${c.nome}/${nomeArq}`;
+    case 'tipo_nome':      return `${tipo}/${c.nome}/${nomeArq}`;
+    case 'nome':           return `${c.nome}/${nomeArq}`;
+    default:               return `${c.uf}/${c.nome}/${tipo}/${nomeArq}`;
+  }
+}
+
+// ── Download single file with standardized name ──
+function upDownloadFile(id){
+  const doc=uploadedDocs.find(d=>d.id===id);
+  if(!doc||!doc.dataUrl){ alert('Arquivo não disponível para download.'); return; }
+  const c=DATA.find(x=>x._id===doc.colabId)||{nome:'Desconhecido',uf:'XX'};
+  const tipo=(doc.tipo&&doc.tipo!=='—'?doc.tipo:'Doc').replace(/[^a-zA-Z0-9 ]/g,'').replace(/\s+/g,'_').slice(0,20);
+  const nome=c.nome.replace(/[^a-zA-Z0-9 ]/g,'').replace(/\s+/g,'_');
+  const ext=doc.ext||doc.fileName.split('.').pop();
+  const filename=`${c.uf}_${tipo}_${nome}.${ext}`;
+  const a=document.createElement('a');
+  a.href=doc.dataUrl; a.download=filename; a.click();
+}
+
+// ── Baixar ZIP (sem sincronizar) ──────────
+async function upBaixarZip(){
+  const docs=uploadedDocs.filter(d=>d.dataUrl);
+  if(!docs.length){ alert('Nenhum documento com arquivo disponível para download.'); return; }
+  const btn=event?.target; if(btn){ btn.textContent='⏳ Gerando ZIP...'; btn.disabled=true; }
+  try{
+    const zip=new JSZip();
+    docs.forEach(d=>{ zip.file(buildZipPath(d), d.dataUrl.split(',')[1], {base64:true}); });
+    const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    const date=new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
+    a.href=url; a.download=`Documentacao_comprobatoria_${date}.zip`; a.click();
+    URL.revokeObjectURL(url);
+  }catch(e){ alert('Erro ao gerar ZIP: '+e.message); }
+  if(btn){ btn.textContent='📥 Baixar ZIP'; btn.disabled=false; }
+}
+
+// ── Sincronizar + Baixar ZIP ──────────────
+async function upSincronizarBaixar(){
+  const docs=uploadedDocs.filter(d=>d.dataUrl);
+  if(!docs.length){ alert('Nenhum documento com arquivo disponível.'); return; }
+  const btn=event?.target; if(btn){ btn.textContent='⏳ Sincronizando...'; btn.disabled=true; }
+  // Mark all as Entregue
+  docs.forEach(d=>{ if(d.tipo&&d.tipo!=='—') upAtualizarStatus(d.colabId,d.tipo,d.fileName); });
+  saveData();
+  // Refresh tabs
+  try{ renderGeral(); }catch(e){}
+  // Generate ZIP
+  try{
+    if(btn) btn.textContent='⏳ Gerando ZIP...';
+    const zip=new JSZip();
+    docs.forEach(d=>{ zip.file(buildZipPath(d), d.dataUrl.split(',')[1], {base64:true}); });
+    const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    const date=new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
+    a.href=url; a.download=`Documentacao_comprobatoria_${date}.zip`; a.click();
+    URL.revokeObjectURL(url);
+    upFilterDocs(); // refresh list
+    alert(`✅ Sincronização concluída!\n\n${docs.length} documento(s) marcados como Entregue.\nZIP baixado com a estrutura de subpastas configurada.\n\nMova o ZIP para o Google Drive pelo navegador ou app do Drive.`);
+  }catch(e){ alert('Erro ao gerar ZIP: '+e.message); }
+  if(btn){ btn.textContent='⬆ Sincronizar + Baixar ZIP'; btn.disabled=false; }
+}
+
+// ── Drag & Drop ───────────────────────────
+function upDragOver(e){
+  e.preventDefault();
+  document.getElementById('up-dropzone').classList.add('dragover');
+}
+function upDragLeave(e){
+  document.getElementById('up-dropzone').classList.remove('dragover');
+}
+function upDrop(e){
+  e.preventDefault();
+  document.getElementById('up-dropzone').classList.remove('dragover');
+  upHandleFiles(e.dataTransfer.files);
+}
+
+// ── ZIP Import ────────────────────────────
+// Load JSZip on demand
+function loadJSZip(){ return Promise.resolve(window.JSZip); }
+
+function upImportZip(file, doneCallback){
+  if(!file) return;
+  const resultDiv=document.getElementById('up-batch-result');
+  resultDiv.style.display='block';
+  resultDiv.innerHTML=`<div style="color:#6c757d;font-size:13px">📦 Lendo arquivo ZIP <b>${file.name}</b> (${(file.size/1024).toFixed(0)} KB)...</div>`;
+
+  // Read ZIP as ArrayBuffer first, then pass to JSZip
+  const arrayBufReader = new FileReader();
+  arrayBufReader.onload = function(e){
+    const arrayBuffer = e.target.result;
+    loadJSZip().then(JSZip=>{
+      const jszip = new JSZip();
+      return jszip.loadAsync(arrayBuffer);
+    }).then(zip=>{
+      const entries=[];
+      zip.forEach((path, entry)=>{
+        if(!entry.dir) entries.push({path, entry});
+      });
+
+      const supported=['pdf','jpg','jpeg','png','webp','doc','docx'];
+      const validEntries=entries.filter(({path})=>{
+        const ext=path.split('.').pop().toLowerCase();
+        return supported.includes(ext);
+      });
+
+      if(!validEntries.length){
+        resultDiv.innerHTML=`
+          <div style="color:#6c757d;font-size:13px;margin-bottom:6px">📦 <b>${file.name}</b> · ${entries.length} arquivo(s) no ZIP</div>
+          <div style="color:#a32d2d;font-size:13px;padding:10px;background:#FFE0E0;border-radius:6px">
+            Nenhum arquivo suportado encontrado.<br>
+            Formatos aceitos: PDF, JPG, PNG, JPEG, WEBP, DOC, DOCX<br>
+            Arquivos encontrados: ${entries.map(e=>e.path.split('/').pop()).join(', ')||'nenhum'}
+          </div>`;
+        return;
+      }
+
+      resultDiv.innerHTML=`<div style="color:#6c757d;font-size:13px;margin-bottom:8px">📦 <b>${file.name}</b> · Processando ${validEntries.length} de ${entries.length} arquivo(s)... <span id="zip-progress">0/${validEntries.length}</span></div>`;
+
+      const rows=[];
+      let processed=0;
+
+      const processNext=(idx)=>{
+        if(idx>=validEntries.length){
+          saveUploadDocs();
+          upFilterDocs();
+          showZipResult(rows, file.name);
+          return;
+        }
+        const {path, entry}=validEntries[idx];
+        const fileName=path.split('/').pop();
+        const ext=fileName.split('.').pop().toLowerCase();
+        const colab=upGuessColab(fileName);
+        const tipo=upGuessType(fileName);
+
+        // Update progress
+        const prog=document.getElementById('zip-progress');
+        if(prog) prog.textContent=`${idx+1}/${validEntries.length}`;
+
+        // Read each file as base64
+        entry.async('base64').then(b64=>{
+          const mimeMap={pdf:'application/pdf',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',doc:'application/msword',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'};
+          const mime=mimeMap[ext]||'application/octet-stream';
+          const dataUrl=`data:${mime};base64,${b64}`;
+          const sizeEst=Math.round(b64.length*0.75);
+
+          if(colab && tipo){
+            const dup=uploadedDocs.find(d=>d.colabId===colab._id&&d.tipo===tipo&&d.fileName===fileName);
+            if(dup){
+              rows.push({fileName,colab,tipo,status:'dup',msg:'Duplicado — já importado'});
+            } else {
+              const id=Date.now().toString()+Math.random().toString(36).slice(2,5)+idx;
+              uploadedDocs.unshift({
+                id,colabId:colab._id,colabNome:colab.nome,colabUf:colab.uf,
+                tipo,cat:TIPO_CAT[tipo]||'Outros',
+                fileName,ext,size:sizeEst,
+                dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+                dataUrl,batchImported:true,fromZip:true,
+              });
+              upAtualizarStatus(colab._id, tipo, fname);
+              rows.push({fileName,colab,tipo,status:'ok',msg:`✅ ${colab.nome} · ${tipo}`});
+            }
+          } else {
+            rows.push({
+              fileName,colab,tipo,
+              status:!colab&&!tipo?'manual':!colab?'no-colab':'no-tipo',
+              msg:!colab&&!tipo?'Não identificado automaticamente':!colab?`Tipo: ${tipo} — colaborador não identificado`:`Colaborador: ${colab.nome} — tipo não identificado`,
+            });
+          }
+          // Process next file sequentially to avoid timestamp collisions
+          setTimeout(()=>processNext(idx+1), 10);
+        }).catch(err=>{
+          rows.push({fileName,colab:null,tipo:null,status:'err',msg:`Erro: ${err.message}`});
+          setTimeout(()=>processNext(idx+1), 10);
+        });
+      };
+
+      processNext(0);
+
+    }).catch(err=>{
+      resultDiv.innerHTML=`<div style="color:#a32d2d;font-size:13px;padding:10px;background:#FFE0E0;border-radius:6px">
+        ❌ Erro ao processar ZIP: ${err.message}<br>
+        <span style="font-size:11px;color:#888;margin-top:4px;display:block">Verifique se o arquivo é um ZIP válido e não está corrompido.</span>
+      </div>`;
+      console.error('[ZIP Import]', err);
+    });
+  };
+
+  arrayBufReader.onerror=function(){
+    resultDiv.innerHTML=`<div style="color:#a32d2d;font-size:13px">❌ Erro ao ler o arquivo. Tente novamente.</div>`;
+  };
+
+  // Read as ArrayBuffer — correct format for JSZip
+  arrayBufReader.readAsArrayBuffer(file);
+
+  // Reset input
+  document.getElementById('up-zip-input').value='';
+}
+
+function showZipResult(rows, zipName){
+  const resultDiv=document.getElementById('up-batch-result');
+  const ok=rows.filter(r=>r.status==='ok').length;
+  const dup=rows.filter(r=>r.status==='dup').length;
+  const noid=rows.filter(r=>['manual','no-colab','no-tipo'].includes(r.status)).length;
+
+  const summary=`<div style="display:flex;gap:14px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+    <span style="font-weight:700;color:#1a1a2e">📦 ${zipName}</span>
+    <span style="color:#155724;font-weight:600">✅ ${ok} importado(s)</span>
+    <span style="color:#6c757d">⏩ ${dup} duplicado(s)</span>
+    <span style="color:#7A5000;font-weight:600">⚠️ ${noid} não identificado(s)</span>
+  </div>`;
+
+  const rowsHtml=rows.map(r=>{
+    const color=r.status==='ok'?'#155724':r.status==='dup'?'#6c757d':'#7A5000';
+    const icon=r.status==='ok'?'✅':r.status==='dup'?'⏩':'⚠️';
+    const fname = r.fileName||r.file?.name||'';
+    const isPending = (r.status==='no-colab'||r.status==='no-tipo'||r.status==='manual');
+    const isDecl = (r.tipo==='Decl. Desktop/Internet'||r.tipo==='Decl. Locação Equipamento'||
+                    r._manualTipo==='Decl. Desktop/Internet'||r._manualTipo==='Decl. Locação Equipamento');
+    const mesesOpts = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+      .map(m=>`<option value="${m}">${m}</option>`).join('');
+    const curMes = new Date().toLocaleDateString('pt-BR',{month:'long'});
+    const curMesCap = curMes.charAt(0).toUpperCase()+curMes.slice(1);
+    const mesSelect = `<span id="decl-mes-wrap-${fname.replace(/[^a-z0-9]/gi,'_')}" style="display:${isDecl?'inline-flex':'none'};align-items:center;gap:4px">
+        <span style="font-size:10px;color:#854D0E;font-weight:600">📅 Mês:</span>
+        <select id="decl-mes-sel-${fname.replace(/[^a-z0-9]/gi,'_')}" style="font-size:11px;padding:2px 6px;border:1px solid #f5c518;border-radius:4px;background:#FEF9C3;color:#854D0E;font-weight:600">
+          <option value="">Selecionar mês…</option>
+          ${mesesOpts}
+        </select>
+      </span>`;
+    const selectHtml=isPending?`
+      <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center">
+        ${!r.colab?`<select class="up-select" style="font-size:11px;padding:3px 6px;background:#fff;border:1px solid #ced4da;color:#1a1a2e" onchange="upBatchSetColab(this,'${fname}')">
+          <option value="">Selecionar colaborador…</option>
+          ${[...DATA].sort((a,b)=>a.nome.localeCompare(b.nome)).map(c=>`<option value="${c._id}">${c.nome} (${c.uf})</option>`).join('')}
+        </select>`:''}
+        ${!r.tipo?`<select class="up-select" style="font-size:11px;padding:3px 6px;background:#fff;border:1px solid #ced4da;color:#1a1a2e" onchange="upBatchSetTipo(this,'${fname}')">
+          <option value="">Selecionar tipo…</option>
+          ${Object.keys(TIPO_TO_FIELD).map(t=>`<option value="${t}">${t}</option>`).join('')}
+        </select>`:''}
+        ${mesSelect}
+        <button class="up-btn" style="font-size:11px;padding:3px 10px;background:#375623;color:#fff;border-color:#375623" onclick="upBatchConfirmRow('${fname}')">✓ Confirmar</button>
+        <button class="up-btn up-btn-danger" style="font-size:11px;padding:3px 8px" title="Excluir da lista" onclick="upBatchDeleteRow('${fname}')">🗑</button>
+      </div>`:'';
+    // For identified declaration rows, also show month selector inline
+    const identDeclHtml = (!isPending && isDecl) ? `
+      <div style="display:flex;gap:6px;margin-top:4px;align-items:center;flex-wrap:wrap">
+        <span style="font-size:10px;color:#854D0E;font-weight:600">📅 Mês da declaração:</span>
+        <select id="decl-mes-sel-${fname.replace(/[^a-z0-9]/gi,'_')}" style="font-size:11px;padding:2px 8px;border:1px solid #f5c518;border-radius:4px;background:#FEF9C3;color:#854D0E;font-weight:600" onchange="upBatchSetDeclMes(this,'${fname}')">
+          <option value="">Selecionar mês…</option>
+          ${['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'].map(m=>`<option value="${m}"${fname.toLowerCase().includes(m.toLowerCase())?` selected`:``}>${m}</option>`).join('')}
+        </select>
+      </div>` : '';
+
+    return `<div id="batch-row-${fname.replace(/[^a-z0-9]/gi,'_')}" style="padding:5px 0;border-bottom:1px solid #dee2e6;font-size:12px">
+      <span style="color:${color}">${icon}</span>
+      <span style="color:#1a1a2e;margin-left:6px;font-weight:500">${fname}</span>
+      <span style="color:#6c757d;margin-left:8px">${r.msg}</span>
+      ${selectHtml}
+      ${identDeclHtml}
+    </div>`;
+  }).join('');
+
+  resultDiv.innerHTML=summary+rowsHtml;
+  window._batchPendingRows=rows;
+  window._batchPendingFiles={};
+  // For ZIP, we don't have File objects for manual fix — note this
+}
+
+// ── End ZIP Import ─────────────────────────
+
+function upHandleFiles(files){
+  const zipFiles  = Array.from(files).filter(f=>f.name.toLowerCase().endsWith('.zip'));
+  const otherFiles= Array.from(files).filter(f=>!f.name.toLowerCase().endsWith('.zip'));
+  if(zipFiles.length){
+    // Processar ZIPs sequencialmente — não em paralelo
+    (async()=>{
+      for(let i=0;i<zipFiles.length;i++){
+        const zf=zipFiles[i];
+        const div=document.getElementById('up-batch-result');
+        if(div){ div.style.display='block'; div.innerHTML=`<div style="color:#6c757d;font-size:13px">📦 ZIP ${i+1}/${zipFiles.length}: processando <b>${zf.name}</b>…</div>`; }
+        await new Promise(resolve=>{
+          upImportZip(zf, resolve); // pass resolve callback
+        });
+      }
+    })();
+  }
+  if(!otherFiles.length) return;
+
+  const tipo    = document.getElementById('up-tipo').value    || null;
+  const colabId = parseInt(document.getElementById('up-colab').value);
+
+  // Both fields are optional — try auto-detect from filename for anything missing
+  const rows = [];
+  let pending = otherFiles.length;
+
+  otherFiles.forEach(file=>{
+    let resolvedTipo    = tipo;
+    let resolvedColabId = isNaN(colabId) ? null : colabId;
+
+    // Auto-detect missing values from filename
+    if(!resolvedColabId){
+      const g = upGuessColab(file.name);
+      if(g) resolvedColabId = g._id;
+    }
+    if(!resolvedTipo){
+      const g = upGuessType(file.name);
+      if(g) resolvedTipo = g;
+    }
+
+    // Collaborator still unknown → ask user
+    if(resolvedColabId===null){
+      rows.push({
+        fileName:file.name, _fileObj:file, file:file,
+        status:'no-colab',
+        msg: resolvedTipo ? `Tipo: ${resolvedTipo} — colaborador não identificado` : 'Colaborador não identificado',
+        colab:null, tipo:resolvedTipo
+      });
+      pending--;
+      if(pending===0) showQuickUploadResult(rows);
+      return;
+    }
+
+    // tipo is fully optional — import without it
+    const colab = DATA.find(x=>x._id===resolvedColabId);
+    if(!colab){ pending--; if(pending===0) showQuickUploadResult(rows); return; }
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    const id  = Date.now().toString()+Math.random().toString(36).slice(2,6);
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      const dup = uploadedDocs.find(d=>
+        d.colabId===resolvedColabId &&
+        d.tipo===(resolvedTipo||'—') &&
+        !d.pending
+      );
+      if(dup){
+        // File already exists for this colab+tipo — add with dup flag visible in list
+        rows.push({fileName:file.name,status:'dup',msg:`Duplicado — ${colab.nome} já possui "${resolvedTipo||'este tipo'}" importado`,colab,tipo:resolvedTipo});
+        // Still add to list but flagged as duplicate
+        const id2=Date.now().toString()+Math.random().toString(36).slice(2,6);
+        const ext2=file.name.split('.').pop().toLowerCase();
+        const reader2=new FileReader();
+        reader2.onload=(e2)=>{
+          uploadedDocs.unshift({
+            id:id2,colabId:resolvedColabId,colabNome:colab.nome,colabUf:colab.uf,
+            tipo:resolvedTipo||'—',cat:TIPO_CAT[resolvedTipo]||'Outros',
+            fileName:file.name,ext:ext2,size:file.size,
+            dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+            dataUrl:e2.target.result,
+            duplicate:true,
+          });
+          saveUploadDocs();
+          pending--;
+          if(pending===0){
+            saveData();
+            try{ renderEquip(); }catch(e){}
+            try{ renderAdm(); }catch(e){}
+            try{ renderTermos(); }catch(e){}
+            try{ renderCert(); }catch(e){}
+            try{ renderPendencias(); }catch(e){}
+            upFilterDocs(); showQuickUploadResult(rows);
+          }
+        };
+        reader2.readAsDataURL(file);
+        return;
+      }
+      uploadedDocs.unshift({
+          id, colabId:resolvedColabId, colabNome:colab.nome, colabUf:colab.uf,
+          tipo:resolvedTipo||'—', cat:TIPO_CAT[resolvedTipo]||'Outros',
+          fileName:file.name, ext, size:file.size,
+          dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+          dataUrl:e.target.result,
+        });
+        if(resolvedTipo) upAtualizarStatus(resolvedColabId, resolvedTipo, upGetEffectiveFileName(file.name, resolvedTipo||''));
+        rows.push({fileName:file.name,status:'ok',msg:`✅ ${colab.nome}${resolvedTipo?' · '+resolvedTipo:''}`,colab,tipo:resolvedTipo});
+      saveUploadDocs();
+      pending--;
+      // Feedback por arquivo processado
+      toast(`📎 ${pending} restante(s)…`+(pending===0?' Concluído!':''),'ok');
+      if(pending===0){
+        saveData();
+        // Atualizar automaticamente as abas de controle
+        try{ renderEquip(); }catch(e){}
+        try{ renderAdm(); }catch(e){}
+        try{ renderTermos(); }catch(e){}
+        try{ renderCert(); }catch(e){}
+        try{ renderPendencias(); }catch(e){}
+        try{ renderDeclaracoes(); }catch(e){}
+        upFilterDocs();
+        toast(`✅ ${rows.length} arquivo(s) importado(s) com sucesso!`,'ok');
+        showQuickUploadResult(rows);
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+  document.getElementById('up-file-input').value='';
+}
+
+function showQuickUploadResult(rows){
+  if(!rows.length) return;
+  const ok  = rows.filter(r=>r.status==='ok').length;
+  const dup = rows.filter(r=>r.status==='dup').length;
+  const noid= rows.filter(r=>['manual','no-colab','no-tipo'].includes(r.status)).length;
+
+  if(ok>0) try{ showSyncToast && showSyncToast(ok,0); }catch(e){}
+
+  if(noid>0){
+    // Save unidentified files as "pending" entries in uploadedDocs so they appear in the list
+    rows.filter(r=>['manual','no-colab','no-tipo'].includes(r.status)).forEach(r=>{
+      const fileObj = r._fileObj || r.file; // r.file from manual rows
+      if(!fileObj && !r.dataUrl) return; // nothing to store
+      const id = Date.now().toString()+Math.random().toString(36).slice(2,6);
+      const fName = r.fileName || (fileObj && fileObj.name) || 'arquivo';
+      const ext = fName.split('.').pop().toLowerCase();
+      const pendingEntry = {
+        id,
+        colabId:   r.colab?._id ?? null,
+        colabNome: r.colab?.nome  ?? '— Não identificado —',
+        colabUf:   r.colab?.uf   ?? '—',
+        tipo:      r.tipo  ?? '— Não identificado —',
+        cat:       r.tipo ? (TIPO_CAT[r.tipo]||'Outros') : 'Pendente',
+        fileName:  fName,
+        ext,
+        size:      r._fileObj?.size ?? 0,
+        dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+        dataUrl:   r.dataUrl || null,
+        pending:   true,   // flag: precisa de preenchimento manual
+        _fileObj:  undefined,
+      };
+      // If we have a File object, read it as dataUrl
+      if(fileObj && !r.dataUrl){
+        const fr = new FileReader();
+        fr.onload = e2 => {
+          pendingEntry.dataUrl = e2.target.result;
+          // Update existing entry
+          const idx = uploadedDocs.findIndex(d=>d.id===id);
+          if(idx>=0) uploadedDocs[idx].dataUrl = e2.target.result;
+          saveUploadDocs();
+          upFilterDocs();
+        };
+        fr.readAsDataURL(fileObj);
+      }
+      // Add immediately (with or without dataUrl) so card shows right away
+      if(!uploadedDocs.find(d=>d.fileName===fName&&d.pending)){
+        uploadedDocs.unshift(pendingEntry);
+      }
+    });
+    saveUploadDocs();
+    upFilterDocs();
+
+    // Show brief info panel (not blocking)
+    const resultDiv=document.getElementById('up-batch-result');
+    if(resultDiv){
+      resultDiv.style.display='block';
+      resultDiv.innerHTML=`
+        <div style="font-size:13px;font-weight:600;color:#7A5000;margin-bottom:6px">
+          ⚠️ ${noid} arquivo(s) não identificado(s) automaticamente foram adicionados à lista como <b>Pendente</b>.
+        </div>
+        <div style="font-size:12px;color:#6c757d">
+          Clique no ícone ✏️ em cada linha para definir o colaborador e tipo manualmente, ou em 🗑 para excluir.
+        </div>`;
+    }
+    window._batchPendingRows = rows;
+    window._batchPendingFiles = {};
+    rows.forEach(r=>{ if(r._fileObj) window._batchPendingFiles[r.fileName]=r._fileObj; });
+  }
+}
+
+function upAtualizarStatus(colabId, tipo, fileName){
+  const c = DATA.find(x=>x._id===colabId);
+  if(!c) return;
+  const field = TIPO_TO_FIELD[tipo];
+  if(!field) return;
+  if(field.cat==='docs'){
+    if(!c.docs) c.docs={};
+    c.docs[field.key] = 'Entregue'; // sempre marcar — sem verificar undefined
+  }
+  if(field.cat==='certs' && c.certs!==undefined){
+    if(!c.certs) c.certs={};
+    c.certs[field.key] = 'Entregue';
+    // If part of OR group, set others in group to N/A
+    const groups = CERT_OR_GROUPS[c.cargo]||[];
+    groups.forEach(group=>{ if(group.includes(field.key)){ group.forEach(other=>{ if(other!==field.key && c.certs[other]==='Pendente') c.certs[other]='N/A'; }); } });
+  }
+  if(field.cat==='decl'){
+    const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    // Extract month from fileName
+    // Handles: "DF – Lucas Sena – Junho.pdf"  and  "DF - Lucas - Junho_Lucas.pdf"
+    // Take only the part before the first underscore (in case of composite names)
+    const rawName = (fileName||'').replace(/\.[^.]+$/,'');
+    const src = rawName.split('_')[0]; // ignore suffix after _
+    let mes = meses[new Date().getMonth()]; // default: current month
+    let ano = String(new Date().getFullYear());
+    meses.forEach(m=>{ if(src.toLowerCase().includes(m.toLowerCase())) mes=m; });
+    const yearMatch = src.match(/20\d\d/);
+    if(yearMatch) ano = yearMatch[0];
+    const key = declKey(c.nome, mes, ano);
+    if(!DECL_DATA[key]) DECL_DATA[key]={};
+    DECL_DATA[key][field.key]='Entregue';
+    _declSave();
+    // Always refresh declarações tab
+    try{ renderDeclaracoes(); }catch(e){}
+    return;
+  }
+  if(field.cat==='equip' && c[field.key]!==undefined && c[field.key]!=='N/A'){
+    const isTel = c.cargo && c.cargo.includes('(TEL)');
+    if(isTel && (field.key==='maleta'||field.key==='uniforme')) return;
+    c[field.key] = 'Sim';
+  }
+  saveData();
+}
+
+function upFilterDocs(){
+  const busca   = (document.getElementById('up-busca')?.value||'').toLowerCase();
+  const filTipo = document.getElementById('up-fil-tipo')?.value||'';
+  const filColab= document.getElementById('up-fil-colab')?.value||'';
+  const filStat = document.getElementById('up-fil-status')?.value||'';
+
+  let docs = [...uploadedDocs];
+  if(busca)   docs = docs.filter(d=>d.colabNome.toLowerCase().includes(busca)||d.fileName.toLowerCase().includes(busca)||d.tipo.toLowerCase().includes(busca));
+  if(filTipo) docs = docs.filter(d=>d.cat===filTipo);
+  if(filColab)docs = docs.filter(d=>d.colabId===parseInt(filColab));
+  if(filStat==='Entregue') docs = docs.filter(d => !d.pending);
+  else if(filStat==='Pendente') docs = docs.filter(d => d.pending===true);
+  // Default (no filter): show ALL including pending
+
+  // Stats
+  const totalUpl = uploadedDocs.length;
+  const colabsUpl = new Set(uploadedDocs.map(d=>d.colabId)).size;
+  const tiposUpl  = new Set(uploadedDocs.map(d=>d.tipo)).size;
+  document.getElementById('up-stats').innerHTML=`
+    <div class="up-stat"><div class="n" style="color:#58a6ff">${totalUpl}</div><div class="l">Documentos</div></div>
+    <div class="up-stat"><div class="n" style="color:#3fb950">${colabsUpl}</div><div class="l">Colaboradores</div></div>
+    <div class="up-stat"><div class="n" style="color:#d29922">${tiposUpl}</div><div class="l">Tipos distintos</div></div>
+    <div class="up-stat" onclick="upMostrarSemUpload()" title="Clique para ver quem está sem upload" style="cursor:pointer;border:1.5px solid #f85149;transition:box-shadow .15s" onmouseover="this.style.boxShadow='0 2px 8px rgba(248,81,73,.3)'" onmouseout="this.style.boxShadow=''">
+      <div class="n" style="color:#f85149">${DATA.length-colabsUpl}</div>
+      <div class="l">Sem upload <span style="font-size:10px">▼</span></div>
+    </div>
+  `;
+  // Render sem-upload list if visible
+  const semUpDiv = document.getElementById('up-sem-upload');
+  if(semUpDiv && semUpDiv.style.display!=='none') upMostrarSemUpload(colabsComUpload);
+
+  const lista = document.getElementById('up-lista');
+  if(!docs.length){
+    lista.innerHTML=`<div class="up-empty"><div class="eicon">📬</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:6px">${uploadedDocs.length?'Nenhum resultado.':'Nenhum documento carregado.'}</div>
+      <div style="font-size:13px">${uploadedDocs.length?'Ajuste os filtros.':'Defina o tipo, selecione o colaborador e importe os arquivos acima.'}</div>
+    </div>`;
+    return;
+  }
+
+  lista.innerHTML = docs.map(d=>{
+    const icon = FILE_ICONS[d.ext]||FILE_ICONS.default;
+    const sizeStr = d.size>1048576 ? (d.size/1048576).toFixed(1)+'MB' : Math.round(d.size/1024)+'KB';
+    const isPending = d.pending === true;
+    const isDup = d.duplicate === true;
+    return `<div class="up-card" style="${isPending?'border-left:3px solid #C55A11;background:#FFF8F0;':isDup?'border-left:3px solid #a32d2d;background:#FFF5F5;':''}">
+      <div class="up-card-icon">${icon}</div>
+      <div class="up-card-info">
+        <div class="up-card-nome" title="${d.fileName}">${d.fileName}${isDup?' <span style="background:#FFE0E0;color:#a32d2d;font-size:10px;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:6px">⚠️ DUPLICADO</span>':''}</div>
+        <div class="up-card-meta" style="margin-top:4px">
+          <span class="up-badge up-badge-tipo" style="${isPending?'background:#FFE0C0;color:#7A3000':isDup?'background:#FFE0E0;color:#a32d2d':''}">${d.tipo==='— Não identificado —'?'⚠️ Não identificado':d.tipo}</span>
+          <span style="margin-left:8px;color:${isPending?'#C55A11':'#58a6ff'};font-weight:600">${d.colabNome}</span>
+          <span style="margin-left:6px;color:#6c757d">· ${d.colabUf} · ${sizeStr} · ${d.dataUpload}</span>
+        </div>
+        ${(isPending||d.tipo==='—'||d.tipo==='— Não identificado —'||!d.colabId)?`<div id="pend-form-${d.id}" style="display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;align-items:center">
+          <select class="up-select" style="font-size:11px;padding:3px 7px;max-width:230px" data-pid="${d.id}" onchange="upPendingSetColab(this.dataset.pid,this.value)">
+            <option value="">${d.colabId!=null?'Alterar colaborador…':'— Selecionar colaborador —'}</option>
+            ${[...DATA].sort((a,b)=>a.nome.localeCompare(b.nome)).map(c=>`<option value="${c._id}" ${c._id===d.colabId?'selected':''}>${c.nome} (${c.uf})</option>`).join('')}
+          </select>
+          <select class="up-select" style="font-size:11px;padding:3px 7px;max-width:200px" data-pid="${d.id}" onchange="upPendingSetTipo(this.dataset.pid,this.value)">
+            <option value="">${d.tipo!=='— Não identificado —'?'Alterar tipo…':'— Selecionar tipo —'}</option>
+            ${Object.keys(TIPO_TO_FIELD).map(t=>`<option value="${t}" ${t===d.tipo?'selected':''}>${t}</option>`).join('')}
+          </select>
+          <button class="btn-primary" style="font-size:11px;padding:4px 12px;background:#375623;border-color:#375623" data-pid="${d.id}" onclick="upPendingConfirmar(this.dataset.pid)">✓ Confirmar</button>
+        </div>`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0">
+        ${isPending
+          ? `<span class="up-badge" style="background:#FFE0C0;color:#7A3000;font-weight:600">⏳ Pendente</span>`
+          : isDup
+            ? `<span class="up-badge" style="background:#FFE0E0;color:#a32d2d;font-weight:600">⚠️ Duplicado</span>`
+            : `<span class="up-badge up-badge-ok">✅ Entregue</span>`}
+        <div style="display:flex;gap:6px;margin-top:4px">
+          ${d.dataUrl?`<button class="up-btn" onclick="upDownloadFile('${d.id}')" title="Baixar com nome padronizado">⬇</button>`:''}
+          ${d.dataUrl?`<button class="up-btn" onclick="upVisualizar('${d.id}')" title="Visualizar">👁</button>`:''}
+          <button class="up-btn up-btn-danger" onclick="upRemover('${d.id}')" title="Remover">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Pending doc manual fill ───────────────
+function upMostrarSemUpload(colabsComUpload){
+  const div = document.getElementById('up-sem-upload');
+  const lista = document.getElementById('up-sem-upload-lista');
+  if(!div || !lista) return;
+  // Toggle
+  if(!colabsComUpload && div.style.display !== 'none'){
+    div.style.display = 'none'; return;
+  }
+  // Build set of colabs with uploads
+  const comUpload = colabsComUpload || new Set((window.uploadedDocs||[]).map(d=>d.colabId).filter(x=>x!=null));
+  const semUpload = DATA.filter(c => c && c.nome && c.status!=='inativo' && !comUpload.has(c._id));
+  if(!semUpload.length){
+    div.style.display = 'none';
+    toast('✅ Todos os colaboradores têm documentos anexados!','ok');
+    return;
+  }
+  lista.innerHTML = semUpload.map(c=>
+    `<span style="background:#fff;border:1px solid #f5c6cb;border-radius:16px;padding:3px 12px;font-size:12px;white-space:nowrap">
+      <span style="font-weight:600;color:#1F4E79">${c.nome}</span>
+      <span style="color:#6c757d;margin-left:4px">${c.cargo.replace('Analista de suporte ','').replace('Analista de suporte especializado ','')}</span>
+      <span style="color:#999;margin-left:4px">${c.uf}</span>
+    </span>`
+  ).join('');
+  div.style.display = 'block';
+}
+
+function upPendingToggle(id){
+  const form = document.getElementById('pend-form-'+id);
+  if(!form) return;
+  form.style.display = form.style.display==='none' ? 'flex' : 'none';
+}
+
+function upPendingSetColab(id, colabId){
+  const d = uploadedDocs.find(x=>x.id===id);
+  if(!d) return;
+  const c = DATA.find(x=>x._id===parseInt(colabId));
+  if(!c) return;
+  d.colabId = c._id; d.colabNome = c.nome; d.colabUf = c.uf;
+  saveUploadDocs();
+  // Update the name badge in the card without full re-render
+  document.querySelectorAll('[data-pid="'+id+'"]').forEach(el=>{
+    const nameSpan = el.closest('.up-card')?.querySelector('.up-card-nome + div span:nth-child(2)');
+    // Just save — no full re-render to avoid resetting other selects
+  });
+  // Don't call upFilterDocs — would reset tipo select
+  console.log('[setColab] id='+id+' colabId='+c._id+' nome='+c.nome); return; upFilterDocs();
+}
+
+function upPendingSetTipo(id, tipo){
+  const d = uploadedDocs.find(x=>x.id===id);
+  if(!d) return;
+  d.tipo = tipo; d.cat = TIPO_CAT[tipo]||'Outros';
+  saveUploadDocs();
+  console.log('[setTipo] id='+id+' tipo='+tipo); return; upFilterDocs();
+}
+
+function upPendingConfirmar(id){
+  const d = uploadedDocs.find(x=>x.id===id);
+  if(!d){ toast('Documento não encontrado.','warn'); return; }
+
+  // Read current select values from DOM (in case user changed but didn't trigger onchange)
+  const colabSel = document.querySelector('[data-pid="'+id+'"][onchange*="SetColab"]');
+  const tipoSel  = document.querySelector('[data-pid="'+id+'"][onchange*="SetTipo"]');
+  if(colabSel && colabSel.value && !d.colabId){
+    const c = DATA.find(x=>x._id===parseInt(colabSel.value));
+    if(c){ d.colabId=c._id; d.colabNome=c.nome; d.colabUf=c.uf; }
+  }
+  if(tipoSel && tipoSel.value && (d.tipo==='— Não identificado —'||d.tipo==='—')){
+    d.tipo=tipoSel.value; d.cat=TIPO_CAT[tipoSel.value]||'Outros';
+  }
+
+  if(!d.colabId){ toast('⚠️ Selecione o colaborador.','warn'); if(colabSel) colabSel.focus(); return; }
+  if(!d.tipo || d.tipo==='— Não identificado —'||d.tipo==='—'){ toast('⚠️ Selecione o tipo do documento.','warn'); if(tipoSel) tipoSel.focus(); return; }
+
+  d.pending = false;
+  if(!d.docs) d.docs={};
+  upAtualizarStatus(d.colabId, d.tipo, d.effFileName||d.fileName);
+  saveData();
+  saveUploadDocs();
+  const nome=d.colabNome, tipo=d.tipo;
+  ['renderAdm','renderTermos','renderEquip','renderCert','renderDeclaracoes','renderPendencias','renderGeral']
+    .forEach(fn=>{ try{window[fn]&&window[fn]();}catch(e){} });
+  upFilterDocs();
+  toast('✅ '+nome+' · '+tipo+' — Entregue!','ok');
+}
+
+function upVisualizar(id){
+  const doc = uploadedDocs.find(d=>d.id===id);
+  if(!doc||!doc.dataUrl) return;
+  const win = window.open('','_blank');
+  if(doc.ext==='pdf'){
+    win.document.write(`<html><body style="margin:0"><embed src="${doc.dataUrl}" width="100%" height="100%" type="application/pdf"></body></html>`);
+  } else {
+    win.document.write(`<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${doc.dataUrl}" style="max-width:100%;max-height:100vh;object-fit:contain"></body></html>`);
+  }
+  win.document.close();
+}
+
+function upDownload(id){
+  const doc = uploadedDocs.find(d=>d.id===id);
+  if(!doc||!doc.dataUrl) return;
+  const a = document.createElement('a');
+  a.href = doc.dataUrl;
+  a.download = doc.fileName;
+  a.click();
+}
+
+function upRemover(id){
+  const doc = uploadedDocs.find(d=>d.id===id);
+  if(!doc) return;
+  if(!confirm(`Remover "${doc.fileName}"?\nO status voltará para Pendente.`)) return;
+  uploadedDocs = uploadedDocs.filter(d=>d.id!==id);
+  saveUploadDocs();
+  // Revert status only if no other upload of same tipo+colab exists
+  const still = uploadedDocs.find(d=>d.colabId===doc.colabId && d.tipo===doc.tipo);
+  if(!still){
+    const c = DATA.find(x=>x._id===doc.colabId);
+    const field = TIPO_TO_FIELD[doc.tipo];
+    if(c && field){
+      if(field.cat==='docs' && c.docs[field.key]==='Entregue') c.docs[field.key]='Pendente';
+      if(field.cat==='certs' && c.certs[field.key]==='Entregue') c.certs[field.key]='Pendente';
+      if(field.cat==='equip' && c[field.key]==='Sim') c[field.key]='Pendente';
+      saveData();
+    }
+  }
+  upFilterDocs();
+}
+
+// ── Batch import (pasta completa) ─────────
+// Normaliza string removendo acentos e caixa
+function normStr(s){
+  return s.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9\s]/g,' ')
+    .replace(/\s+/g,' ').trim();
+}
+
+// Tenta identificar o colaborador a partir do nome do arquivo
+function upGuessColab(filename){
+  const base = normStr(filename.replace(/\.[^.]+$/,''));
+  const words = base.split(' ');
+
+  let bestMatch=null, bestScore=0;
+  DATA.forEach(c=>{
+    const nNorm = normStr(c.nome);
+    const nWords = nNorm.split(' ');
+    // Count overlapping words (ignore short words)
+    const score = nWords.filter(w=>w.length>2 && words.includes(w)).length;
+    // Bonus: first+last name match
+    const bonus = (words.includes(nWords[0]) && words.includes(nWords[nWords.length-1])) ? 2 : 0;
+    const total = score + bonus;
+    if(total > bestScore){ bestScore=total; bestMatch=c; }
+  });
+  return bestScore >= 2 ? bestMatch : null;
+}
+
+// Tenta identificar o tipo de documento a partir do nome do arquivo
+const TIPO_KEYWORDS = {
+  'Diploma/Superior':       ['diploma','superior','graduacao','faculdade','bacharel','licenciatura','tecnologo','historico escolar'],
+  'Especialização TI':      ['especializacao','pos graduacao','pos-graduacao','mba','especializacao ti','especializacao em ti'],
+  'Exp. Suporte':           ['experiencia suporte','exp suporte','comprovante experiencia','carteira trabalho','ctps suporte','declaracao experiencia'],
+  'Exp. Microcomputadores': ['experiencia micro','exp micro','microcomputador','computador'],
+  'ASO Admissional':        ['aso','atestado saude','exame admissional','saude ocupacional','admissional'],
+  'CTPS':                   ['ctps','carteira trabalho','carteira de trabalho','clt'],
+  'Contrato de Trabalho':   ['contrato trabalho','contrato de trabalho','contrato emprego'],
+  'Termo TCU':              ['termo tcu','termo responsabilidade tcu','termo de responsabilidade'],
+  'Cadastro TCU':           ['cadastro tcu','cadastro terceirizado','cadastro de terceirizado'],
+  'Decl. Não Parentesco':   ['parentesco','nao parentesco','declaracao parentesco','declaracao de nao parentesco'],
+  'Termo Vale Transporte':  ['vale transporte','vt','termo vt','termo vale'],
+  'Termo de Conduta T&S':   ['conduta','termo conduta','codigo conduta','ts conduta'],
+  'HDI SCA':                ['hdi sca','sca'],
+  'HDI CSR':                ['hdi csr','csr'],
+  'M365 Fundamentals':      ['m365','microsoft 365','ms365','fundamentals','ms-900'],
+  'MD-100 ou MD-102':       ['md100','md102','md-100','md-102','desktop administrator'],
+  'HDI DAST':               ['dast','desktop advanced'],
+  'AZ-900':                 ['az900','az-900','azure fundamentals'],
+  'ITIL Foundations v4':    ['itil','itil v4','itil4','itil foundation'],
+  'HDI SCTL':               ['sctl','team lead','team leader'],
+  'HDI KCS':                ['kcs','knowledge centered'],
+  'HDI SCM':                ['scm','support center manager'],
+  'HDI SCD':                ['scd','support center director'],
+  'Termo Maleta':              ['maleta','termo maleta','ferramenta'],
+  'Decl. Desktop/Internet':    ['desktop internet','internet desktop','conectividade','ajuste custo','custo desktop','custo internet','decl desktop','decl internet'],
+  'Decl. Locação Equipamento': ['locacao equip','locação equip','equipamento locacao','decl locacao','decl celular','celular locacao','locação de equip','locacao de equip','declaração locação','declaracao locacao','decl locação'],
+  'XLA Foundation':         ['xla','xla foundation'],
+};
+
+function upGuessType(filename){
+  const base = normStr(filename.replace(/\.[^.]+$/,''));
+  let bestType=null, bestScore=0;
+  Object.entries(TIPO_KEYWORDS).forEach(([tipo, keywords])=>{
+    const score = keywords.filter(kw=>base.includes(normStr(kw))).length;
+    if(score > bestScore){ bestScore=score; bestType=tipo; }
+  });
+  return bestScore > 0 ? bestType : null;
+}
+
+
+// ── Ampulheta em qualquer botão ──────────────────────────
+function withSpinner(btn, asyncFn){
+  if(!btn) { asyncFn(); return; }
+  const orig = btn.innerHTML;
+  btn.innerHTML = '⏳'; btn.disabled = true;
+  Promise.resolve().then(asyncFn).finally(()=>{
+    setTimeout(()=>{ btn.innerHTML=orig; btn.disabled=false; }, 400);
+  });
+}
+// Wrapper para onclick inline: withBtn(this, fn)
+function withBtn(btn, fn){ withSpinner(btn, fn); }
+
+// ── Upload unificado: docs + ZIPs juntos ──────────────────
+async function upHandleFiles(files){
+  const arr = Array.from(files);
+  if(!arr.length) return;
+
+  const tipo    = document.getElementById('up-tipo')?.value || null;
+  const colabId = parseInt(document.getElementById('up-colab')?.value);
+
+  // Mostrar progresso
+  const panel = document.getElementById('up-batch-result');
+  if(panel){ panel.style.display='block'; panel.innerHTML=`<div style="color:#6c757d;font-size:13px">⏳ Processando ${arr.length} arquivo(s)…</div>`; }
+
+  const allRows = [];   // {fileName, file, status:'ok'|'dup'|'pending', colab, tipo, doc}
+  let processed = 0;
+
+  function progress(msg){
+    if(panel) panel.innerHTML = `<div style="color:#6c757d;font-size:13px">⏳ ${msg}</div>`;
+  }
+
+  // Read file as dataURL
+  function readFile(file){ return new Promise(res=>{ const fr=new FileReader(); fr.onload=e=>res(e.target.result); fr.onerror=()=>res(null); fr.readAsDataURL(file); }); }
+
+  // Process one file
+  async function processFile(file){
+    processed++;
+    progress(`Processando ${processed}/${arr.length}: ${file.name}`);
+    const ext = file.name.split('.').pop().toLowerCase();
+
+    let resolvedColab = isNaN(colabId) ? null : DATA.find(x=>x._id===colabId);
+    let resolvedTipo  = tipo;
+
+    if(!resolvedColab){ const g=upGuessColab(file.name); if(g) resolvedColab=g; }
+    if(!resolvedTipo){ const g=upGuessType(file.name); if(g) resolvedTipo=g; }
+
+    if(!resolvedColab || !resolvedTipo){
+      // Not identified — add as pending card immediately (includes colab known but no tipo)
+      const id = Date.now().toString()+Math.random().toString(36).slice(2,6);
+      const dataUrl = await readFile(file);
+      const entry = {
+        id, pending:true,
+        colabId:   resolvedColab?._id ?? null,
+        colabNome: resolvedColab?.nome ?? '— Não identificado —',
+        colabUf:   resolvedColab?.uf  ?? '—',
+        tipo:      resolvedTipo ?? '— Não identificado —',
+        cat:       resolvedTipo?(TIPO_CAT[resolvedTipo]||'Outros'):'Pendente',
+        fileName:file.name, ext, size:file.size, dataUrl,
+        dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+      };
+      uploadedDocs.unshift(entry);
+      allRows.push({fileName:file.name, file, status:'pending', colab:resolvedColab, tipo:resolvedTipo, docId:id});
+      return;
+    }
+
+    // Check duplicate
+    const isDup = uploadedDocs.some(d=>d.colabId===resolvedColab._id&&d.tipo===resolvedTipo&&!d.pending);
+    const dataUrl = await readFile(file);
+    const id = Date.now().toString()+Math.random().toString(36).slice(2,6);
+    const effName = upGetEffectiveFileName(file.name, resolvedTipo);
+    uploadedDocs.unshift({
+      id, colabId:resolvedColab._id, colabNome:resolvedColab.nome, colabUf:resolvedColab.uf,
+      tipo:resolvedTipo, cat:TIPO_CAT[resolvedTipo]||'Outros',
+      fileName:file.name, ext, size:file.size, dataUrl, duplicate:isDup,
+      dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+    });
+    if(!isDup) upAtualizarStatus(resolvedColab._id, resolvedTipo, effName);
+    allRows.push({fileName:file.name, file, status:isDup?'dup':'ok', colab:resolvedColab, tipo:resolvedTipo});
+  }
+
+  // Extract ZIP files
+  async function processZip(file){
+    progress(`📦 Extraindo ZIP: ${file.name}`);
+    const ab = await new Promise(res=>{const fr=new FileReader();fr.onload=e=>res(e.target.result);fr.readAsArrayBuffer(file);});
+    const JSZip = await loadJSZip();
+    const zip = await new JSZip().loadAsync(ab);
+    const entries = [];
+    zip.forEach((path, entry)=>{ if(!entry.dir) entries.push({path,entry}); });
+    for(const {path,entry} of entries){
+      const blob = await entry.async('blob');
+      const f2 = new File([blob], path.split('/').pop(), {type:blob.type});
+      await processFile(f2);
+    }
+  }
+
+  // Process all files (ZIPs and regular) in order
+  for(const file of arr){
+    if(file.name.toLowerCase().endsWith('.zip')){
+      await processZip(file);
+    } else {
+      await processFile(file);
+    }
+  }
+
+  // Save and update all tabs
+  saveData();
+  saveUploadDocs();
+  ['renderAdm','renderTermos','renderEquip','renderCert','renderDeclaracoes','renderPendencias']
+    .forEach(fn=>{ try{window[fn]&&window[fn]();}catch(e){} });
+  upFilterDocs();
+
+  // Show result panel
+  upShowResult(allRows);
+
+  // Reset input
+  const inp = document.getElementById('up-file-input');
+  if(inp) inp.value='';
+  const zinp = document.getElementById('up-zip-input');
+  if(zinp) zinp.value='';
+}
+
+// ── Result panel ─────────────────────────────────────────
+function upShowResult(rows){
+  const panel = document.getElementById('up-batch-result');
+  if(!panel) return;
+  panel.style.display = 'block';
+
+  const ok      = rows.filter(r=>r.status==='ok');
+  const pending = rows.filter(r=>r.status==='pending');
+  const dups    = rows.filter(r=>r.status==='dup');
+
+  let h = `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #dee2e6">
+    <b style="font-size:13px;color:#1F4E79">📊 Resultado</b>
+    <span style="background:#D4EDDA;color:#155724;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">✅ ${ok.length} importados</span>
+    ${pending.length?`<span style="background:#FCEBEB;color:#A32D2D;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">⚠️ ${pending.length} não identificados</span>`:''}
+    ${dups.length?`<span style="background:#f0f2f5;color:#6c757d;padding:2px 10px;border-radius:12px;font-size:12px">⏩ ${dups.length} duplicados</span>`:''}
+    <span style="color:#6c757d;font-size:11px">📁 ${rows.length} total</span>
+    <button onclick="document.getElementById('up-batch-result').style.display='none'" style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:18px;color:#999;line-height:1" title="Fechar">✕</button>
+  </div>`;
+
+  // Pending section — full selects
+  if(pending.length){
+    h += `<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:#A32D2D;margin-bottom:8px">⚠️ Não identificados — selecione e confirme:</div>`;
+    pending.forEach(r=>{
+      const d = uploadedDocs.find(x=>x.id===r.docId);
+      if(!d) return;
+      h += `<div style="background:#FFF8F0;border:1.5px solid #F5C518;border-radius:8px;padding:10px 14px;margin-bottom:8px">
+        <div style="font-weight:600;color:#7A3000;font-size:12px;margin-bottom:8px">📄 ${r.fileName}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          ${!d.colabId?`<select class="up-select" style="font-size:11px;padding:4px 8px;max-width:240px" data-pid="${d.id}" onchange="upPendingSetColab(this.dataset.pid,this.value)">
+            <option value="">— Selecionar colaborador —</option>
+            ${[...DATA].sort((a,b)=>a.nome.localeCompare(b.nome)).map(c=>`<option value="${c._id}">${c.nome} (${c.uf})</option>`).join('')}
+          </select>`:`<span style="background:#E1F5EE;color:#155724;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:600">👤 ${d.colabNome}</span>`}
+          ${d.tipo==='— Não identificado —'?`<select class="up-select" style="font-size:11px;padding:4px 8px;max-width:210px" data-pid="${d.id}" onchange="upPendingSetTipo(this.dataset.pid,this.value)">
+            <option value="">— Selecionar tipo —</option>
+            ${Object.keys(TIPO_TO_FIELD).map(t=>`<option value="${t}">${t}</option>`).join('')}
+          </select>`:`<span style="background:#E8F0FE;color:#1A3A6B;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:600">📋 ${d.tipo}</span>`}
+          <button class="btn-primary" style="font-size:11px;padding:5px 14px;background:#1F4E79" data-pid="${d.id}" onclick="upPendingConfirmar(this.dataset.pid);this.closest('[data-pid]')&&upShowResult(window._lastUpRows||[])">✓ Confirmar</button>
+        </div>
+      </div>`;
+    });
+    h += `</div>`;
+  }
+
+  // OK section (collapsible)
+  if(ok.length){
+    h += `<details style="margin-bottom:6px"><summary style="cursor:pointer;font-size:12px;font-weight:600;color:#155724">✅ ${ok.length} importado(s) — clique para ver</summary><div style="margin-top:6px">`;
+    ok.forEach(r=>{ h+=`<div style="font-size:11px;padding:2px 8px;color:#155724">• ${r.fileName} — ${r.colab?.nome} · ${r.tipo}</div>`; });
+    h += `</div></details>`;
+  }
+
+  // Dups section (collapsible)
+  if(dups.length){
+    h += `<details><summary style="cursor:pointer;font-size:12px;color:#6c757d">⏩ ${dups.length} duplicado(s)</summary><div style="margin-top:6px">`;
+    dups.forEach(r=>{ h+=`<div style="font-size:11px;padding:2px 8px;color:#6c757d">• ${r.fileName}</div>`; });
+    h += `</div></details>`;
+  }
+
+  panel.innerHTML = h;
+  window._lastUpRows = rows;
+}
+
+function upBatchImport(files){
+  const arr = Array.from(files);
+  if(!arr.length) return;
+
+  const resultDiv = document.getElementById('up-batch-result');
+  resultDiv.style.display='block';
+  resultDiv.innerHTML = `<div style="color:#6c757d;font-size:13px;margin-bottom:10px">🔍 Analisando ${arr.length} arquivo(s)...</div>`;
+
+  let matched=0, skipped=0, noColab=0, noTipo=0;
+  const rows=[];
+  let pending = arr.length;
+  // ── Adiciona arquivo não identificado ao uploadedDocs imediatamente ──
+  function addPendingDoc(file, colab, tipo){
+    const fName = file.name;
+    if(uploadedDocs.find(d=>d.fileName===fName&&d.pending)) return; // avoid dup
+    const id  = Date.now().toString()+Math.random().toString(36).slice(2,6);
+    const ext = fName.split('.').pop().toLowerCase();
+    const entry = {
+      id,
+      colabId:   colab?._id ?? null,
+      colabNome: colab?.nome ?? '— Não identificado —',
+      colabUf:   colab?.uf  ?? '—',
+      tipo:      tipo ?? '— Não identificado —',
+      cat:       tipo ? (TIPO_CAT[tipo]||'Outros') : 'Pendente',
+      fileName:  fName,
+      ext, size: file.size,
+      dataUpload: new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+      dataUrl:   null,
+      pending:   true,
+    };
+    uploadedDocs.unshift(entry);
+    saveUploadDocs();
+    upFilterDocs();
+    // Read file async for preview/download (non-blocking)
+    try{
+      const fr = new FileReader();
+      fr.onload = e => {
+        const i = uploadedDocs.findIndex(d=>d.id===id);
+        if(i>=0){ uploadedDocs[i].dataUrl = e.target.result; saveUploadDocs(); upFilterDocs(); }
+      };
+      fr.readAsDataURL(file);
+    }catch(e){}
+  }
+
+
+  arr.forEach(file=>{
+    const colab = upGuessColab(file.name);
+    const tipo  = upGuessType(file.name);
+    const ext   = file.name.split('.').pop().toLowerCase();
+
+    if(!colab && !tipo){
+      rows.push({file, _fileObj:file, fileName:file.name, colab:null, tipo:null, status:'manual', msg:'Não identificado — precisa de seleção manual'});
+      noColab++; noTipo++;
+      addPendingDoc(file, null, null);
+      pending--; if(pending===0) showBatchResult(rows, matched, skipped, noColab, noTipo, arr.length);
+      return;
+    }
+    if(!colab){
+      rows.push({file, colab:null, tipo, status:'no-colab', msg:`Tipo: ${tipo} — colaborador não identificado`});
+      noColab++;
+      addPendingDoc(file, null, tipo);
+      pending--; if(pending===0) showBatchResult(rows, matched, skipped, noColab, noTipo, arr.length);
+      return;
+    }
+    if(!tipo){
+      rows.push({file, _fileObj:file, fileName:file.name, colab, tipo:null, status:'no-tipo', msg:`Colaborador: ${colab.nome} — tipo não identificado`});
+      noTipo++;
+      addPendingDoc(file, colab, null);
+      pending--; if(pending===0) showBatchResult(rows, matched, skipped, noColab, noTipo, arr.length);
+      return;
+    }
+
+    // Check duplicate
+    const dup = uploadedDocs.find(d=>d.colabId===colab._id && d.tipo===tipo && d.fileName===file.name);
+    if(dup){
+      rows.push({file, colab, tipo, status:'dup', msg:`Duplicado — já existe`});
+      skipped++;
+      pending--; if(pending===0) showBatchResult(rows, matched, skipped, noColab, noTipo, arr.length);
+      return;
+    }
+
+    // Read and import
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      const id = Date.now().toString()+Math.random().toString(36).slice(2,5);
+      uploadedDocs.unshift({
+        id, colabId:colab._id, colabNome:colab.nome, colabUf:colab.uf,
+        tipo, cat:TIPO_CAT[tipo]||'Outros',
+        fileName:file.name, ext, size:file.size,
+        dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+        dataUrl:e.target.result,
+        batchImported:true,
+      });
+      upAtualizarStatus(colab._id, tipo, upGetEffectiveFileName(file.name, tipo));
+      rows.push({file, colab, tipo, status:'ok', msg:`✅ ${colab.nome} · ${tipo}`});
+      matched++;
+      pending--;
+      toast(`📎 ${matched}/${arr.length} importado(s)…`,'ok');
+      if(pending===0){
+        saveData();
+        saveUploadDocs();
+        try{ renderDeclaracoes(); }catch(e){}
+        try{ renderEquip(); }catch(e){}
+        try{ renderPendencias(); }catch(e){}
+        upFilterDocs();
+        toast(`✅ ${matched} arquivo(s) importado(s)!`,'ok');
+        showBatchResult(rows, matched, skipped, noColab, noTipo, arr.length);
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function showBatchResult(rows, matched, skipped, noColab, noTipo, total){
+  // Pending docs already added via addPendingDoc — update the list
+  upFilterDocs();
+
+  const div = document.getElementById('up-batch-result');
+  if(!div) return;
+  div.style.display = 'block';
+
+  const noid = noColab + noTipo;
+  const erros = rows.filter(r=>['manual','no-colab','no-tipo'].includes(r.status));
+  const ok    = rows.filter(r=>r.status==='ok');
+  const dups  = rows.filter(r=>r.status==='dup');
+
+  // Summary bar
+  let html2 = `<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #dee2e6">
+    <span style="font-weight:700;font-size:13px;color:#1F4E79">📊 Resultado do upload</span>
+    <span style="background:#D4EDDA;color:#155724;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600">✅ ${matched} importados</span>
+    ${noid>0?`<span style="background:#FCEBEB;color:#A32D2D;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600">⚠️ ${noid} não identificados</span>`:''}
+    ${dups.length>0?`<span style="background:#f0f2f5;color:#6c757d;padding:3px 10px;border-radius:12px;font-size:12px">⏩ ${dups.length} duplicados</span>`:''}
+    <span style="color:#6c757d;font-size:11px">📁 ${total} arquivo(s) total</span>
+    <button onclick="document.getElementById('up-batch-result').style.display='none'" style="margin-left:auto;background:none;border:none;cursor:pointer;color:#6c757d;font-size:16px" title="Fechar">✕</button>
+  </div>`;
+
+  // ── Não identificados (erro) ──
+  if(erros.length){
+    html2 += `<div style="margin-bottom:10px">
+      <div style="font-size:12px;font-weight:700;color:#A32D2D;margin-bottom:6px">⚠️ Arquivos não identificados — preencha abaixo e clique Confirmar</div>`;
+    erros.forEach(r=>{
+      const fname = r.file?.name || r.fileName || '—';
+      html2 += `<div style="background:#FFF8F0;border:1px solid #F5C518;border-radius:6px;padding:8px 12px;margin-bottom:6px;font-size:12px">
+        <div style="font-weight:600;color:#7A3000;margin-bottom:6px">📄 ${fname}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          ${!r.colab?`<select class="up-select" style="font-size:11px;padding:3px 7px;max-width:240px" onchange="upBatchSetColab(this,'${fname}')">
+            <option value="">— Selecionar colaborador —</option>
+            ${[...DATA].sort((a,b)=>a.nome.localeCompare(b.nome)).map(c=>`<option value="${c._id}">${c.nome} (${c.uf})</option>`).join('')}
+          </select>`:`<span style="background:#E1F5EE;color:#155724;padding:2px 8px;border-radius:8px;font-size:11px">👤 ${r.colab.nome}</span>`}
+          ${!r.tipo?`<select class="up-select" style="font-size:11px;padding:3px 7px;max-width:200px" onchange="upBatchSetTipo(this,'${fname}')">
+            <option value="">— Selecionar tipo —</option>
+            ${Object.keys(TIPO_TO_FIELD).map(t=>`<option value="${t}">${t}</option>`).join('')}
+          </select>`:`<span style="background:#E8F0FE;color:#1A3A6B;padding:2px 8px;border-radius:8px;font-size:11px">📋 ${r.tipo}</span>`}
+          <button class="btn-primary" style="font-size:11px;padding:4px 12px;background:#1F4E79" onclick="upBatchConfirmRow('${fname}')">✓ Confirmar</button>
+        </div>
+      </div>`;
+    });
+    html2 += `</div>`;
+  }
+
+  // ── Importados com sucesso ──
+  if(ok.length){
+    html2 += `<details style="margin-bottom:6px"><summary style="cursor:pointer;font-size:12px;font-weight:600;color:#155724;list-style:none">
+      ✅ ${ok.length} arquivo(s) importados com sucesso <span style="font-weight:400;color:#6c757d">(clique para ver)</span>
+    </summary><div style="margin-top:6px">`;
+    ok.forEach(r=>{
+      html2 += `<div style="font-size:11px;padding:3px 8px;color:#155724">• ${r.file?.name||r.fileName} — ${r.colab?.nome||''} · ${r.tipo||''}</div>`;
+    });
+    html2 += `</div></details>`;
+  }
+
+  // ── Duplicados ──
+  if(dups.length){
+    html2 += `<details><summary style="cursor:pointer;font-size:12px;color:#6c757d;list-style:none">
+      ⏩ ${dups.length} duplicado(s) ignorado(s)
+    </summary><div style="margin-top:6px">`;
+    dups.forEach(r=>{
+      html2 += `<div style="font-size:11px;padding:3px 8px;color:#6c757d">• ${r.file?.name||r.fileName}</div>`;
+    });
+    html2 += `</div></details>`;
+  }
+
+  div.innerHTML = html2;
+  window._batchPendingRows = rows;
+  window._batchPendingFiles = {};
+  rows.forEach(r=>{ if(r.file) window._batchPendingFiles[r.file.name||r.fileName]=r.file; });
+}
+
+// Manual fix for unidentified files
+function upBatchDeleteRow(fname){
+  if(!window._batchPendingRows) return;
+  // Remove from pending rows
+  window._batchPendingRows = window._batchPendingRows.filter(r=>(r.fileName||r.file?.name)!==fname);
+  // Remove from pending docs in uploadedDocs
+  uploadedDocs = uploadedDocs.filter(d=>!(d.pending && d.fileName===fname));
+  saveUploadDocs();
+  // Remove the DOM row
+  const key = fname.replace(/[^a-z0-9]/gi,'_');
+  const el = document.getElementById('batch-row-'+key);
+  if(el) el.remove();
+  // Hide panel if no more pending rows
+  const remaining = (window._batchPendingRows||[]).filter(r=>['no-colab','no-tipo','manual'].includes(r.status));
+  if(!remaining.length){
+    const resultDiv = document.getElementById('up-batch-result');
+    if(resultDiv) resultDiv.style.display='none';
+  }
+}
+
+function upBatchSetDeclMes(sel, fname){
+  // For already-identified rows, re-run upAtualizarStatus with the chosen month
+  const row = window._batchPendingRows?.find(r=>(r.fileName||r.file?.name)===fname);
+  if(!row||!row.colab||!row.tipo) return;
+  const mes = sel.value;
+  if(!mes) return;
+  const tipo = row.tipo;
+  // Build a synthetic fileName containing the month so upAtualizarStatus extracts it
+  const effectiveFileName = mes + ' ' + fname;
+  upAtualizarStatus(row.colab._id, tipo, effectiveFileName);
+  toast('✅ Declaração de '+mes+' registrada!','ok');
+}
+
+function upBatchSetColab(sel, fname){
+  const row = window._batchPendingRows?.find(r=>(r.fileName||r.file?.name)===fname);
+  if(row) row._manualColabId = parseInt(sel.value)||null;
+}
+function upBatchSetTipo(sel, fname){
+  const row = window._batchPendingRows?.find(r=>(r.fileName||r.file?.name)===fname);
+  if(!row) return;
+  row._manualTipo = sel.value||null;
+  // Show/hide month selector for declarations
+  const key = fname.replace(/[^a-z0-9]/gi,'_');
+  const mesWrap = document.getElementById('decl-mes-wrap-'+key);
+  if(mesWrap){
+    const isDecl = sel.value==='Decl. Desktop/Internet'||sel.value==='Decl. Locação Equipamento';
+    mesWrap.style.display = isDecl ? 'inline-flex' : 'none';
+  }
+}
+function upBatchConfirmRow(fname){
+  const row = window._batchPendingRows?.find(r=>(r.fileName||r.file?.name)===fname);
+  if(!row){ alert('Registro não encontrado. Tente reenviar o arquivo.'); return; }
+
+  const colabId = row.colab?._id ?? row._manualColabId;
+  const tipo    = row.tipo   ?? row._manualTipo;
+  if(!colabId||!tipo){ alert('Selecione colaborador e tipo antes de confirmar.'); return; }
+
+  const colab = DATA.find(x=>x._id===colabId);
+  if(!colab){ alert('Colaborador não encontrado.'); return; }
+
+  // For declaration types, get the manually selected month
+  const isDecl = tipo==='Decl. Desktop/Internet'||tipo==='Decl. Locação Equipamento';
+  const fileKey = row.fileName || row.file?.name;
+  const key = fileKey.replace(/[^a-z0-9]/gi,'_');
+  let declMes = '';
+  if(isDecl){
+    const mesSel = document.getElementById('decl-mes-sel-'+key);
+    if(mesSel && mesSel.value) declMes = mesSel.value;
+    if(!declMes){ alert('Selecione o mês da declaração antes de confirmar.'); return; }
+  }
+  // Build effective fileName to carry the month (used by upAtualizarStatus)
+  const effectiveFileName = declMes
+    ? `${declMes} ${document.getElementById('up-ano-decl')?.value||'2026'} ${fileKey}`
+    : upGetEffectiveFileName(fileKey, tipo);
+
+  const file = window._batchPendingFiles?.[fileKey] || row.file || null;
+
+  function doImport(dataUrl, size, ext){
+    // Remove importação anterior do mesmo arquivo (se existir) para reimportar
+    const existIdx = uploadedDocs.findIndex(d=>d.colabId===colabId&&d.tipo===tipo&&d.fileName===fileKey);
+    if(existIdx>=0) uploadedDocs.splice(existIdx,1);
+    const id = Date.now().toString()+Math.random().toString(36).slice(2,5);
+    // Para declarações: pegar mês do select ou do nome do arquivo
+    const isDecl = tipo==='Decl. Desktop/Internet'||tipo==='Decl. Locação Equipamento';
+    const declMesSel = document.getElementById('up-mes')?.value||'';
+    const declAnoSel = document.getElementById('up-ano-decl')?.value||String(new Date().getFullYear());
+    const effFileName = isDecl && declMesSel ? declMesSel+' '+declAnoSel+' '+fileKey : upGetEffectiveFileName(fileKey, tipo);
+    uploadedDocs.unshift({
+      id, colabId, colabNome:colab.nome, colabUf:colab.uf,
+      tipo, cat:TIPO_CAT[tipo]||'Outros',
+      fileName:fileKey, effFileName, ext, size,
+      declMes: isDecl?(declMesSel||''):undefined,
+      declAno: isDecl?declAnoSel:undefined,
+      dataUpload:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+      dataUrl, batchImported:true,
+    });
+    upAtualizarStatus(colabId, tipo, effFileName);
+    saveData();
+    saveUploadDocs();
+    try{ renderEquip(); }catch(e){}
+    try{ renderAdm(); }catch(e){}
+    try{ renderTermos(); }catch(e){}
+    try{ renderCert(); }catch(e){}
+    try{ renderPendencias(); }catch(e){}
+    try{ renderDeclaracoes(); }catch(e){}
+    // Feedback visual imediato
+    toast(`✅ ${colab.nome} · ${tipo}`+(effFileName.match(/Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro/)?` · ${effFileName.match(/Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro/)[0]}`:''),'ok');
+    upFilterDocs();
+    // Refresh the result panel
+    const allRows = window._batchPendingRows;
+    const ok  = allRows.filter(r=>r.status==='ok').length;
+    const dup2= allRows.filter(r=>r.status==='dup').length;
+    const noid= allRows.filter(r=>['no-colab','no-tipo','manual'].includes(r.status)).length;
+    // Re-render result panel inline
+    const resultDiv = document.getElementById('up-batch-result');
+    if(!resultDiv) return;
+    resultDiv.innerHTML = `<div style="font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:10px">
+        ✅ ${ok} importado(s) &nbsp;·&nbsp; ⏩ ${dup2} duplicado(s) &nbsp;·&nbsp; <span style="color:#7A5000">⚠️ ${noid} não identificado(s)</span>
+      </div>` +
+      allRows.filter(r=>['manual','no-colab','no-tipo'].includes(r.status)).map(r=>`
+        <div style="padding:6px 0;border-bottom:1px solid #dee2e6;font-size:12px">
+          <span style="color:#7A5000">⚠️</span>
+          <span style="color:#1a1a2e;font-weight:500;margin-left:6px">${r.fileName||r.file?.name}</span>
+          <span style="color:#6c757d;margin-left:8px">${r.msg}</span>
+          <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap">
+            ${!r.colab?`<select class="up-select" style="font-size:11px;padding:3px 6px" onchange="upBatchSetColab(this,'${r.fileName||r.file?.name}')">
+              <option value="">Selecionar colaborador…</option>
+              ${[...DATA].sort((a,b)=>a.nome.localeCompare(b.nome)).map(c=>`<option value="${c._id}"${r._manualColabId===c._id?' selected':''}>${c.nome} (${c.uf})</option>`).join('')}
+            </select>`:'<span style="color:#155724;font-size:11px">👤 '+r.colab.nome+'</span>'}
+            ${!r.tipo?`<select class="up-select" style="font-size:11px;padding:3px 6px" onchange="upBatchSetTipo(this,'${r.fileName||r.file?.name}')">
+              <option value="">Selecionar tipo…</option>
+              ${Object.keys(TIPO_TO_FIELD).map(t=>`<option value="${t}"${r._manualTipo===t?' selected':''}>${t}</option>`).join('')}
+            </select>`:'<span style="color:#155724;font-size:11px">📄 '+r.tipo+'</span>'}
+            <button class="btn-primary" style="padding:4px 12px;font-size:12px" onclick="upBatchConfirmRow('${r.fileName||r.file?.name}')">✓ Confirmar</button>
+          </div>
+        </div>`).join('') +
+      (noid===0?'<div style="color:#155724;font-size:13px;font-weight:600;margin-top:8px">✅ Todos os arquivos foram importados!</div>':'');
+  }
+
+  if(file){
+    const ext = file.name.split('.').pop().toLowerCase();
+    const reader = new FileReader();
+    reader.onload = (e)=>doImport(e.target.result, file.size, ext);
+    reader.readAsDataURL(file);
+  } else if(row.dataUrl){
+    // ZIP entries already have dataUrl
+    const ext = fileKey.split('.').pop().toLowerCase();
+    doImport(row.dataUrl, row.size||0, ext);
+  } else {
+    alert('Arquivo não disponível para confirmar. Importe novamente usando "Identificar pelo nome".');
+  }
+}
+
+// ── End batch import ──────────────────────
+
+function upLimparTudo(){
+  if(!confirm(`Remover todos os ${uploadedDocs.length} documentos?\nOs status voltarão para Pendente.`)) return;
+  // Revert all statuses
+  uploadedDocs.forEach(doc=>{
+    const c = DATA.find(x=>x._id===doc.colabId);
+    const field = TIPO_TO_FIELD[doc.tipo];
+    if(c && field){
+      if(field.cat==='docs' && c.docs[field.key]==='Entregue') c.docs[field.key]='Pendente';
+      if(field.cat==='certs' && c.certs[field.key]==='Entregue') c.certs[field.key]='Pendente';
+    }
+  });
+  uploadedDocs=[];
+  saveUploadDocs();
+  upFilterDocs();
+}
+
+// Re-apply all stored uploads to DATA on page load (restore statuses)
+(function reapplyUploadStatuses(){
+  uploadedDocs.forEach(doc=>upAtualizarStatus(doc.colabId, doc.tipo, doc.fileName));
+})();
+
+
+// ══════════════════════════════════════════
+// CARGOS E REQUISITOS
+// ══════════════════════════════════════════
+const REQUISITOS_DATA = [{"cargo": "Analista de suporte telefônico (TEL)", "grupo": "Suporte Telefônico", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação HDI SCA ou HDI CSR", "Experiência mínima de 3 anos em suporte técnico/help desk", "Experiência mínima de 2 anos em operação de microcomputadores", "Treinamento inicial de 40 horas (capacitação prevista em contrato)"], "certs": ["HDI SCA", "HDI CSR"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "3 anos", "exp_micro": "2 anos"}, {"cargo": "Analista de suporte (BSB)", "grupo": "Suporte Brasília", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação Microsoft 365 Certified: Fundamentals", "Certificação MD-100 ou MD-102", "Certificação HDI DAST", "Experiência mínima de 5 anos em suporte técnico", "Experiência mínima de 2 anos em operação de microcomputadores"], "certs": ["M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "5 anos", "exp_micro": "2 anos"}, {"cargo": "Analista de suporte (EST)", "grupo": "Suporte Estados", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação Microsoft 365 Certified: Fundamentals", "Certificação MD-100 ou MD-102", "Certificação HDI DAST ou HDI CSR", "Experiência mínima de 3 anos em suporte técnico", "Experiência mínima de 2 anos em operação de microcomputadores", "Certificado em curso de montagem/configuração de microcomputadores (≥20h)"], "certs": ["M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST", "HDI CSR"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "3 anos", "exp_micro": "2 anos"}, {"cargo": "Analista de suporte especializado (AE)", "grupo": "Atendimentos Especiais", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação Microsoft 365 Certified: Fundamentals", "Certificação HDI DAST ou HDI CSR", "Certificação MD-100 ou MD-102", "Experiência mínima de 5 anos em suporte técnico", "Experiência mínima de 4 anos em operação de microcomputadores", "Certificado curso montagem/configuração microcomputadores (≥20h)", "Treinamento inicial de 40 horas", "Conhecimentos básicos: Windows, Mac OS e Linux", "Conhecimentos básicos: ecossistemas Apple e Android"], "certs": ["M365 Fundamentals", "HDI DAST", "HDI CSR", "MD-100 ou MD-102"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "5 anos", "exp_micro": "4 anos"}, {"cargo": "Cabeamento estruturado (CE)", "grupo": "Cabeamento", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Experiência mínima de 5 anos em suporte técnico", "Experiência mínima de 5 anos em operação de microcomputadores", "Certificado curso montagem/configuração microcomputadores (≥20h)", "Treinamento inicial de 40 horas", "Curso geral de redes e cabeamento estruturado"], "certs": [], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "5 anos", "exp_micro": "5 anos"}, {"cargo": "Analista de suporte especializado (AC)", "grupo": "Administração de Contas", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação Microsoft 365 Certified: Fundamentals", "Certificação MD-100 ou MD-102", "Certificação AZ-900 (Microsoft Azure Fundamentals)", "Experiência mínima de 5 anos em suporte técnico", "Experiência mínima de 4 anos em operação de microcomputadores", "Treinamento inicial de 40 horas", "Conhecimentos: Microsoft Office, Teams, SharePoint e Azure"], "certs": ["M365 Fundamentals", "MD-100 ou MD-102", "AZ-900"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "5 anos", "exp_micro": "4 anos"}, {"cargo": "Administração de parque tecnológico (AP)", "grupo": "Parque Tecnológico", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação HDI DAST ou HDI SCA ou HDI CSR", "Experiência mínima de 5 anos em suporte técnico", "Experiência mínima de 4 anos em operação de microcomputadores", "Certificado curso montagem/configuração microcomputadores (≥20h)", "Treinamento inicial de 40 horas"], "certs": ["HDI DAST", "HDI SCA", "HDI CSR"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "5 anos", "exp_micro": "4 anos"}, {"cargo": "Supervisor de suporte (STEL)", "grupo": "Supervisão TEL", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação ITIL Foundations v4 ou posterior", "Certificação HDI SCTL (Support Center Team Leader)", "Experiência mínima de 4 anos em suporte/help desk", "Experiência mínima de 3 anos em supervisão de serviços de atendimento TI (ou 1 ano no contrato atual)", "Experiência mínima de 2 anos em operação de microcomputadores"], "certs": ["ITIL Foundations v4", "HDI SCTL"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "4 anos suporte + 3 anos supervisão", "exp_micro": "N/A"}, {"cargo": "Supervisor de suporte (BSB)", "grupo": "Supervisão BSB", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação ITIL Foundations v4 ou posterior", "Certificação HDI SCTL (Support Center Team Lead)", "Experiência mínima de 4 anos em suporte/help desk", "Experiência mínima de 3 anos em supervisão/gerência de suporte TI (ou 1 ano no contrato atual)"], "certs": ["ITIL Foundations v4", "HDI SCTL"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "4 anos suporte + 3 anos supervisão", "exp_micro": "N/A"}, {"cargo": "Supervisor de suporte (EST)", "grupo": "Supervisão EST", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação ITIL Foundations v4 ou posterior", "Certificação HDI SCTL (Support Center Team Lead)", "Experiência mínima de 4 anos em suporte/help desk", "Experiência mínima de 3 anos em supervisão/gerência de suporte TI (ou 1 ano no contrato atual)"], "certs": ["ITIL Foundations v4", "HDI SCTL"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "4 anos suporte + 3 anos supervisão", "exp_micro": "N/A"}, {"cargo": "Supervisor de suporte (SAE)", "grupo": "Supervisão AE", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação ITIL Foundations v4 ou posterior", "Certificação HDI SCTL (Support Center Team Lead)", "Experiência mínima de 4 anos em suporte/help desk", "Experiência mínima de 3 anos em supervisão/gerência de suporte TI (ou 1 ano no contrato atual)"], "certs": ["ITIL Foundations v4", "HDI SCTL"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "4 anos suporte + 3 anos supervisão", "exp_micro": "N/A"}, {"cargo": "Supervisor de suporte (SCHA)", "grupo": "Supervisão Chamados", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação ITIL Foundations v4 ou posterior", "Experiência mínima de 4 anos em suporte/help desk", "Experiência mínima de 3 anos em supervisão/gerência de suporte TI (ou 1 ano no contrato atual)"], "certs": ["ITIL Foundations v4"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "4 anos suporte + 3 anos supervisão", "exp_micro": "N/A"}, {"cargo": "Gestor de conhecimento", "grupo": "Gestão do Conhecimento", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação HDI KCS (Knowledge Centered Support)", "Experiência mínima de 4 anos em suporte técnico/help desk", "Experiência mínima de 3 anos em supervisão/gerência de suporte TI"], "certs": ["HDI KCS"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "4 anos suporte + 3 anos supervisão", "exp_micro": "N/A"}, {"cargo": "Gestor de Service desk", "grupo": "Gestão do Service Desk", "requisitos": ["Ensino superior completo em TI (ou outra área + especialização em TI)", "Certificação ITIL versão 4", "Duas certificações HDI: SCTL, SCM, SCD ou XLA Foundation", "Experiência mínima de 6 anos em suporte técnico/help desk", "Experiência mínima de 5 anos em supervisão/gerência de suporte TI"], "certs": ["ITIL Foundations v4", "HDI SCTL", "HDI SCM", "HDI SCD", "XLA Foundation"], "formacao": "Superior em TI ou outra área + especialização TI", "exp_suporte": "6 anos suporte + 5 anos supervisão", "exp_micro": "N/A"}];
+
+const REQ_GRUPO_MAP = {
+  'Suporte': ['Analista de suporte telefônico (TEL)','Analista de suporte (BSB)','Analista de suporte (EST)','Analista de suporte especializado (AE)'],
+  'Supervisor': ['Supervisor de suporte (STEL)','Supervisor de suporte (BSB)','Supervisor de suporte (EST)','Supervisor de suporte (SAE)','Supervisor de suporte (SCHA)'],
+  'Gestor': ['Gestor de conhecimento','Gestor de Service desk'],
+  'Especializado': ['Cabeamento estruturado (CE)','Analista de suporte especializado (AC)','Administração de parque tecnológico (AP)'],
+};
+
+const GRUPO_COLORS = {
+  'Suporte Telefônico': '#E8F0FE',
+  'Suporte Brasília': '#EAF5EA',
+  'Suporte Estados': '#EAF5EA',
+  'Atendimentos Especiais': '#FFF5E6',
+  'Cabeamento': '#F5F0FF',
+  'Administração de Contas': '#FFF5E6',
+  'Parque Tecnológico': '#FFF5E6',
+  'Supervisão TEL': '#FDE8E8',
+  'Supervisão BSB': '#FDE8E8',
+  'Supervisão EST': '#FDE8E8',
+  'Supervisão AE': '#FDE8E8',
+  'Supervisão Chamados': '#FDE8E8',
+  'Gestão do Conhecimento': '#E8F0FE',
+  'Gestão do Service Desk': '#E3F2FD',
+};
+const GRUPO_BORDER = {
+  'Suporte Telefônico':'#2E75B6','Suporte Brasília':'#375623','Suporte Estados':'#375623',
+  'Atendimentos Especiais':'#C55A11','Cabeamento':'#7030A0','Administração de Contas':'#C55A11',
+  'Parque Tecnológico':'#C55A11','Supervisão TEL':'#a32d2d','Supervisão BSB':'#a32d2d',
+  'Supervisão EST':'#a32d2d','Supervisão AE':'#a32d2d','Supervisão Chamados':'#a32d2d',
+  'Gestão do Conhecimento':'#1F4E79','Gestão do Service Desk':'#1F4E79',
+};
+
+function renderRequisitos(){
+  const busca=(document.getElementById('req-busca')?.value||'').toLowerCase();
+  const grupo=document.getElementById('req-grupo')?.value||'';
+  const el=document.getElementById('req-cards');
+  if(!el) return;
+
+  let list=REQUISITOS_DATA;
+  if(busca) list=list.filter(r=>r.cargo.toLowerCase().includes(busca)||r.grupo.toLowerCase().includes(busca));
+  if(grupo) list=list.filter(r=>REQ_GRUPO_MAP[grupo]?.includes(r.cargo));
+
+  if(!list.length){el.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:#aaa">Nenhum cargo encontrado.</div>';return;}
+
+  el.innerHTML=list.map(r=>{
+    const bg=GRUPO_COLORS[r.grupo]||'#f8f9fa';
+    const border=GRUPO_BORDER[r.grupo]||'#dee2e6';
+    const certsHtml=r.certs.length?r.certs.map(c=>`<span style="background:#E8F0FE;color:#1F4E79;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;margin:1px;display:inline-block">${c}</span>`).join(''):'<span style="color:#aaa;font-size:12px">Nenhuma obrigatória</span>';
+    const reqHtml=r.requisitos.map(req=>`<li style="font-size:12px;color:#444;margin-bottom:3px;line-height:1.5">${req}</li>`).join('');
+
+    // Count colaboradores with this cargo
+    const nColab=DATA.filter(c=>c.cargo===r.cargo).length;
+    const nAtivos=DATA.filter(c=>c.cargo===r.cargo&&c.status!=='inativo').length;
+
+    return `<div style="background:${bg};border:1.5px solid ${border};border-radius:10px;overflow:hidden">
+      <div style="background:${border};color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:700;font-size:13px">${r.cargo}</div>
+        <div style="font-size:11px;opacity:.85;font-weight:600">${r.grupo}</div>
+      </div>
+      <div style="padding:14px">
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:#6c757d;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Certificações obrigatórias</div>
+          <div>${certsHtml}</div>
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:#6c757d;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Formação</div>
+          <div style="font-size:12px;color:#444">${r.formacao}</div>
+        </div>
+        <div style="display:flex;gap:12px;margin-bottom:10px;font-size:12px">
+          <div><span style="color:#6c757d">Exp. Suporte:</span> <b style="color:#1F4E79">${r.exp_suporte}</b></div>
+          <div><span style="color:#6c757d">Exp. Microcomp.:</span> <b style="color:#1F4E79">${r.exp_micro}</b></div>
+        </div>
+        <details style="margin-bottom:10px">
+          <summary style="font-size:11px;color:#6c757d;font-weight:600;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;list-style:none;display:flex;align-items:center;gap:5px">
+            <span>▶</span> Requisitos completos
+          </summary>
+          <ul style="margin:8px 0 0 12px;padding:0">${reqHtml}</ul>
+        </details>
+        <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(0,0,0,.08);padding-top:8px;margin-top:4px">
+          <div style="font-size:12px;color:#6c757d">
+            <b style="color:#1F4E79">${nAtivos}</b> ativo(s) · ${nColab-nAtivos} inativo(s)
+          </div>
+          <button onclick="showColabCargo(this.dataset.cargo)" data-cargo="${r.cargo}" style="padding:4px 12px;background:${border};color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600">
+            Ver colaboradores
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showColabCargo(cargo){
+  // Switch to geral tab
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>{ if(t.textContent.includes('Geral')||t.textContent.includes('Colaboradores')) t.classList.add('active'); });
+  tabIds.forEach(t=>{ const el=document.getElementById('tab-'+t); if(el) el.style.display=t==='geral'?'block':'none'; });
+  setTimeout(()=>{
+    // Clear other filters first
+    const sf=document.getElementById('filter-status-geral'); if(sf) sf.value='';
+    const uf=document.getElementById('filter-uf-geral'); if(uf) uf.value='';
+    document.getElementById('search-geral').value='';
+    // Populate cargo filter then set value
+    populateCargoFilter('filter-cargo-geral');
+    const sel=document.getElementById('filter-cargo-geral');
+    if(sel) sel.value=cargo;
+    // Render with explicit cargo value
+    const body=document.getElementById('body-geral');
+    const rows=filterData('',cargo,{tab:'geral'});
+    if(body) body.innerHTML=rows.length?rows.map((c,i)=>{
+      const ativo=c.status!=='inativo';
+      return '<tr><td style="color:#999;font-size:11px">'+(i+1)+'</td><td><b style="color:#1F4E79">'+c.nome+'</b><br><span style="font-size:10px;color:#'+(ativo?'155724;background:#D4EDDA':'7A0000;background:#FCEBEB')+'';
+    }).join(''):'<tr><td colspan="20" style="text-align:center;padding:20px;color:#aaa">Nenhum colaborador encontrado</td></tr>';
+    renderGeral();
+    document.querySelector('.content').scrollTop=0;
+  },50);
+}
+
+// Add cargo tooltip badge to all tab renders — clicking cargo shows requisitos
+function cargoWithReq(cargo, id){
+  const req=REQUISITOS_DATA.find(r=>r.cargo===cargo);
+  if(!req) return `<span class="badge-cargo">${cargo}</span>`;
+  return `<span class="badge-cargo" style="cursor:pointer" onclick="openReqModal('${cargo.replace(/'/g,"\\'")}',event)" title="Ver requisitos do cargo">${cargo} ℹ️</span>`;
+}
+
+function openReqModal(cargo, e){
+  if(e) e.stopPropagation();
+  const req=REQUISITOS_DATA.find(r=>r.cargo===cargo);
+  if(!req) return;
+  const border=GRUPO_BORDER[req.grupo]||'#1F4E79';
+  document.getElementById('modal-nome').innerHTML=`<span style="font-size:14px">${req.cargo}</span> <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${border};color:#fff;vertical-align:middle">${req.grupo}</span>`;
+  const certsHtml=req.certs.length?req.certs.map(c=>`<span style="background:#E8F0FE;color:#1F4E79;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;margin:1px;display:inline-block">${c}</span>`).join(''):'<span style="color:#aaa">Nenhuma</span>';
+  const reqHtml=req.requisitos.map(r=>`<li style="font-size:12px;margin-bottom:4px">${r}</li>`).join('');
+  document.getElementById('modal-body').innerHTML=`
+    <div class="detail-grid" style="margin-bottom:12px">
+      <div class="detail-item"><div class="dl">Formação</div><div class="dv" style="font-size:12px">${req.formacao}</div></div>
+      <div class="detail-item"><div class="dl">Exp. Suporte</div><div class="dv">${req.exp_suporte}</div></div>
+      <div class="detail-item"><div class="dl">Exp. Microcomp.</div><div class="dv">${req.exp_micro}</div></div>
+      <div class="detail-item"><div class="dl">Certificações</div><div class="dv">${certsHtml}</div></div>
+    </div>
+    <div class="grp-hdr">Requisitos Obrigatórios</div>
+    <ul style="margin:10px 0 0 16px;padding:0">${reqHtml}</ul>
+  `;
+  document.getElementById('modal-detail').classList.add('open');
+}
+
+// ══════════════════════════════════════════
+// BACKUP / RESTAURAR DADOS
+// ══════════════════════════════════════════
+function atualizarComFeedback(){
+  const btn = document.querySelector('[onclick*="atualizarComFeedback"]');
+  if(btn){ btn.textContent='⏳ Atualizando…'; btn.disabled=true; }
+  setTimeout(()=>{
+    atualizarTodasAbas();
+    if(btn){ btn.textContent='🔄 Atualizar'; btn.disabled=false; }
+  }, 50);
+}
+
+function atualizarTodasAbas(){
+  const fns=[
+    ['renderGeral',()=>renderGeral()],
+    ['renderEquip',()=>renderEquip()],
+    ['renderAdm',()=>renderAdm()],
+    ['renderTermos',()=>renderTermos()],
+    ['renderCert',()=>renderCert()],
+    ['renderPendencias',()=>renderPendencias()],
+    ['renderDeclaracoes',()=>renderDeclaracoes()],
+    ['ferRender',()=>ferRender()],
+    ['ferCtrlRender',()=>ferCtrlRender()],
+    ['indRender',()=>indRender()],
+    ['rGerencial',()=>rGerencial()],
+    ['upFilterDocs',()=>upFilterDocs()],
+    ['updateHeaderStats',()=>updateHeaderStats()],
+  ];
+  let ok=0;
+  fns.forEach(([name,fn])=>{ try{ fn(); ok++; }catch(e){ console.warn('Atualizar: '+name,e); } });
+  toast(`🔄 ${ok} abas atualizadas!`,'ok');
+}
+
+function exportarBackup(){
+  const backup = {
+    versao: '4.0',
+    exportadoEm: new Date().toISOString(),
+    portal: 'portal-gestao',
+    ts_portal_data_v2: DATA,   // full DATA — sem delta para garantir restauração correta
+    ts_ctrl_uni:       JSON.parse(localStorage.getItem('ts_ctrl_uni')       || '[]'),
+    ts_contrata_queue: JSON.parse(localStorage.getItem('ts_contrata_queue') || '[]'),
+    ts_cal_notes:      JSON.parse(localStorage.getItem('ts_cal_notes')      || '{}'),
+    ts_com_hist:       JSON.parse(localStorage.getItem('ts_com_hist')       || '[]'),
+    ts_predef:         JSON.parse(localStorage.getItem('ts_predef')         || '[]'),
+    ts_decl_data:      JSON.parse(localStorage.getItem('ts_decl_data')      || '{}'),
+    ts_ferias_data:    JSON.parse(localStorage.getItem('ts_ferias_data')    || '[]'),
+    ts_ind_hist:       JSON.parse(localStorage.getItem('ts_ind_hist')       || '{}'),
+    upload_meta: (JSON.parse(localStorage.getItem('ts_upload_docs')||'[]'))
+                   .map(d=>{ const {dataUrl,...rest}=d; return rest; }),
+  };
+
+  const json = JSON.stringify(backup);
+  const blob = new Blob([json], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const date = new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
+  a.href = url;
+  a.download = `backup_portal_${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  const kb = Math.round(json.length/1024);
+  alert(`✅ Backup exportado!\nArquivo: backup_portal_${date}.json\nTamanho: ~${kb} KB\n\nPara restaurar em outro dispositivo:\n1. Abra o portal no GitHub Pages\n2. Clique em 📂 Restaurar\n3. Selecione este arquivo JSON`);
+}
+
+function importarBackup(input){
+  const file = input.files[0];
+  if(!file) return;
+  input.value = '';
+
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const backup = JSON.parse(e.target.result);
+      if(!backup.portal || backup.portal !== 'portal-gestao'){
+        alert('❌ Arquivo inválido. Use um backup gerado por este portal.');
+        return;
+      }
+
+      const totalColab = backup.delta?.length || backup.ts_portal_data_v2?.length || 0;
+      if(!confirm(`📂 Restaurar Backup\n\nData: ${new Date(backup.exportadoEm).toLocaleString('pt-BR')}\nVersão: ${backup.versao}\nRegistros: ${totalColab}\n\n⚠️ Os dados atuais serão substituídos.\n\nContinuar?`)) return;
+
+      // Version 4.0: full format (new)
+      if(backup.ts_portal_data_v2){
+        const valid = backup.ts_portal_data_v2.filter(c=>c&&c.nome&&typeof c.nome==='string');
+        _safeSetItem('ts_portal_data_v2', JSON.stringify(valid));
+      }
+      // Version 3.0: delta format — merge with _XLSX_DATA to recover names
+      else if(backup.versao==='3.0' && backup.delta){
+        const merged = backup.delta.map(d=>{
+          if(d.nome) return d; // already has nome
+          const cpfD = (d.cpf||'').replace(/\D/g,'');
+          const base = _XLSX_DATA.find(x=>(x.cpf||'').replace(/\D/g,'')===cpfD);
+          return base ? {...base,...d} : d;
+        }).filter(c=>c&&c.nome&&typeof c.nome==='string');
+        _safeSetItem('ts_portal_data_v2', JSON.stringify(merged));
+      }
+
+      // Restore other data
+      if(backup.ts_ctrl_uni)       _safeSetItem('ts_ctrl_uni',       JSON.stringify(backup.ts_ctrl_uni));
+      if(backup.ts_contrata_queue) _safeSetItem('ts_contrata_queue', JSON.stringify(backup.ts_contrata_queue));
+      if(backup.ts_cal_notes)      _safeSetItem('ts_cal_notes',      JSON.stringify(backup.ts_cal_notes));
+      if(backup.ts_com_hist)       _safeSetItem('ts_com_hist',       JSON.stringify(backup.ts_com_hist));
+      if(backup.ts_predef)         _safeSetItem('ts_predef',         JSON.stringify(backup.ts_predef));
+      if(backup.ts_decl_data)      _safeSetItem('ts_decl_data',      JSON.stringify(backup.ts_decl_data));
+      if(backup.ts_ferias_data)    _safeSetItem('ts_ferias_data',    JSON.stringify(backup.ts_ferias_data));
+      if(backup.ts_ind_hist)       _safeSetItem('ts_ind_hist',       JSON.stringify(backup.ts_ind_hist));
+      if(backup.upload_meta)       _safeSetItem('ts_upload_docs',    JSON.stringify(backup.upload_meta));
+
+      // Limpar todos os filtros antes de recarregar
+      ['filter-uf-geral','filter-cargo-geral','filter-status-geral','filter-sexo-geral',
+       'filter-pcd-geral','search-geral'].forEach(id=>{
+        const el=document.getElementById(id); if(el) el.value='';
+      });
+      localStorage.setItem('ts_filters_cleared','1');
+      alert(`✅ Backup restaurado!\n${totalColab} colaboradores carregados.\n\nO portal vai recarregar.`);
+      location.reload();
+
+    }catch(err){
+      alert(`❌ Erro ao importar backup:\n${err.message}`);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function _safeSetItem(key, value){
+  try{
+    localStorage.setItem(key, value);
+  }catch(e){
+    // Quota exceeded — clear old upload files first then retry
+    if(e.name==='QuotaExceededError'||e.message.includes('quota')||e.message.includes('exceeded')){
+      try{ localStorage.removeItem('ts_upload_docs'); }catch(e2){}
+      try{ localStorage.setItem(key, value); }catch(e3){
+        console.warn(`[backup] Could not save ${key}: still too large`);
+      }
+    }
+  }
+}
+
+// ══════════════════════════════════════════
+// PENDÊNCIAS
+// ══════════════════════════════════════════
+const PEND_DOC_LABELS = {
+  'Termo TCU':'Termo TCU', 'Cadastro TCU':'Cadastro TCU',
+  'Decl. Não Parentesco':'Decl. Não Parentesco',
+  'Diploma/Superior':'Diploma/Superior', 'Especialização TI':'Especialização TI',
+  'Exp. Suporte':'Exp. Suporte', 'Exp. Microcomputadores':'Exp. Microcomputadores',
+  'ASO Admissional':'ASO Admissional', 'CTPS':'CTPS',
+  'Contrato de Trabalho':'Contrato de Trabalho',
+  'Termo Vale Transporte':'Termo Vale Transporte',
+  'Termo de Conduta T&S':'Termo de Conduta T&S',
+};
+const PEND_CAT_MAP = {
+  docs:   ['Termo TCU','Cadastro TCU','Decl. Não Parentesco'],
+  admissao:['Diploma/Superior','Especialização TI','Exp. Suporte','Exp. Microcomputadores','ASO Admissional','CTPS','Contrato de Trabalho'],
+  termos: ['Termo Vale Transporte','Termo de Conduta T&S'],
+};
+
+// ── Grupos de certificações alternativas (OR) ─────────────────
+// Se qualquer uma do grupo estiver Entregue/Agendado, as outras não são pendência
+const CERT_OR_GROUPS = {
+  // TEL: HDI SCA OU HDI CSR (precisa de pelo menos uma)
+  'Analista de suporte telefônico (TEL)': [['HDI SCA','HDI CSR']],
+  // EST: HDI DAST OU HDI CSR
+  'Analista de suporte (EST)':            [['HDI DAST','HDI CSR']],
+  // AE: HDI DAST OU HDI CSR
+  'Analista de suporte especializado (AE)':[['HDI DAST','HDI CSR']],
+  // AP: HDI DAST OU HDI SCA OU HDI CSR
+  'Administração de parque tecnológico (AP)':[['HDI DAST','HDI SCA','HDI CSR']],
+  // Gestor de SD: precisa de 2 entre SCTL, SCM, SCD, XLA Foundation
+  'Gestor de Service desk':               [['HDI SCTL','HDI SCM','HDI SCD','XLA Foundation']],
+};
+
+function certSatisfied(c, certName){
+  // Returns true if this cert is already covered by an OR group
+  const groups = CERT_OR_GROUPS[c.cargo] || [];
+  for(const group of groups){
+    if(!group.includes(certName)) continue;
+    // Check if any other member of this group is Entregue or Agendado
+    const satisfied = group.some(other => other !== certName &&
+      (c.certs[other]==='Entregue' || c.certs[other]==='Agendado'));
+    if(satisfied) return true;
+  }
+  return false;
+}
+
+function getPendencias(c){
+  const items = [];
+  // Docs
+  Object.entries(c.docs||{}).forEach(([k,v])=>{
+    if(v==='Pendente') items.push({cat:'docs',label:k,tipo:'doc'});
+  });
+  // Certs — respeita grupos OR
+  Object.entries(c.certs||{}).forEach(([k,v])=>{
+    if(v==='Pendente' && !certSatisfied(c, k))
+      items.push({cat:'certs',label:k,tipo:'cert'});
+  });
+  // Equipamentos — respeitar N/A por cargo (planilha edital)
+  const _naMap = {
+    celular_tablet:'sem_celular', maleta:'sem_maleta', uniforme:'sem_uniforme'
+  };
+  ['celular_tablet','cracha','maleta','uniforme'].forEach(k=>{
+    const naKey = _naMap[k];
+    if(naKey && cargoNa(c.cargo, naKey)) return; // N/A para este cargo
+    if(c[k]==='Pendente') items.push({cat:'equip',label:k.replace('_',' '),tipo:'equip'});
+  });
+  return items;
+}
+
+function renderPendencias(){
+  // Populate UF filter
+  const ufSel = document.getElementById('pend-uf');
+  if(ufSel && ufSel.options.length <= 1){
+    [...new Set(DATA.map(c=>c.uf))].sort().forEach(uf=>{
+      const o=document.createElement('option'); o.value=uf; o.textContent=uf; ufSel.appendChild(o);
+    });
+  }
+
+  const busca = (document.getElementById('pend-busca')?.value||'').toLowerCase();
+  const cat   = document.getElementById('pend-cat')?.value||'';
+  const uf    = document.getElementById('pend-uf')?.value||'';
+
+  // Build list of colabs with pendencies
+  const ativos = DATA.filter(c=>c.status!=='inativo');
+  let list = ativos.map(c=>({c, pends:getPendencias(c)})).filter(({pends})=>pends.length>0);
+
+  if(busca) list=list.filter(({c})=>c.nome.toLowerCase().includes(busca)||c.uf.toLowerCase().includes(busca)||(c.cargo||'').toLowerCase().includes(busca)||(c.cpf||'').includes(busca)||(c.email_inst||c.email||'').toLowerCase().includes(busca)||(c.celular||'').includes(busca));
+  if(uf)    list=list.filter(({c})=>c.uf===uf);
+  if(cat)   list=list.filter(({pends})=>pends.some(p=>p.cat===cat));
+
+  // Stats
+  const total=list.length;
+  const totalPends=list.reduce((n,{pends})=>n+pends.length,0);
+  const byCat={docs:0,admissao:0,termos:0,certs:0,equip:0};
+  list.forEach(({pends})=>pends.forEach(p=>{
+    if(p.cat==='docs'){
+      if(PEND_CAT_MAP.docs.includes(p.label)) byCat.docs++;
+      else if(PEND_CAT_MAP.admissao.includes(p.label)) byCat.admissao++;
+      else if(PEND_CAT_MAP.termos.includes(p.label)) byCat.termos++;
+    } else if(p.cat==='certs') byCat.certs++;
+    else if(p.cat==='equip') byCat.equip++;
+  }));
+
+  const statsEl = document.getElementById('pend-stats');
+  if(statsEl) statsEl.innerHTML=`
+    <div class="stat-card red"><div class="n">${total}</div><div class="l">Com pendências</div></div>
+    <div class="stat-card amber"><div class="n">${totalPends}</div><div class="l">Total pendências</div></div>
+    <div class="stat-card"><div class="n">${byCat.docs+byCat.admissao+byCat.termos}</div><div class="l">📄 Documentos</div></div>
+    <div class="stat-card"><div class="n">${byCat.certs}</div><div class="l">🏆 Certificações</div></div>
+    <div class="stat-card"><div class="n">${byCat.equip}</div><div class="l">📱 Equipamentos</div></div>
+  `;
+
+  const lista = document.getElementById('pend-lista');
+  if(!lista) return;
+
+  if(!list.length){
+    lista.innerHTML=`<div style="text-align:center;padding:40px;color:#aaa;background:#fff;border-radius:10px;border:1px solid #dee2e6">
+      <div style="font-size:32px;margin-bottom:8px">✅</div>
+      <div style="font-size:14px;font-weight:600">Nenhuma pendência encontrada!</div>
+    </div>`;
+    return;
+  }
+
+  const CAT_COLORS={docs:'#FFF3CD',admissao:'#FFE0E0',termos:'#FDE8E8',certs:'#E8F0FE',equip:'#E8FFE8'};
+  const CAT_ICONS={docs:'📄',admissao:'🎓',termos:'📝',certs:'🏆',equip:'📱'};
+
+  lista.innerHTML=list.map(({c,pends})=>{
+    // Group pends by category
+    const byGroup = {};
+    pends.forEach(p=>{
+      const g = p.cat==='docs'
+        ? (PEND_CAT_MAP.docs.includes(p.label)?'docs': PEND_CAT_MAP.admissao.includes(p.label)?'admissao':'termos')
+        : p.cat;
+      if(!byGroup[g]) byGroup[g]=[];
+      byGroup[g].push(p.label);
+    });
+    if(cat && !Object.keys(byGroup).includes(cat)) return '';
+
+    const groups = Object.entries(byGroup).map(([g,items])=>`
+      <div style="margin-top:8px">
+        <div style="font-size:11px;font-weight:600;color:#6c757d;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">${CAT_ICONS[g]||'📋'} ${g==='docs'?'Docs TCU':g==='admissao'?'Admissão':g==='termos'?'Termos':g==='certs'?'Certificações':'Equipamentos'}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">
+          ${items.map(i=>`<span style="background:#FFE0E0;color:#7A0000;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${i}</span>`).join('')}
+        </div>
+      </div>`).join('');
+
+    return `<div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:14px 16px;margin-bottom:8px;border-left:4px solid #C55A11">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div>
+          <div style="font-weight:700;color:#1F4E79;font-size:14px;cursor:pointer" onclick="openDetail(${c._id})">${c.nome}</div>
+          <div style="font-size:12px;color:#6c757d;margin-top:2px">${c.cargo} · <b>${c.uf}</b> · <span style="color:#C55A11;font-weight:600">${pends.length} pendência(s)</span></div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn-sec" style="padding:4px 12px;font-size:12px" onclick="openDetail(${c._id})">Ver ficha</button>
+          <button class="btn-primary" style="padding:4px 12px;font-size:12px;background:#C55A11;border-color:#C55A11" onclick="enviarLembretePend(${c._id})">📧 Solicitar Documentos</button>
+          <button class="btn-sec" style="padding:4px 12px;font-size:12px" onclick="addEmailDate(${c._id})" title="Registrar envio manual">📅 Registrar</button>
+        </div>
+      </div>
+      ${groups}
+      ${(c.emails_enviados&&c.emails_enviados.length?'<div style="margin-top:8px;padding:6px 12px;background:#FFF8E1;border:1px solid #FFD54F;border-radius:6px;font-size:11px"><b>📧 Envios:</b> '+c.emails_enviados.map((d,i)=>(i+1)+'. '+d).join(' | ')+'</div>':'')}
+    </div>`;
+  }).filter(Boolean).join('');
+}
+
+function exportPendencias(){
+  const ativos=DATA.filter(c=>c.status!=='inativo');
+  const headers=['Nome','CPF','UF','Cargo','Status','Tipo Pendência','Pendência'];
+  const rows=[];
+  ativos.forEach(c=>{
+    const pends=getPendencias(c);
+    if(!pends.length) return;
+    pends.forEach(p=>{
+      rows.push([c.nome,c.cpf,c.uf,c.cargo,'Ativo',
+        p.cat==='certs'?'Certificação':p.cat==='equip'?'Equipamento':'Documento',p.label]);
+    });
+  });
+  downloadCsv(headers,rows,'Relatorio_Pendencias');
+}
+
+
+function addEmailDate(id){
+  var c=DATA.find(x=>x._id===id); if(!c) return;
+  var now=new Date();
+  var def=now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  var inp=prompt('Data do envio:',def); if(!inp) return;
+  if(!c.emails_enviados) c.emails_enviados=[];
+  c.emails_enviados.push(inp.trim()); saveData(); renderPendencias();
+}
+function enviarLembretePend(id){
+  const c=DATA.find(x=>x._id===id);
+  if(!c) return;
+  const pends=getPendencias(c);
+  const emailTo=c.email_inst&&c.email_inst!=='Pendente'?c.email_inst:(c.email&&c.email!=='Pendente'?c.email:'');
+  if(!emailTo){ alert('E-mail não cadastrado para '+c.nome); return; }
+
+  // List all pending items (all categories together, numbered)
+  // Build list with OR group info for certs
+  const listaItens = pends.map((p,i)=>{
+    if(p.cat==='certs'){
+      const groups=CERT_OR_GROUPS[c.cargo]||[];
+      for(const g of groups){
+        if(g.includes(p.label)&&g.length>1){
+          return '  '+(i+1)+'. Certificação: '+g.join(' OU ');
+        }
+      }
+      return '  '+(i+1)+'. Certificação: '+p.label;
+    }
+    return '  '+(i+1)+'. '+p.label;
+  }).join('\n');
+
+  const assunto=encodeURIComponent('[TCU/T&S] Pendências de documentação — '+c.nome);
+  const corpo=encodeURIComponent(
+    'Prezado(a) '+c.nome+',\n\n'+
+    'Identificamos que os seguintes documentos ainda constam como PENDENTES em seu cadastro no Contrato T\u0026S/TCU:\n\n'+
     listaItens+'\n\n'+
     'Solicitamos que regularize a situação em até 5 (cinco) dias úteis, inserindo o forms abaixo:\n\n'+
     'Documentação – Preencher o formulário:\n'+
@@ -5951,7 +7898,7 @@ function pcEnviarEmail(id){
     'Atenciosamente,\n'+
     'Priscila Pamplona Torres\n'+
     'Gestora do Service Desk — Central de Serviços de TI\n'+
-    'Tribunal de Contas da União | Contrato T&S'
+    'Tribunal de Contas da União | Contrato T\u0026S'
   );
   window.location.href='mailto:'+email+'?subject='+assunto+'&body='+corpo;
 }
@@ -7895,6 +9842,7 @@ function enviarLembretePend(id){
     'Gestora do Service Desk — Central de Serviços de TI\n'+
     'Tribunal de Contas da União | Contrato T&S'
   );
+  // Register send date
   const _now=new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   if(!c.emails_enviados) c.emails_enviados=[];
   c.emails_enviados.push(_now);
