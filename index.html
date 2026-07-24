@@ -7827,6 +7827,7 @@ function renderPendencias(){
         <div style="display:flex;gap:6px">
           <button class="btn-sec" style="padding:4px 12px;font-size:12px" onclick="openDetail(${c._id})">Ver ficha</button>
           <button class="btn-primary" style="padding:4px 12px;font-size:12px;background:#C55A11;border-color:#C55A11" onclick="enviarLembretePend(${c._id})">📧 Solicitar Documentos</button>
+          <button class="btn-sec" style="padding:4px 12px;font-size:12px;background:#E8F4FD;border-color:#2E75B6;color:#1F4E79" onclick="addEmailDate(${c._id})" title="Registrar data de envio manual">📅 Registrar Envio</button>
         </div>
       </div>
       ${groups}
@@ -7847,6 +7848,30 @@ function exportPendencias(){
     });
   });
   downloadCsv(headers,rows,'Relatorio_Pendencias');
+}
+
+
+// ── Registrar/remover datas de envio de e-mail ─────────────────────────
+function addEmailDate(id){
+  const c=DATA.find(x=>x._id===id);
+  if(!c) return;
+  const now=new Date();
+  const defaultDate=now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const input=prompt('Data do envio (ou confirme a data atual):', defaultDate);
+  if(!input) return;
+  if(!c.emails_enviados) c.emails_enviados=[];
+  c.emails_enviados.push(input.trim());
+  saveData();
+  renderPendencias();
+  toast('📅 Data de envio registrada: '+input.trim(),'ok');
+}
+
+function removeEmailDate(id, idx){
+  const c=DATA.find(x=>x._id===id);
+  if(!c||!c.emails_enviados) return;
+  c.emails_enviados.splice(idx,1);
+  saveData();
+  renderPendencias();
 }
 
 function enviarLembretePend(id){
@@ -7885,7 +7910,15 @@ function enviarLembretePend(id){
     'Gestora do Service Desk — Central de Serviços de TI\n'+
     'Tribunal de Contas da União | Contrato T&S'
   );
+  // Registrar data do envio
+  const now = new Date();
+  const dataEnvio = now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  if(!c.emails_enviados) c.emails_enviados=[];
+  c.emails_enviados.push(dataEnvio);
+  saveData();
+
   window.location.href='mailto:'+emailTo+'?subject='+assunto+'&body='+corpo;
+  setTimeout(function(){ renderPendencias(); }, 500);
 }
 
 // ══════════════════════════════════════════
