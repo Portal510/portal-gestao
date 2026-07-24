@@ -5935,13 +5935,18 @@ function pcEnviarEmail(id){
   const assunto=encodeURIComponent('[TCU/T&S] Pendências de Certificação e Diploma — '+c.nome);
   const corpo=encodeURIComponent(
     'Prezado(a) '+c.nome+',\n\n'+
-    'Identificamos que os seguintes documentos/certificações ainda constam como PENDENTES em seu cadastro no Contrato T&S/TCU:\n\n'+
-    lista+'\n\n'+
-    'Solicitamos que regularize a situação em até o prazo final de '+prazoFmt+'.\n\n'+
-    'Para entregar a documentação, acesse o formulário abaixo:\n'+
+    'Identificamos que os seguintes documentos ainda constam como PENDENTES em seu cadastro no Contrato T&S/TCU:\n\n'+
+    listaItens+'\n\n'+
+    'Solicitamos que regularize a situação em até 5 (cinco) dias úteis, inserindo o forms abaixo:\n\n'+
+    'Documentação – Preencher o formulário:\n'+
     'https://forms.office.com/r/wrE4eJnCBj\n\n'+
+    'Observação: Caso não possua ainda a certificação prevista para o cargo, solicitamos o envio do comprovante de agendamento.\n\n'+
+    'Reforçamos que o prazo para entrega das certificações, conforme edital, é de 90 dias a partir da data de admissão.\n\n'+
     'Em caso de dúvidas, entre em contato com sua supervisão imediata.\n\n'+
-    'Atenciosamente,\nPriscila Pamplona Torres\nGestora do Service Desk — TCU | Contrato T&S'
+    'Atenciosamente,\n'+
+    'Priscila Pamplona Torres\n'+
+    'Gestora do Service Desk — Central de Serviços de TI\n'+
+    'Tribunal de Contas da União | Contrato T&S'
   );
   window.location.href='mailto:'+email+'?subject='+assunto+'&body='+corpo;
 }
