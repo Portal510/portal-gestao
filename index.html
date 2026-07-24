@@ -8655,7 +8655,12 @@ function rAbono(){
   // Firebase sync removed — use DATA directly
   // populate cargo filter
   var cargoSel=document.getElementById('abono-f-cargo');
-  if(cargoSel){var _cc=cargoSel.value;cargoSel.innerHTML='<option value="">Todos os cargos</option>';[...new Set(DATA.filter(c=>c&&c.nome&&c.status!==\'inativo\').map(c=>c.cargo).filter(Boolean))].sort().forEach(function(cargo){var o=document.createElement(\'option\');o.value=cargo;o.textContent=cargo;cargoSel.appendChild(o);});if(_cc&&[...cargoSel.options].some(o=>o.value===_cc)) cargoSel.value=_cc;}
+  if(cargoSel){
+    var _cc=cargoSel.value;
+    cargoSel.innerHTML='<option value="">Todos os cargos</option>';
+    [...new Set(DATA.filter(c=>c&&c.nome&&c.status!=="inativo").map(c=>c.cargo).filter(Boolean))].sort().forEach(function(g){var o=document.createElement('option');o.value=g;o.textContent=g;cargoSel.appendChild(o);});
+    if(_cc&&[...cargoSel.options].some(o=>o.value===_cc)) cargoSel.value=_cc;
+  }
   var fMes=document.getElementById('abono-f-mes')?.value||'';
   var fAno=document.getElementById('abono-f-ano')?.value||'';
   var fCargo=document.getElementById('abono-f-cargo')?.value||'';
