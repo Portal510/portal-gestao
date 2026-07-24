@@ -5803,9 +5803,12 @@ function renderPendCert(){
 
   // Populate cargo filter
   const cargoSel=document.getElementById('pc-cargo');
-  if(cargoSel&&cargoSel.options.length<=1){
-    [...new Set(DATA.filter(c=>c&&c.nome&&c.status!=='inativo').map(c=>c.cargo))].sort()
+  if(cargoSel){
+    const _cc=cargoSel.value;
+    cargoSel.innerHTML='<option value="">Todos os cargos</option>';
+    [...new Set(DATA.filter(c=>c&&c.nome&&c.status!=='inativo').map(c=>c.cargo).filter(Boolean))].sort()
       .forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;cargoSel.appendChild(o);});
+    if(_cc&&[...cargoSel.options].some(o=>o.value===_cc)) cargoSel.value=_cc;
   }
 
   const busca  = (document.getElementById('pc-busca')?.value||'').toLowerCase();
@@ -5819,7 +5822,7 @@ function renderPendCert(){
   const prazoAlerta = diasRestantes <= 7;
   const prazoVencido = diasRestantes < 0;
 
-  const ALL_DOCS_DIPLOMA = ['Diploma/Superior','Especialização TI'];
+  const ALL_DOCS_DIPLOMA = ['Diploma/Superior'];
 
   // Build list
   let rows = DATA.filter(c=>c&&c.nome&&typeof c.nome==='string'&&c.status!=='inativo');
