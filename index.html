@@ -209,7 +209,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
 .portal-layout{display:flex;height:calc(100vh - 56px);overflow:hidden}
 
 /* SIDEBAR */
-.sidebar{width:220px;min-width:220px;background:#fff;border-right:1px solid #dee2e6;display:flex;flex-direction:column;transition:width .25s ease,min-width .25s ease;overflow:hidden;position:relative;z-index:98;flex-shrink:0}
+.sidebar{width:220px;min-width:220px;background:#fff;border-right:1px solid #dee2e6;display:flex;flex-direction:column;transition:width .25s ease,min-width .25s ease;overflow:hidden;position:relative;z-index:98}
 .sidebar.collapsed{width:0;min-width:0;border-right:none}
 .sidebar-inner{width:220px;overflow-y:auto;overflow-x:hidden;flex:1;padding:10px 0;scrollbar-width:thin;scrollbar-color:#ced4da #f8f9fa}
 .sidebar-inner::-webkit-scrollbar{width:4px}
@@ -228,7 +228,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
 .sidebar-toggle.collapsed{left:0}
 
 /* CONTENT */
-.content{flex:1;padding:20px 24px;overflow-y:auto;overflow-x:auto;height:100%;min-width:0}
+.content{flex:1;padding:20px 24px;overflow-y:auto;overflow-x:hidden;height:100%}
 
 /* RESPONSIVE */
 @media(max-width:768px){
@@ -7837,7 +7837,6 @@ function renderPendencias(){
         <div style="display:flex;gap:6px">
           <button class="btn-sec" style="padding:4px 12px;font-size:12px" onclick="openDetail(${c._id})">Ver ficha</button>
           <button class="btn-primary" style="padding:4px 12px;font-size:12px;background:#C55A11;border-color:#C55A11" onclick="enviarLembretePend(${c._id})">📧 Solicitar Documentos</button>
-          <button class="btn-sec" style="padding:4px 12px;font-size:12px;background:#E8F4FD;border-color:#2E75B6;color:#1F4E79" onclick="addEmailDate(${c._id})" title="Registrar data de envio manual">📅 Registrar Envio</button>
         </div>
       </div>
       ${groups}
@@ -7858,30 +7857,6 @@ function exportPendencias(){
     });
   });
   downloadCsv(headers,rows,'Relatorio_Pendencias');
-}
-
-
-// ── Registrar/remover datas de envio de e-mail ─────────────────────────
-function addEmailDate(id){
-  const c=DATA.find(x=>x._id===id);
-  if(!c) return;
-  const now=new Date();
-  const defaultDate=now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  const input=prompt('Data do envio (ou confirme a data atual):', defaultDate);
-  if(!input) return;
-  if(!c.emails_enviados) c.emails_enviados=[];
-  c.emails_enviados.push(input.trim());
-  saveData();
-  renderPendencias();
-  toast('📅 Data de envio registrada: '+input.trim(),'ok');
-}
-
-function removeEmailDate(id, idx){
-  const c=DATA.find(x=>x._id===id);
-  if(!c||!c.emails_enviados) return;
-  c.emails_enviados.splice(idx,1);
-  saveData();
-  renderPendencias();
 }
 
 function enviarLembretePend(id){
@@ -7912,24 +7887,20 @@ function enviarLembretePend(id){
     'Identificamos que os seguintes documentos ainda constam como PENDENTES em seu cadastro no Contrato T&S/TCU:\n\n'+
     listaItens+'\n\n'+
     'Solicitamos que regularize a situação em até 5 (cinco) dias úteis, inserindo o forms abaixo:\n\n'+
-    'Documentação – Formulário: https://forms.office.com/r/wrE4eJnCBj\n\n'+
-    'Observação: Caso não possua ainda a certificação prevista para o cargo, solicitamos o envio do comprovante de agendamento.\n\n'+
-    'Reforçamos que o prazo para entrega das certificações, conforme edital, é de 90 dias a partir da data de admissão.\n\n'+
-    'Em caso de dúvidas, favor entrar em contato com sua supervisão imediata.\n\n'+
+    'Documentação – Preencher o formulário:\n'+
+    'https://forms.office.com/r/wrE4eJnCBj\n\n'+
+    'Em caso de dúvidas, entre em contato com sua supervisão imediata.\n\n'+
     'Atenciosamente,\n'+
     'Priscila Pamplona Torres\n'+
     'Gestora do Service Desk — Central de Serviços de TI\n'+
     'Tribunal de Contas da União | Contrato T&S'
   );
-  // Registrar data do envio
-  const now = new Date();
-  const dataEnvio = now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const _now=new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   if(!c.emails_enviados) c.emails_enviados=[];
-  c.emails_enviados.push(dataEnvio);
+  c.emails_enviados.push(_now);
   saveData();
-
   window.location.href='mailto:'+emailTo+'?subject='+assunto+'&body='+corpo;
-  setTimeout(function(){ renderPendencias(); }, 500);
+  setTimeout(function(){renderPendencias();},500);
 }
 
 // ══════════════════════════════════════════
