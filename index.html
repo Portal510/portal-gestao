@@ -5971,23 +5971,6 @@ function exportarPendCert(){
   _exportXlsXML(hdrs,data,'Pendencias_Cert_Diploma');
 }
 // ══════════════════════════════════════════
-const RESET_FIELDS = {
-  equipamentos: {
-    dataFields: ['celular_tablet','cracha','maleta','uniforme'],
-    docFields:  ['Termo TCU','Cadastro TCU'],
-  },
-  admissao: {
-    docFields: ['Diploma/Superior','Especialização TI','Exp. Suporte',
-                'Exp. Microcomputadores','ASO Admissional','CTPS','Contrato de Trabalho'],
-  },
-  termos: {
-    docFields: ['Termo Vale Transporte','Termo de Conduta T&S','Decl. Não Parentesco'],
-  },
-  certif: {
-    certFields: ['HDI SCA','HDI CSR','M365 Fundamentals','MD-100 ou MD-102','HDI DAST',
-                 'AZ-900','ITIL Foundations v4','HDI SCTL','HDI KCS','HDI SCM','HDI SCD','XLA Foundation'],
-  },
-};
 
 function resetarPendente(tab){
   const labels = {
