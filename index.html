@@ -3357,6 +3357,8 @@ function showTab(id,el){
   document.querySelectorAll('select[id^="abono-f-"]').forEach(function(s){ if(s.id!=='abono-f-mes'&&s.id!=='abono-f-ano') s.value=''; });
   var gerCargo=document.getElementById('ger-cargo'); if(gerCargo) gerCargo.value='';
   var pcCargo=document.getElementById('pc-cargo'); if(pcCargo) pcCargo.value='';
+  var pcBusca=document.getElementById('pc-busca'); if(pcBusca) pcBusca.value='';
+  var pcTipo=document.getElementById('pc-tipo'); if(pcTipo) pcTipo.value='';
   tabIds.forEach(t=>{
     const el2=document.getElementById('tab-'+t);
     if(el2) el2.style.display=t===id?'block':'none';
