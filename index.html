@@ -3029,8 +3029,7 @@ function renderTermos(){
   updateStatsTermos(rows);
 }
 
-const CARGO_CERTS_REQUIRED = {"Analista de suporte telefônico (TEL)": ["HDI SCA", "HDI CSR"], "Analista de suporte (BSB)": ["M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST"], "Analista de suporte (EST)": ["M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST", "HDI CSR"], "Analista de suporte especializado (AE)": ["M365 Fundamentals", "HDI DAST", "HDI CSR", "MD-100 ou MD-102"], "Analista de suporte especializado (AC)": ["M365 Fundamentals", "MD-100 ou MD-102", "AZ-900"], "Administração de parque tecnológico (AP)": ["HDI DAST", "HDI SCA", "HDI CSR"], "Supervisor de suporte (STEL)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (BSB)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (EST)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (SAE)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (SCHA)": ["ITIL Foundations v4"], "Gestor de conhecimento": ["HDI KCS"], "Gestor de Service desk": ["ITIL Foundations v4", "HDI SCTL", "HDI SCM", "HDI SCD", "XLA Foundation"]};
-const ALL_CERTS_LIST = ["HDI SCA", "HDI CSR", "M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST", "AZ-900", "ITIL Foundations v4", "HDI SCTL", "HDI KCS", "HDI SCM", "HDI SCD", "XLA Foundation"];
+const CARGO_CERTS_REQUIRED = {{};const ALL_CERTS_LIST = ["HDI SCA", "HDI CSR", "M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST", "AZ-900", "ITIL Foundations v4", "HDI SCTL", "HDI KCS", "HDI SCM", "HDI SCD", "XLA Foundation"];
 
 // Returns effective status of a cert for a colaborador
 // N/A if cargo doesn't need it; Entregue/Agendado/Pendente based on saved value
@@ -7829,6 +7828,7 @@ function renderPendencias(){
         <div style="display:flex;gap:6px">
           <button class="btn-sec" style="padding:4px 12px;font-size:12px" onclick="openDetail(${c._id})">Ver ficha</button>
           <button class="btn-primary" style="padding:4px 12px;font-size:12px;background:#C55A11;border-color:#C55A11" onclick="enviarLembretePend(${c._id})">📧 Solicitar Documentos</button>
+          <button class="btn-sec" style="padding:4px 12px;font-size:12px;color:#1F4E79;border-color:#2E75B6" onclick="addEmailDate(${c._id})" title="Registrar data de envio manual">📅 Registrar</button>
         </div>
       </div>
       ${groups}
@@ -7851,6 +7851,21 @@ function exportPendencias(){
   downloadCsv(headers,rows,'Relatorio_Pendencias');
 }
 
+
+function addEmailDate(id){
+  var c=DATA.find(x=>x._id===id); if(!c) return;
+  var now=new Date();
+  var def=now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  var inp=prompt('Data/hora do envio (confirme ou edite):',def); if(inp===null) return;
+  if(!c.emails_enviados) c.emails_enviados=[];
+  c.emails_enviados.push(inp.trim());
+  saveData(); renderPendencias();
+}
+function removeEmailDate(id,idx){
+  var c=DATA.find(x=>x._id===id); if(!c||!c.emails_enviados) return;
+  c.emails_enviados.splice(idx,1);
+  saveData(); renderPendencias();
+}
 function enviarLembretePend(id){
   const c=DATA.find(x=>x._id===id);
   if(!c) return;
@@ -7881,13 +7896,21 @@ function enviarLembretePend(id){
     'Solicitamos que regularize a situação em até 5 (cinco) dias úteis, inserindo o forms abaixo:\n\n'+
     'Documentação – Preencher o formulário:\n'+
     'https://forms.office.com/r/wrE4eJnCBj\n\n'+
+    'Observação: Caso não possua ainda a certificação prevista para o cargo, solicitamos o envio do comprovante de agendamento.\n\n'+
+    'Reforçamos que o prazo para entrega das certificações, conforme edital, é de 90 dias a partir da data de admissão.\n\n'+
     'Em caso de dúvidas, entre em contato com sua supervisão imediata.\n\n'+
     'Atenciosamente,\n'+
     'Priscila Pamplona Torres\n'+
     'Gestora do Service Desk — Central de Serviços de TI\n'+
     'Tribunal de Contas da União | Contrato T&S'
   );
+  // Registrar data do envio
+  const _nowEnvio=new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  if(!c.emails_enviados) c.emails_enviados=[];
+  c.emails_enviados.push(_nowEnvio);
+  saveData();
   window.location.href='mailto:'+emailTo+'?subject='+assunto+'&body='+corpo;
+  setTimeout(function(){renderPendencias();},500);
 }
 
 // ══════════════════════════════════════════
