@@ -484,7 +484,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
     <div class="tab" onclick="showTab('uniforme',this)"><span class="tab-icon">👔</span><span class="tab-label">Uniforme</span></div>
     <div class="tab" onclick="showTab('upload',this)"><span class="tab-icon">📎</span><span class="tab-label">Documentos</span></div>
-    <div class="tab" onclick="showTab('declaracoes',this)"><span class="tab-icon">📋</span><span class="tab-label">Declarações</span></div>
+    
 
     <div class="sidebar-section">Comunicação</div>
     <div class="tab" onclick="showTab('comunicados',this)"><span class="tab-icon">📧</span><span class="tab-label">Comunicados</span></div>
@@ -1420,76 +1420,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
 
 <!-- ═══════════════════ DECLARAÇÕES ═══════════════════ -->
-<div id="tab-declaracoes" style="display:none">
-<div style="padding:20px 24px">
-
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
-    <div>
-      <div style="font-size:18px;font-weight:700;color:#1F4E79">📋 Controle de Declarações — Equipamentos e Internet</div>
-      <div style="font-size:12px;color:#6c757d;margin-top:3px">Declaração de ajuste de custo (Desktop/Internet) e Declaração de locação de equipamentos · Preenchimento mensal</div>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <select id="decl-mes" onchange="renderDeclaracoes()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
-        <option>Janeiro</option><option>Fevereiro</option><option>Março</option><option>Abril</option>
-        <option>Maio</option><option>Junho</option><option>Julho</option><option>Agosto</option>
-        <option>Setembro</option><option>Outubro</option><option>Novembro</option><option>Dezembro</option>
-      </select>
-      <select id="decl-ano" onchange="renderDeclaracoes()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
-        <option>2025</option><option selected>2026</option><option>2027</option><option>2028</option><option>2029</option><option>2030</option>
-      </select>
-      <select id="decl-uf" onchange="renderDeclaracoes()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
-        <option value="">Todos os estados</option>
-      </select>
-      <button onclick="exportDeclaracoes()" style="padding:6px 14px;background:#1F4E79;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">⬇ Exportar XLSX</button>
-    </div>
-  </div>
-
-  <!-- KPIs -->
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
-    <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:12px 16px">
-      <div style="font-size:11px;color:#6c757d;margin-bottom:4px">Colaboradores</div>
-      <div id="decl-kpi-total" style="font-size:22px;font-weight:700;color:#1F4E79">0</div>
-    </div>
-    <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:12px 16px">
-      <div style="font-size:11px;color:#6c757d;margin-bottom:4px">Desktop/Internet entregues</div>
-      <div id="decl-kpi-desk" style="font-size:22px;font-weight:700;color:#375623">0</div>
-    </div>
-    <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:12px 16px">
-      <div style="font-size:11px;color:#6c757d;margin-bottom:4px">Locação Equip. entregues</div>
-      <div id="decl-kpi-cel" style="font-size:22px;font-weight:700;color:#185FA5">0</div>
-    </div>
-    <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:12px 16px">
-      <div style="font-size:11px;color:#6c757d;margin-bottom:4px">Pendentes</div>
-      <div id="decl-kpi-pend" style="font-size:22px;font-weight:700;color:#A32D2D">0</div>
-    </div>
-  </div>
-
-  <!-- Legenda das nomenclaturas -->
-  <div style="background:#E8F0FE;border:1px solid #2E75B6;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#1F4E79">
-    <b>📌 Nomenclatura dos arquivos:</b> UF – Nome – Mês<br>
-    <span style="color:#6c757d">Exemplos: <code>GO – João da Silva – Junho.pdf</code> &nbsp;·&nbsp; <code>DF – Maria Souza – Março.pdf</code></span>
-  </div>
-
-  <!-- Tabela -->
-  <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
-        <thead>
-          <tr>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left;white-space:nowrap">#</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left;white-space:nowrap">Colaborador</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left;white-space:nowrap">UF</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left;white-space:nowrap">Cargo</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:center;white-space:nowrap">Decl. Desktop/Internet</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:center;white-space:nowrap">Decl. Locação Equipamento</th>
-          </tr>
-        </thead>
-        <tbody id="decl-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-
-
-
 
 
 <!-- ═══════════════════ FÉRIAS ═══════════════════ -->
@@ -3274,7 +3204,7 @@ function clearFilters(tab){
 }
 
 // TAB SWITCHING
-const tabIds=['geral','equipamentos','admissao','termos','certif','calendario','comunicados','predef','uniforme','upload','declaracoes','requisitos','pendencias','contrata','abono','gerencial','indicadores','ferias'];
+const tabIds=['geral','equipamentos','admissao','termos','certif','calendario','comunicados','predef','uniforme','upload','requisitos','pendencias','contrata','abono','gerencial','indicadores','ferias'];
 // ── Sidebar toggle ────────────────────────
 function toggleSidebar(){
   const sidebar=document.getElementById('sidebar');
@@ -3301,7 +3231,7 @@ function showTab(id,el){
   });
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:()=>{try{renderDeclaracoes();}catch(e){}},requisitos:function(){try{renderRequisitos();}catch(e){console.error('renderRequisitos:',e);document.getElementById('req-cards').innerHTML='<p style="color:red;padding:20px">Erro: '+e.message+'</p>';}},pendencias:function(){try{renderPendencias();}catch(e){console.error('renderPendencias:',e);document.getElementById('pend-lista').innerHTML='<p style="color:red;padding:20px">Erro: '+e.message+'</p>';}},contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){console.error('rAbono error:',e);}},gerencial:()=>{try{rGerencial();}catch(e){console.error('rGerencial error:',e);}},indicadores:()=>{try{indRender();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}}};
+  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,requisitos:function(){try{renderRequisitos();}catch(e){console.error('renderRequisitos:',e);document.getElementById('req-cards').innerHTML='<p style="color:red;padding:20px">Erro: '+e.message+'</p>';}},pendencias:function(){try{renderPendencias();}catch(e){console.error('renderPendencias:',e);document.getElementById('pend-lista').innerHTML='<p style="color:red;padding:20px">Erro: '+e.message+'</p>';}},contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){console.error('rAbono error:',e);}},gerencial:()=>{try{rGerencial();}catch(e){console.error('rGerencial error:',e);}},indicadores:()=>{try{indRender();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}}};
   if(renders[id]) renders[id]();
 }
 
@@ -5158,66 +5088,6 @@ function declCiclar(nome, mes, ano, campo){
   renderDeclaracoes();
   toast(`${campo==='desk'?'Desktop/Internet':'Locação Equipamento'}: ${prox}`,'ok');
 }
-
-function renderDeclaracoes(){
-  const mes  = document.getElementById('decl-mes')?.value  || 'Junho';
-  const ano  = document.getElementById('decl-ano')?.value  || '2026';
-  const fUf  = document.getElementById('decl-uf')?.value   || '';
-  const tbody = document.getElementById('decl-tbody');
-  if(!tbody) return;
-
-  // Populate UF filter
-  const ufSel = document.getElementById('decl-uf');
-  if(ufSel && ufSel.options.length<=1){
-    [...new Set(DATA.filter(c=>c.status!=='inativo').map(c=>c.uf))].sort()
-      .forEach(uf=>{ const o=document.createElement('option');o.value=uf;o.textContent=uf;ufSel.appendChild(o); });
-  }
-
-  // Set current month on first load
-  const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  const mesEl = document.getElementById('decl-mes');
-  if(mesEl && mesEl.selectedIndex===0 && !mesEl._init){
-    mesEl.value = meses[new Date().getMonth()];
-    mesEl._init = true;
-  }
-
-  const ativos = DATA.filter(c=>c.status!=='inativo' && (!fUf||c.uf===fUf));
-
-  let totDesk=0, totCel=0, totPend=0;
-
-  function mkBadge(status, nome, mes, ano, campo){
-    const nomeSafe = nome.replace(/'/g,"\\'");
-    if(status==='Entregue')
-      return `<span style="background:#E1F5EE;color:#3B6D11;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;user-select:none" title="Clique para alterar" onclick="declCiclar('${nomeSafe}','${mes}','${ano}','${campo}')">✅ Entregue</span>`;
-    if(status==='N/A')
-      return `<span style="background:#f1efe8;color:#6c757d;padding:3px 10px;border-radius:12px;font-size:11px;cursor:pointer;user-select:none" title="Clique para alterar" onclick="declCiclar('${nomeSafe}','${mes}','${ano}','${campo}')">— N/A</span>`;
-    return `<span style="background:#FCEBEB;color:#A32D2D;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;user-select:none" title="Clique para alterar" onclick="declCiclar('${nomeSafe}','${mes}','${ano}','${campo}')">⏳ Pendente</span>`;
-  }
-
-  tbody.innerHTML = ativos.map((c,i)=>{
-    const {desk,cel} = declStatus(c, mes, ano);
-    if(desk==='Entregue') totDesk++;
-    if(cel==='Entregue') totCel++;
-    if(desk==='Pendente'||cel==='Pendente') totPend++;
-
-    const bg = i%2===0?'':'background:#f8f9fb';
-    return `<tr style="${bg}">
-      <td style="padding:8px 12px;color:#999;font-size:11px">${i+1}</td>
-      <td style="padding:8px 12px;font-weight:600;color:#1F4E79">${c.nome}</td>
-      <td style="padding:8px 12px;font-weight:600">${c.uf}</td>
-      <td style="padding:8px 12px;font-size:11px">${c.cargo}</td>
-      <td style="padding:8px 12px;text-align:center">${mkBadge(desk,c.nome,mes,ano,'desk')}</td>
-      <td style="padding:8px 12px;text-align:center">${mkBadge(cel,c.nome,mes,ano,'cel')}</td>
-    </tr>`;
-  }).join('') || '<tr><td colspan="6" style="padding:2rem;text-align:center;color:#6c757d">Nenhum colaborador encontrado.</td></tr>';
-
-  // KPIs
-  document.getElementById('decl-kpi-total').textContent = ativos.length;
-  document.getElementById('decl-kpi-desk').textContent  = totDesk;
-  document.getElementById('decl-kpi-cel').textContent   = totCel;
-  document.getElementById('decl-kpi-pend').textContent  = totPend;
-}
-
 
 function exportDeclaracoes(){
   const mes = document.getElementById('decl-mes')?.value || 'Junho';
