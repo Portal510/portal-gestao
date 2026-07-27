@@ -7727,7 +7727,7 @@ function getPendencias(c){
     if(v==='Pendente') items.push({cat:'docs',label:k,tipo:'doc',status:'pendente'});
     else if(v==='Agendado'){
       const dt=c.docs_agenda&&c.docs_agenda[k]?c.docs_agenda[k]:'';
-      const lbl=dt?k+' (agendado: '+dt.split('-').reverse().join('/)+')':k+' (agendado)';
+      const lbl=dt?k+' (agendado: '+dt.split('-').reverse().join('/')+')':k+' (agendado)';
       items.push({cat:'docs',label:lbl,tipo:'doc',status:'agendado'});
     }
   });
