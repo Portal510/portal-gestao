@@ -7724,12 +7724,22 @@ function getPendencias(c){
   const items = [];
   // Docs
   Object.entries(c.docs||{}).forEach(([k,v])=>{
-    if(v==='Pendente') items.push({cat:'docs',label:k,tipo:'doc'});
+    if(v==='Pendente') items.push({cat:'docs',label:k,tipo:'doc',status:'pendente'});
+    else if(v==='Agendado'){
+      const dt=c.docs_agenda&&c.docs_agenda[k]?c.docs_agenda[k]:'';
+      const lbl=dt?k+' (agendado: '+dt.split('-').reverse().join('/)+')':k+' (agendado)';
+      items.push({cat:'docs',label:lbl,tipo:'doc',status:'agendado'});
+    }
   });
   // Certs — respeita grupos OR
   Object.entries(c.certs||{}).forEach(([k,v])=>{
     if(v==='Pendente' && !certSatisfied(c, k))
-      items.push({cat:'certs',label:k,tipo:'cert'});
+      items.push({cat:'certs',label:k,tipo:'cert',status:'pendente'});
+    else if(v==='Agendado' && !certSatisfied(c, k)){
+      const dt=c.certs_agenda&&c.certs_agenda[k]?c.certs_agenda[k]:'';
+      const lbl=dt?k+' (agendado: '+dt.split('-').reverse().join('/')+')':k+' (agendado)';
+      items.push({cat:'certs',label:lbl,tipo:'cert',status:'agendado'});
+    }
   });
   // Equipamentos — respeitar N/A por cargo (planilha edital)
   const _naMap = {
@@ -7816,7 +7826,7 @@ function renderPendencias(){
       <div style="margin-top:8px">
         <div style="font-size:11px;font-weight:600;color:#6c757d;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">${CAT_ICONS[g]||'📋'} ${g==='docs'?'Docs TCU':g==='admissao'?'Admissão':g==='termos'?'Termos':g==='certs'?'Certificações':'Equipamentos'}</div>
         <div style="display:flex;flex-wrap:wrap;gap:4px">
-          ${items.map(i=>`<span style="background:#FFE0E0;color:#7A0000;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${i}</span>`).join('')}
+          ${items.map((i,_idx,arr)=>{const ag=i.includes('(agendado');return `<span style="background:${ag?'#E3F2FD':'#FFE0E0'};color:${ag?'#0D47A1':'#7A0000'};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${i}</span>`;}).join('')}
         </div>
       </div>`).join('');
 
