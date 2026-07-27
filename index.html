@@ -1709,68 +1709,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
 
 
-<div id="tab-pend-cert" style="display:none">
-<div style="padding:20px 24px">
 
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px">
-    <div>
-      <div style="font-size:20px;font-weight:700;color:#1F4E79">⚠️ Pendências — Certificações e Diploma</div>
-      <div style="font-size:12px;color:#6c757d;margin-top:3px">Prazo final: <b style="color:#A32D2D">27/07/2026</b> · Colaboradores com certificação ou diploma pendentes</div>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <input type="text" id="pc-busca" placeholder="🔍 Buscar nome…" oninput="renderPendCert()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px;width:200px">
-      <select id="pc-cargo" onchange="renderPendCert()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px;max-width:250px">
-        <option value="">Todos os cargos</option>
-      </select>
-      <select id="pc-tipo" onchange="renderPendCert()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
-        <option value="">Todos os tipos</option>
-        <option value="diploma">📜 Diploma</option>
-        <option value="cert">🏆 Certificações</option>
-      </select>
-      <button onclick="withBtn(this,()=>exportXlsx('pend-cert'))" style="padding:6px 14px;background:#375623;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">⬇ Exportar</button>
-    </div>
-  </div>
-
-  <!-- Prazo e novo agendamento -->
-  <div style="background:#FEF9C3;border:1px solid #F5C518;border-radius:8px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-    <div>
-      <div style="font-size:13px;font-weight:700;color:#7A5000">📅 Prazo final de entrega: 27/07/2026</div>
-      <div style="font-size:11px;color:#854D0E;margin-top:2px">Colaboradores abaixo devem regularizar Diploma/Superior e/ou Certificações exigidas pelo cargo</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
-      <label style="font-size:12px;font-weight:600;color:#7A5000">🔄 Prorrogar prazo:</label>
-      <input type="date" id="pc-novo-prazo" value="2026-07-27" onchange="renderPendCert()" style="padding:5px 10px;border:1px solid #F5C518;border-radius:6px;font-size:12px;background:#fff">
-    </div>
-  </div>
-
-  <!-- KPIs -->
-  <div id="pc-kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px"></div>
-
-  <!-- Tabela -->
-  <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
-        <thead>
-          <tr>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left">#</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left">Colaborador</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left">Cargo</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left">UF</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left">Diploma</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left">Certificações Pendentes</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:center">Prazo</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:center">Ações</th>
-          </tr>
-        </thead>
-        <tbody id="pc-tbody"></tbody>
-      </table>
-    <div id="pc-count" style="padding:8px 14px;font-size:11px;color:#6c757d;border-top:1px solid #dee2e6;background:#f8f9fb"></div>
-  </div>
-
-</div>
-</div>
-
-</div><!-- /content -->
-</div><!-- /portal-layout -->
 
 <!-- ══ TERMO UNIFORME MODAL ══ -->
 <div class="modal-bg" id="modal-termo-uni">
@@ -3362,7 +3301,7 @@ function showTab(id,el){
   });
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert:renderPendCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:()=>{try{renderDeclaracoes();}catch(e){}},requisitos:function(){try{renderRequisitos();}catch(e){console.error('renderRequisitos:',e);document.getElementById('req-cards').innerHTML='<p style="color:red;padding:20px">Erro: '+e.message+'</p>';}},pendencias:function(){try{renderPendencias();}catch(e){console.error('renderPendencias:',e);document.getElementById('pend-lista').innerHTML='<p style="color:red;padding:20px">Erro: '+e.message+'</p>';}},contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){console.error('rAbono error:',e);}},gerencial:()=>{try{rGerencial();}catch(e){console.error('rGerencial error:',e);}},indicadores:()=>{try{indRender();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}}};
+  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:()=>{try{renderDeclaracoes();}catch(e){}},requisitos:function(){try{renderRequisitos();}catch(e){console.error('renderRequisitos:',e);document.getElementById('req-cards').innerHTML='<p style="color:red;padding:20px">Erro: '+e.message+'</p>';}},pendencias:function(){try{renderPendencias();}catch(e){console.error('renderPendencias:',e);document.getElementById('pend-lista').innerHTML='<p style="color:red;padding:20px">Erro: '+e.message+'</p>';}},contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){console.error('rAbono error:',e);}},gerencial:()=>{try{rGerencial();}catch(e){console.error('rGerencial error:',e);}},indicadores:()=>{try{indRender();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}}};
   if(renders[id]) renders[id]();
 }
 
