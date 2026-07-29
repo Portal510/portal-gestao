@@ -4237,6 +4237,8 @@ function enviarPreDefDireto(i){
   const m=preDefModelos[i];
   document.getElementById('predef-envio-titulo').textContent=m.titulo;
   document.getElementById('predef-envio-assunto').textContent=m.assunto;
+  var corpoEl=document.getElementById('predef-envio-corpo');
+  if(corpoEl) corpoEl.textContent=m.corpo;
   document.getElementById('predef-envio-corpo').textContent=m.corpo;
   // Populate dest options
   const cargoSel=document.getElementById('predef-envio-cargo');
