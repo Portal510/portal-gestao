@@ -2422,8 +2422,7 @@ function _startRealtimeSync(){
         reader.read().then(function(chunk){
           if(chunk.done){console.warn('[sync] stream ended, retry 5s');setTimeout(doSSE,5000);return;}
           buf+=dec.decode(chunk.value,{stream:true});
-          var lines=buf.split('
-');buf=lines.pop();
+          var lines=buf.split('\n');buf=lines.pop();
           lines.forEach(function(l){
             l=l.trim();if(!l)return;
             try{var e=JSON.parse(l);
