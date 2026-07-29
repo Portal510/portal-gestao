@@ -3976,6 +3976,7 @@ function applyUser(){
     badge.id='user-badge';
     badge.style.cssText='margin-left:12px;font-size:12px;background:rgba(255,255,255,.18);padding:5px 14px;border-radius:20px;cursor:pointer;white-space:nowrap;border:1px solid rgba(255,255,255,.25)';
     badge.onclick=logout;
+    if(!document.getElementById('sync-btn')){var sb=document.createElement('div');sb.id='sync-btn';sb.style.cssText='margin-left:8px;font-size:12px;background:rgba(255,255,255,.15);padding:5px 12px;border-radius:20px;cursor:pointer;border:1px solid rgba(255,255,255,.25);color:#fff';sb.textContent='☁ Sync';sb.onclick=function(){if(typeof syncFirebase==='function')syncFirebase();};var hdr=document.querySelector('.header');if(hdr)hdr.appendChild(sb);}
     const h=document.querySelector('.header'); if(h) h.appendChild(badge);
   }
   badge.textContent='👤 '+(currentUser?.nome||'Gestor')+' · Sair';
