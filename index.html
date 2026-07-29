@@ -7428,13 +7428,11 @@ function atualizarTodasAbas(){
     ['renderTermos',()=>renderTermos()],
     ['renderCert',()=>renderCert()],
     ['renderPendencias',()=>renderPendencias()],
-    ['renderDeclaracoes',()=>renderDeclaracoes()],
     ['ferRender',()=>ferRender()],
     ['ferCtrlRender',()=>ferCtrlRender()],
     ['indRender',()=>indRender()],
     ['rGerencial',()=>rGerencial()],
     ['upFilterDocs',()=>upFilterDocs()],
-    ['updateHeaderStats',()=>updateHeaderStats()],
   ];
   let ok=0;
   fns.forEach(([name,fn])=>{ try{ fn(); ok++; }catch(e){ console.warn('Atualizar: '+name,e); } });
