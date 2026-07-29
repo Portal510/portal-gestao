@@ -10042,7 +10042,7 @@ var _FB_LISTEN = 'https://firestore.googleapis.com/v1/projects/'+_FB_PROJECT+'/d
 var _FB_OWN_TS = 0;
 
 function _fbApply(payload){
-  if(!payload||!Array.isArray(payload.colaboradores)||payload.colaboradores.length<5) return;
+  if(!payload||!Array.isArray(payload.colaboradores)||payload.colaboradores.length<10) return;
   var remTs = payload.ts||0;
   var curTs = parseInt(localStorage.getItem('ts_data_saved_at')||'0');
   if(remTs===_FB_OWN_TS||remTs<=curTs+3000) return;
@@ -10108,7 +10108,7 @@ function _fbStartSync(){
   fetch(_FB_DOC+'?key='+_FB_API).then(function(res){
     if(res.status===404){
       console.log('[fb sync] doc nao existe, criando...');
-      _fbSave(DATA, Date.now()).then(function(){doSSE();});
+      if(DATA&&DATA.length>10){_fbSave(DATA, Date.now()).then(function(){doSSE();});}else{doSSE();}
     } else {
       // Load and check if remote is newer
       res.json().then(function(doc){
@@ -10143,5 +10143,5 @@ function syncFirebase(){
 
 </script>
 </body>
-</html>_fbStartSync();
+</html>
   
