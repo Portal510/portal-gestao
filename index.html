@@ -743,7 +743,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           <option value="ok">Dentro do prazo</option>
           <option value="atencao">Abaixo do minimo</option>
         </select>
-        <button onclick="exportTempoServico()" class="btn g-only" style="padding:6px 14px;font-size:12px;margin-left:auto">Exportar XLSX</button>
+        <input type="file" id="ts-import-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="tsImportarVisao(this)"><button onclick="document.getElementById('ts-import-input').click()" class="btn g-only" style="padding:6px 14px;font-size:12px">&#8593; Importar XLSX</button>
+        <button onclick="exportTempoServico()" class="btn g-only" style="padding:6px 14px;font-size:12px;margin-left:auto">&#8595; Exportar XLSX</button>
       </div>
     </div>
     <div class="stats-row" id="ts-kpis" style="margin-bottom:.75rem"></div>
@@ -785,7 +786,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </div>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
       <input type="text" id="ts-reg-busca" placeholder="Filtrar por colaborador..." oninput="renderTsRegistros()" style="padding:7px 11px;border:1px solid #ced4da;border-radius:6px;font-size:13px;min-width:240px">
-      <button onclick="exportTsRegistros()" class="btn g-only" style="padding:6px 14px;font-size:12px;margin-left:auto">Exportar XLSX</button>
+      <input type="file" id="ts-reg-import-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="tsImportarRegistros(this)"><button onclick="document.getElementById('ts-reg-import-input').click()" class="btn g-only" style="padding:6px 14px;font-size:12px">&#8593; Importar XLSX</button>
+      <button onclick="exportTsRegistros()" class="btn g-only" style="padding:6px 14px;font-size:12px;margin-left:auto">&#8595; Exportar XLSX</button>
     </div>
     <div id="ts-reg-lista"></div>
   </div>
@@ -2645,6 +2647,99 @@ function exportTempoServico(){
   });
   var ws=XLSX.utils.aoa_to_sheet(d),wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Tempo');XLSX.writeFile(wb,'Tempo_Servico.xlsx');
+}
+
+function tsParseData(val){
+  if(!val) return null;
+  var s=String(val).trim();
+  var m1=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m1) return m1[3]+'-'+m1[2].padStart(2,'0')+'-'+m1[1].padStart(2,'0');
+  var m2=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m2) return m2[1]+'-'+m2[2]+'-'+m2[3];
+  var m3=s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+  if(m3) return m3[3]+'-'+m3[2].padStart(2,'0')+'-'+m3[1].padStart(2,'0');
+  return null;
+}
+function tsNorm(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim(); }
+
+// Importar para Visao Geral (dados de colaboradores - colunas: Nome/Cargo/Admissao)
+function tsImportarVisao(inp){
+  var file=inp.files[0]; if(!file){inp.value='';return;}
+  inp.value='';
+  if(typeof XLSX==='undefined'){alert('XLSX nao disponivel.');return;}
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var wb=XLSX.read(e.target.result,{type:'binary',cellDates:true});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,dateNF:'dd/mm/yyyy'});
+      if(!rows.length){alert('Arquivo vazio.');return;}
+      var header=rows[0].map(tsNorm);
+      function ci(keys){for(var i=0;i<keys.length;i++){var x=header.indexOf(tsNorm(keys[i]));if(x>-1)return x;}return -1;}
+      var iN=ci(['colaborador','nome','funcionario']);
+      var iE=ci(['data de entrada','entrada','data entrada','admissao','data admissao','data_admissao']);
+      var iS=ci(['data de saida','saida','data saida']);
+      var importados=0,erros=0;
+      for(var i=1;i<rows.length;i++){
+        var row=rows[i];
+        var nome=String(row[iN]||'').trim();
+        // If only name and admission date (no saida), update DATA colab admission
+        if(iN>-1&&nome){
+          var adm=iE>-1?tsParseData(row[iE]):null;
+          var colab=DATA.find(function(c){return c&&c.nome&&c.nome.toLowerCase()===nome.toLowerCase();});
+          if(colab&&adm){colab.data_admissao=adm;importados++;}
+          else if(!colab){erros++;}
+        }
+        // If also has entrada+saida, add as period
+        if(iE>-1&&iS>-1&&nome){
+          var entrada=tsParseData(row[iE]),saida=tsParseData(row[iS]);
+          if(entrada&&saida&&saida>entrada){
+            TS_REGISTROS.push({nome:nome,entrada:entrada,saida:saida,meses:tsCalcMeses(entrada,saida)});
+            importados++;
+          }
+        }
+      }
+      tsSaveReg();saveData();renderTempoServico();
+      alert('Importacao concluida: '+importados+' registros. Erros: '+erros+'.');
+    }catch(ex){alert('Erro ao importar: '+ex.message);}
+  };
+  reader.readAsBinaryString(file);
+}
+
+// Importar periodos (colunas: Colaborador | Data de Entrada | Data de Saida)
+function tsImportarRegistros(inp){
+  var file=inp.files[0]; if(!file){inp.value='';return;}
+  inp.value='';
+  if(typeof XLSX==='undefined'){alert('XLSX nao disponivel.');return;}
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var wb=XLSX.read(e.target.result,{type:'binary',cellDates:true});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,dateNF:'dd/mm/yyyy'});
+      if(!rows.length){alert('Arquivo vazio.');return;}
+      var header=rows[0].map(tsNorm);
+      function ci(keys){for(var i=0;i<keys.length;i++){var x=header.indexOf(tsNorm(keys[i]));if(x>-1)return x;}return -1;}
+      var iN=ci(['colaborador','nome','funcionario']);
+      var iE=ci(['data de entrada','entrada','data entrada']);
+      var iS=ci(['data de saida','saida','data saida']);
+      if(iN<0||iE<0||iS<0){alert('Colunas nao encontradas. Use: Colaborador | Data de Entrada | Data de Saida');return;}
+      var importados=0,erros=0;
+      for(var i=1;i<rows.length;i++){
+        var row=rows[i];
+        var nome=String(row[iN]||'').trim();
+        var entrada=tsParseData(row[iE]);
+        var saida=tsParseData(row[iS]);
+        if(!nome||!entrada||!saida){erros++;continue;}
+        if(saida<=entrada){erros++;continue;}
+        TS_REGISTROS.push({nome:nome,entrada:entrada,saida:saida,meses:tsCalcMeses(entrada,saida)});
+        importados++;
+      }
+      tsSaveReg();renderTsRegistros();
+      alert('Importacao concluida: '+importados+' periodos. Erros: '+erros+'.');
+    }catch(ex){alert('Erro ao importar: '+ex.message);}
+  };
+  reader.readAsBinaryString(file);
 }
 function exportTsRegistros(){
   if(typeof XLSX==='undefined'){alert('XLSX nao disponivel.');return;}
