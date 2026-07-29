@@ -57,8 +57,7 @@
       payload:   {stringValue:json},
       savedAt:   {stringValue:new Date().toISOString()},
       ver:       {stringValue:ver},
-      source:    {stringValue:'portal-gestao'},
-      token:     {stringValue:'PortalTS@TCU2026'}
+      source:    {stringValue:'portal-gestao'}
     }});
 
     // Skip entirely if browser reports offline — avoids guaranteed-fail fetch + console noise
@@ -71,7 +70,6 @@
       {method:'PATCH',headers:{'Content-Type':'application/json'},body:body})
       .then(function(r){
         if(!r.ok) return r.text().then(function(t){throw new Error(r.status+': '+t.slice(0,100));});
-        window._fbGestaoOwnTs = fullPayload.ts;
         fbStatus('Salvo ✓','ok');
         setTimeout(function(){fbStatus('Online ●','ok');},2000);
         return r.json();
@@ -211,7 +209,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
 .portal-layout{display:flex;height:calc(100vh - 56px);overflow:hidden}
 
 /* SIDEBAR */
-.sidebar{width:220px;min-width:220px;background:#fff;border-right:1px solid #dee2e6;display:flex;flex-direction:column;transition:width .25s ease,min-width .25s ease;overflow:hidden;position:relative;z-index:98}
+.sidebar{width:220px;min-width:220px;background:#fff;border-right:1px solid #dee2e6;display:flex;flex-direction:column;transition:width .25s ease,min-width .25s ease;overflow:hidden;position:relative;z-index:98;flex-shrink:0}
 .sidebar.collapsed{width:0;min-width:0;border-right:none}
 .sidebar-inner{width:220px;overflow-y:auto;overflow-x:hidden;flex:1;padding:10px 0;scrollbar-width:thin;scrollbar-color:#ced4da #f8f9fa}
 .sidebar-inner::-webkit-scrollbar{width:4px}
@@ -230,7 +228,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
 .sidebar-toggle.collapsed{left:0}
 
 /* CONTENT */
-.content{flex:1;padding:20px 24px;overflow-y:auto;overflow-x:hidden;height:100%}
+.content{flex:1;min-width:0;padding:20px 24px;overflow-y:auto;overflow-x:auto;height:100%}
 
 /* RESPONSIVE */
 @media(max-width:768px){
@@ -433,15 +431,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-if(location.protocol === 'file:'){
-  document.addEventListener('DOMContentLoaded', function(){
-    var banner = document.createElement('div');
-    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#C55A11;color:#fff;padding:12px 20px;text-align:center;font-size:14px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.3)';
-    banner.innerHTML = '⚠️ Você está abrindo o portal como arquivo local — sincronização e Firebase NÃO funcionam assim. '
-      + '<a href="https://portal510.github.io/portal-gestao/" target="_blank" style="color:#FFE0A0;text-decoration:underline;margin-left:8px">👉 Clique aqui para abrir corretamente</a>';
-    document.body.prepend(banner);
-  });
-}
+if(location.protocol==="file:"){document.addEventListener("DOMContentLoaded",function(){var b=document.createElement("div");b.style.cssText="position:fixed;top:0;left:0;right:0;z-index:99999;background:#C55A11;color:#fff;padding:10px 20px;text-align:center;font-size:13px;font-weight:600";b.innerHTML='⚠️ Arquivo local — use <a href="https://portal510.github.io/portal-gestao/" style="color:#FFE0A0">portal510.github.io/portal-gestao</a> para sync';document.body.prepend(b);});}
 </script>
 </head>
 <body>
@@ -494,10 +484,10 @@ if(location.protocol === 'file:'){
     <div class="tab" onclick="showTab('admissao',this)"><span class="tab-icon">🎓</span><span class="tab-label">Admissão</span></div>
     <div class="tab" onclick="showTab('termos',this)"><span class="tab-icon">📝</span><span class="tab-label">Termos</span></div>
     <div class="tab" onclick="showTab('certif',this)"><span class="tab-icon">🏆</span><span class="tab-label">Certificações</span></div>
-    <div class="tab" onclick="showTab('pend-cert',this)"><span class="tab-icon">⚠️</span><span class="tab-label">Pend. Cert/Diploma</span></div>
+    <div class="tab" onclick="showTab(this)"><span class="tab-icon">⚠️</span><span class="tab-label">Pend. Cert/Diploma</span></div>
     <div class="tab" onclick="showTab('uniforme',this)"><span class="tab-icon">👔</span><span class="tab-label">Uniforme</span></div>
     <div class="tab" onclick="showTab('upload',this)"><span class="tab-icon">📎</span><span class="tab-label">Documentos</span></div>
-    <div class="tab" onclick="showTab('declaracoes',this)"><span class="tab-icon">📋</span><span class="tab-label">Declarações</span></div>
+    <!-- removed --><span class="tab-icon">📋</span><span class="tab-label">Declarações</span></div>
 
     <div class="sidebar-section">Comunicação</div>
     <div class="tab" onclick="showTab('comunicados',this)"><span class="tab-icon">📧</span><span class="tab-label">Comunicados</span></div>
@@ -1429,80 +1419,10 @@ if(location.protocol === 'file:'){
     </div>
   </div>
 </div>
-</div>
+
 
 
 <!-- ═══════════════════ DECLARAÇÕES ═══════════════════ -->
-<div id="tab-declaracoes" style="display:none">
-<div style="padding:20px 24px">
-
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
-    <div>
-      <div style="font-size:18px;font-weight:700;color:#1F4E79">📋 Controle de Declarações — Equipamentos e Internet</div>
-      <div style="font-size:12px;color:#6c757d;margin-top:3px">Declaração de ajuste de custo (Desktop/Internet) e Declaração de locação de equipamentos · Preenchimento mensal</div>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <select id="decl-mes" onchange="renderDeclaracoes()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
-        <option>Janeiro</option><option>Fevereiro</option><option>Março</option><option>Abril</option>
-        <option>Maio</option><option>Junho</option><option>Julho</option><option>Agosto</option>
-        <option>Setembro</option><option>Outubro</option><option>Novembro</option><option>Dezembro</option>
-      </select>
-      <select id="decl-ano" onchange="renderDeclaracoes()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
-        <option>2025</option><option selected>2026</option><option>2027</option><option>2028</option><option>2029</option><option>2030</option>
-      </select>
-      <select id="decl-uf" onchange="renderDeclaracoes()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
-        <option value="">Todos os estados</option>
-      </select>
-      <button onclick="exportDeclaracoes()" style="padding:6px 14px;background:#1F4E79;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">⬇ Exportar XLSX</button>
-    </div>
-  </div>
-
-  <!-- KPIs -->
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
-    <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:12px 16px">
-      <div style="font-size:11px;color:#6c757d;margin-bottom:4px">Colaboradores</div>
-      <div id="decl-kpi-total" style="font-size:22px;font-weight:700;color:#1F4E79">0</div>
-    </div>
-    <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:12px 16px">
-      <div style="font-size:11px;color:#6c757d;margin-bottom:4px">Desktop/Internet entregues</div>
-      <div id="decl-kpi-desk" style="font-size:22px;font-weight:700;color:#375623">0</div>
-    </div>
-    <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:12px 16px">
-      <div style="font-size:11px;color:#6c757d;margin-bottom:4px">Locação Equip. entregues</div>
-      <div id="decl-kpi-cel" style="font-size:22px;font-weight:700;color:#185FA5">0</div>
-    </div>
-    <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:12px 16px">
-      <div style="font-size:11px;color:#6c757d;margin-bottom:4px">Pendentes</div>
-      <div id="decl-kpi-pend" style="font-size:22px;font-weight:700;color:#A32D2D">0</div>
-    </div>
-  </div>
-
-  <!-- Legenda das nomenclaturas -->
-  <div style="background:#E8F0FE;border:1px solid #2E75B6;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#1F4E79">
-    <b>📌 Nomenclatura dos arquivos:</b> UF – Nome – Mês<br>
-    <span style="color:#6c757d">Exemplos: <code>GO – João da Silva – Junho.pdf</code> &nbsp;·&nbsp; <code>DF – Maria Souza – Março.pdf</code></span>
-  </div>
-
-  <!-- Tabela -->
-  <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
-        <thead>
-          <tr>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left;white-space:nowrap">#</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left;white-space:nowrap">Colaborador</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left;white-space:nowrap">UF</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left;white-space:nowrap">Cargo</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:center;white-space:nowrap">Decl. Desktop/Internet</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:center;white-space:nowrap">Decl. Locação Equipamento</th>
-          </tr>
-        </thead>
-        <tbody id="decl-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-
-
-</div>
 
 
 <!-- ═══════════════════ FÉRIAS ═══════════════════ -->
@@ -1664,7 +1584,7 @@ if(location.protocol === 'file:'){
   </div>
 
 </div>
-</div>
+
 <!-- ═══════════════════ INDICADORES ═══════════════════ -->
 <div id="tab-indicadores" style="display:none">
 <div style="padding:20px 24px">
@@ -1719,72 +1639,13 @@ if(location.protocol === 'file:'){
     <div id="ind-cards" style="display:flex;flex-direction:column;gap:18px"></div>
   </div>
 
-</div>
-</div>
+
+
 
 <!-- ═══════════════════ PENDÊNCIAS CERT/DIPLOMA ═══════════════════ -->
-<div id="tab-pend-cert" style="display:none">
-<div style="padding:20px 24px">
-
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px">
-    <div>
-      <div style="font-size:20px;font-weight:700;color:#1F4E79">⚠️ Pendências — Certificações e Diploma</div>
-      <div style="font-size:12px;color:#6c757d;margin-top:3px">Prazo final: <b style="color:#A32D2D">27/07/2026</b> · Colaboradores com certificação ou diploma pendentes</div>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <input type="text" id="pc-busca" placeholder="🔍 Buscar nome…" oninput="renderPendCert()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px;width:200px">
-      <select id="pc-cargo" onchange="renderPendCert()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px;max-width:250px">
-        <option value="">Todos os cargos</option>
-      </select>
-      <select id="pc-tipo" onchange="renderPendCert()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
-        <option value="">Todos os tipos</option>
-        <option value="diploma">📜 Diploma</option>
-        <option value="cert">🏆 Certificações</option>
-      </select>
-      <button onclick="withBtn(this,()=>exportXlsx('pend-cert'))" style="padding:6px 14px;background:#375623;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">⬇ Exportar</button>
-    </div>
-  </div>
-
-  <!-- Prazo e novo agendamento -->
-  <div style="background:#FEF9C3;border:1px solid #F5C518;border-radius:8px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-    <div>
-      <div style="font-size:13px;font-weight:700;color:#7A5000">📅 Prazo final de entrega: 27/07/2026</div>
-      <div style="font-size:11px;color:#854D0E;margin-top:2px">Colaboradores abaixo devem regularizar Diploma/Superior e/ou Certificações exigidas pelo cargo</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
-      <label style="font-size:12px;font-weight:600;color:#7A5000">🔄 Prorrogar prazo:</label>
-      <input type="date" id="pc-novo-prazo" value="2026-07-27" onchange="renderPendCert()" style="padding:5px 10px;border:1px solid #F5C518;border-radius:6px;font-size:12px;background:#fff">
-    </div>
-  </div>
-
-  <!-- KPIs -->
-  <div id="pc-kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px"></div>
-
-  <!-- Tabela -->
-  <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
-        <thead>
-          <tr>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left">#</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left">Colaborador</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left">Cargo</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left">UF</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left">Diploma</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:left">Certificações Pendentes</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:center">Prazo</th>
-            <th style="background:#1F4E79;color:#fff;padding:10px 12px;text-align:center">Ações</th>
-          </tr>
-        </thead>
-        <tbody id="pc-tbody"></tbody>
-      </table>
-    <div id="pc-count" style="padding:8px 14px;font-size:11px;color:#6c757d;border-top:1px solid #dee2e6;background:#f8f9fb"></div>
-  </div>
-
 </div>
 </div>
 
-</div><!-- /content -->
-</div><!-- /portal-layout -->
 
 <!-- ══ TERMO UNIFORME MODAL ══ -->
 <div class="modal-bg" id="modal-termo-uni">
@@ -2288,6 +2149,7 @@ const COLAB = JSON.parse(`[{"_id": 0, "nome": "Abdias Francisco Rodrigues", "cpf
 
 
 
+
 // ── Field formatters ─────────────────────────────────────────────
 function fmtCPF(v){
   if(!v||v==='Pendente') return v||'';
@@ -2358,114 +2220,6 @@ function setupFieldFormatting(){
 const DATA_KEY = 'ts_portal_data_v2';
 
 // ── Save DATA to localStorage (formato completo — garante persistência) ──
-function syncFirebase(){
-  // Push local first
-  var localTs = parseInt(localStorage.getItem('ts_data_saved_at')||'0');
-  if(typeof window._fbGestaoSave==='function') window._fbGestaoSave({colaboradores:DATA,ts:Date.now()});
-  if(typeof window._fbGestaoLoad!=='function'){ fbStatus('Firebase indisponivel','err'); return; }
-  fbStatus('Sincronizando...','sync');
-  window._fbGestaoLoad().then(function(p){
-    if(!p||!p.colaboradores||p.colaboradores.length<5){ fbStatus('Firebase vazio','err'); return; }
-    var rTs=p.ts||0;
-    if(rTs > localTs + 10000){
-      if(confirm('Firebase tem dados mais recentes ('+new Date(rTs).toLocaleString('pt-BR')+').\nAtualizar este dispositivo?')){
-        var v=p.colaboradores.filter(function(c){return c&&c.nome;});
-        _safeSetItem(DATA_KEY,JSON.stringify(v));
-        localStorage.setItem('ts_data_saved_at',rTs.toString());
-        DATA=v.map(function(c,i){return Object.assign({},c,{_id:i});});
-        try{renderGeral();}catch(e){}
-        fbStatus('Atualizado ('+v.length+' colabs)','ok');
-      }
-    } else {
-      fbStatus('Ja atualizado — '+new Date(localTs).toLocaleTimeString('pt-BR'),'ok');
-    }
-  }).catch(function(e){ fbStatus('Erro: '+e.message,'err'); });
-}
-
-
-
-// ── Firebase real-time listener ─────────────────────────────────────
-// -- Real-time sync via Firestore SSE --
-function _applyRemoteData(payload){
-  if(!payload||!Array.isArray(payload.colaboradores)||payload.colaboradores.length<5) return;
-  var remTs=payload.ts||0;
-  var curTs=parseInt(localStorage.getItem('ts_data_saved_at')||'0');
-  if(remTs===window._fbGestaoOwnTs) return;
-  if(remTs<=curTs+3000) return;
-  var valid=payload.colaboradores.filter(function(c){return c&&c.nome;});
-  if(valid.length<5) return;
-  _safeSetItem(DATA_KEY,JSON.stringify(valid));
-  localStorage.setItem('ts_data_saved_at',remTs.toString());
-  DATA=valid.map(function(c,i){return Object.assign({},c,{_id:i});});
-  try{
-    var at=document.querySelector('.tab.active');
-    if(at){var oc=at.getAttribute('onclick')||'';var m=oc.match(/showTab\(['"]([\w-]+)['"]/);if(m&&typeof renders!=='undefined'&&renders[m[1]])renders[m[1]]();else renderGeral();}
-  }catch(e){try{renderGeral();}catch(e2){}}
-  try{fbStatus('Sincronizado ('+new Date(remTs).toLocaleTimeString('pt-BR')+')','ok');}catch(e){}
-  console.log('[sync] Atualizado: '+valid.length+' colabs');
-}
-
-function _startRealtimeSync(){
-  var API_KEY='AIzaSyB6gK-4UWyVnf0u7wQf-lge1LEXnoDmTz8';
-  var PROJECT='portal-ts';
-  var LISTEN='https://firestore.googleapis.com/v1/projects/'+PROJECT+'/databases/(default)/documents:listen?key='+API_KEY;
-  var BODY=JSON.stringify({database:'projects/'+PROJECT+'/databases/(default)',addTarget:{documents:{documents:['projects/'+PROJECT+'/databases/(default)/documents/portal-ts/gestao']},targetId:1}});
-
-  function ensureDocExists(cb){
-    // Check if document exists, create if not
-    var checkUrl='https://firestore.googleapis.com/v1/projects/'+PROJECT+'/databases/(default)/documents/portal-ts/gestao?key='+API_KEY;
-    fetch(checkUrl).then(function(res){
-      if(res.status===404){
-        // Document doesn't exist — create it with current DATA
-        console.log('[sync] Documento nao existe — criando no Firebase...');
-        if(typeof window._fbGestaoSave==='function'){
-          window._fbGestaoSave({colaboradores:DATA, ts:Date.now()}).then(function(){
-            console.log('[sync] Documento criado com sucesso');
-            if(cb) cb();
-          }).catch(function(){ if(cb) cb(); });
-        } else { if(cb) cb(); }
-      } else {
-        if(cb) cb();
-      }
-    }).catch(function(){ if(cb) cb(); });
-  }
-
-  function doSSE(){
-    fetch(LISTEN,{method:'POST',headers:{'Content-Type':'application/json'},body:BODY})
-    .then(function(res){
-      if(res.status===404){ console.warn('[sync] 404 - documento ainda nao existe'); _startFbPolling(); return; }
-      if(!res.ok) throw new Error('HTTP '+res.status);
-      var reader=res.body.getReader();
-      var dec=new TextDecoder();
-      var buf='';
-      function read(){
-        reader.read().then(function(chunk){
-          if(chunk.done){console.warn('[sync] stream ended, retry 5s');setTimeout(doSSE,5000);return;}
-          buf+=dec.decode(chunk.value,{stream:true});
-          var lines=buf.split('\n');buf=lines.pop();
-          lines.forEach(function(l){
-            l=l.trim();if(!l)return;
-            try{var e=JSON.parse(l);
-              if(e.documentChange&&e.documentChange.document&&e.documentChange.document.fields){
-                var f=e.documentChange.document.fields;
-                if(f.payload){_applyRemoteData(JSON.parse(f.payload.stringValue));}
-              }
-            }catch(ex){}
-          });
-          read();
-        }).catch(function(e){console.warn('[sync] read err:',e.message);_startFbPolling();});
-      }
-      read();
-      console.log('[sync] SSE listener ativo');
-    }).catch(function(e){
-      console.warn('[sync] SSE falhou:',e.message,'- polling 30s');
-      _startFbPolling();
-    });
-  }
-  ensureDocExists(function(){ doSSE(); });
-}
-
-
 function saveData(){
   try{
     DATA = DATA.filter(c => c && c.nome && typeof c.nome === 'string');
@@ -2474,13 +2228,14 @@ function saveData(){
     _safeSetItem(DATA_KEY, JSON.stringify(DATA));
     localStorage.setItem('ts_data_saved_at', Date.now().toString());
     // Salvar cópia de segurança no Firebase (documento separado 'gestao-data')
-    try{ _fbBackupData(); }catch(fe){}
+    // Firebase save
+    try{ _fbSave(DATA, Date.now()); }catch(fe){}
   }catch(e){ console.warn('[saveData]',e); }
 }
 
 // Restaura DATA do Firebase se localStorage vazio ou corrompido
 // Firebase backup desativado (rede bloqueia acesso)
-function _fbBackupData(){if(window._fbThrottle)return;window._fbThrottle=setTimeout(function(){window._fbThrottle=null;},15000);try{if(typeof window._fbGestaoSave==="function")window._fbGestaoSave({colaboradores:DATA,ts:Date.now()});}catch(e){}}
+
 
 async function _fbRestoreIfEmpty(){
   try{
@@ -2503,7 +2258,6 @@ async function _fbRestoreIfEmpty(){
   }catch(e){ return false; } // silenced — Firebase may be unavailable
 }
 
-function _initFbSync(){var lTs=parseInt(localStorage.getItem("ts_data_saved_at")||"0");if(typeof window._fbGestaoLoad!=="function")return;window._fbGestaoLoad().then(function(p){if(!p||!Array.isArray(p.colaboradores)||p.colaboradores.length<5)return;if((p.ts||0)>lTs+5000){var v=p.colaboradores.filter(function(c){return c&&c.nome;});if(v.length<5)return;_safeSetItem(DATA_KEY,JSON.stringify(v));localStorage.setItem("ts_data_saved_at",(p.ts||Date.now()).toString());DATA=v.map(function(c,i){return Object.assign({},c,{_id:i});});try{renderGeral();}catch(e){}try{fbStatus("Dados sincronizados do Firebase","ok");}catch(e){}console.log("[initFbSync] Firebase mais recente:"+v.length+" colabs");}}).catch(function(){});}
 // ── Load DATA from localStorage ──────────────────────
 function loadData(){
   const _CM={"46188061172": "619920026082", "01705347150": "62984042945", "85407119234": "96991188289", "01322263248": "91992345022", "81367783020": "51992172455", "09166760488": "84988698928", "85216445153": "61993022484", "58847383587": "79998754768", "08731129463": "81983002258", "01166458148": "61999944752", "97089117200": "69984824337", "05772713779": "27998205907", "78744709315": "85996635387", "81854021168": "61985545275", "64200728320": "86988364931", "71032002115": "61981245149", "04938168103": "61998691590", "00537335170": "61998765529", "06637296961": "41996996537", "65700481200": "95991413492", "01874505110": "61998495835", "03675067696": "31971383032", "59514914287": "92981297292", "04158093557": "71988920836", "39383768134": "65992960534", "04503695100": "61998358224", "00802669247": "98984436622", "02145201106": "61981046836", "11591701775": "21992752228", "03165674183": "61994063361", "89687329149": "61993030129", "00008120994": "48999208778", "12854358775": "21988815635", "00628388225": "67981558067", "38100332860": "11982401940", "09224369324": "88999175419", "02283223164": "61984883782", "04456140488": "82988013645", "07678566433": "83998311191", "04843563137": "61991853088", "00330495305": "63984365737", "05505759106": "61991162568", "05751737180": "61992416617", "01562131176": "61991599905", "02040216189": "61981635164", "02873773189": "61991453537", "00055184154": "61991253899", "87428148200": "68999646021"};
@@ -3151,7 +2905,7 @@ function renderTermos(){
   updateStatsTermos(rows);
 }
 
-const CARGO_CERTS_REQUIRED = {"Analista de suporte telefônico (TEL)": ["HDI SCA", "HDI CSR"], "Analista de suporte (BSB)": ["M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST", "Curso Montagem/Config. Micro (20h)"], "Analista de suporte (EST)": ["M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST", "HDI CSR", "Curso Montagem/Config. Micro (20h)"], "Analista de suporte especializado (AE)": ["M365 Fundamentals", "HDI DAST", "HDI CSR", "MD-100 ou MD-102", "Curso Montagem/Config. Micro (20h)"], "Analista de suporte especializado (AC)": ["M365 Fundamentals", "MD-100 ou MD-102", "AZ-900"], "Administração de parque tecnológico (AP)": ["HDI DAST", "HDI SCA", "HDI CSR", "Curso Montagem/Config. Micro (20h)"], "Supervisor de suporte (STEL)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (BSB)": ["ITIL Foundations v4", "HDI SCTL", "Curso Montagem/Config. Micro (20h)"], "Supervisor de suporte (EST)": ["ITIL Foundations v4", "HDI SCTL", "Curso Montagem/Config. Micro (20h)"], "Supervisor de suporte (SAE)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (SCHA)": ["ITIL Foundations v4"], "Gestor de conhecimento": ["HDI KCS"], "Gestor de Service desk": ["ITIL Foundations v4", "HDI SCTL", "HDI SCM", "HDI SCD", "XLA Foundation"]};
+const CARGO_CERTS_REQUIRED = {"Analista de suporte telefônico (TEL)": ["HDI SCA", "HDI CSR"], "Analista de suporte (BSB)": ["M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST", "Curso Montagem/Config. Micro (20h)"], "Analista de suporte (EST)": ["M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST", "HDI CSR", "Curso Montagem/Config. Micro (20h)"], "Analista de suporte especializado (AE)": ["M365 Fundamentals", "HDI DAST", "HDI CSR", "MD-100 ou MD-102", "Curso Montagem/Config. Micro (20h)"], "Analista de suporte especializado (AC)": ["M365 Fundamentals", "MD-100 ou MD-102", "AZ-900"], "Administração de parque tecnológico (AP)": ["HDI DAST", "HDI SCA", "HDI CSR", "Curso Montagem/Config. Micro (20h)"], "Supervisor de suporte (STEL)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (BSB)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (EST)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (SAE)": ["ITIL Foundations v4", "HDI SCTL"], "Supervisor de suporte (SCHA)": ["ITIL Foundations v4"], "Gestor de conhecimento": ["HDI KCS"], "Gestor de Service desk": ["ITIL Foundations v4", "HDI SCTL", "HDI SCM", "HDI SCD", "XLA Foundation"]};
 const ALL_CERTS_LIST = ["HDI SCA", "HDI CSR", "M365 Fundamentals", "MD-100 ou MD-102", "HDI DAST", "AZ-900", "ITIL Foundations v4", "HDI SCTL", "HDI KCS", "HDI SCM", "HDI SCD", "XLA Foundation", "Curso Montagem/Config. Micro (20h)"];
 
 // Returns effective status of a cert for a colaborador
@@ -3458,7 +3212,7 @@ function clearFilters(tab){
 }
 
 // TAB SWITCHING
-const tabIds=['geral','equipamentos','admissao','termos','certif','pend-cert','calendario','comunicados','predef','uniforme','upload','declaracoes','requisitos','pendencias','contrata','abono','gerencial','indicadores','ferias'];
+const tabIds=['geral','equipamentos','admissao','termos','certif','calendario','comunicados','predef','uniforme','upload','requisitos','pendencias','contrata','abono','gerencial','indicadores','ferias'];
 // ── Sidebar toggle ────────────────────────
 function toggleSidebar(){
   const sidebar=document.getElementById('sidebar');
@@ -3479,15 +3233,13 @@ function showTab(id,el){
   document.querySelectorAll('select[id^="abono-f-"]').forEach(function(s){ if(s.id!=='abono-f-mes'&&s.id!=='abono-f-ano') s.value=''; });
   var gerCargo=document.getElementById('ger-cargo'); if(gerCargo) gerCargo.value='';
   var pcCargo=document.getElementById('pc-cargo'); if(pcCargo) pcCargo.value='';
-  var pcBusca=document.getElementById('pc-busca'); if(pcBusca) pcBusca.value='';
-  var pcTipo=document.getElementById('pc-tipo'); if(pcTipo) pcTipo.value='';
   tabIds.forEach(t=>{
     const el2=document.getElementById('tab-'+t);
     if(el2) el2.style.display=t===id?'block':'none';
   });
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,'pend-cert':renderPendCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:()=>{try{renderDeclaracoes();}catch(e){}},requisitos:function(){try{renderRequisitos();}catch(e){console.error('renderRequisitos:',e);document.getElementById('req-cards').innerHTML='<p style="color:red;padding:20px">Erro: '+e.message+'</p>';}},pendencias:function(){try{renderPendencias();}catch(e){console.error('renderPendencias:',e);document.getElementById('pend-lista').innerHTML='<p style="color:red;padding:20px">Erro: '+e.message+'</p>';}},contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){console.error('rAbono error:',e);}},gerencial:()=>{try{rGerencial();}catch(e){console.error('rGerencial error:',e);}},indicadores:()=>{try{indRender();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}}};
+  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert:renderPendCert,calendario:renderCal,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:()=>{try{renderDeclaracoes();}catch(e){}},requisitos:function(){try{renderRequisitos();}catch(e){console.error('renderRequisitos:',e);document.getElementById('req-cards').innerHTML='<p style="color:red;padding:20px">Erro: '+e.message+'</p>';}},pendencias:function(){try{renderPendencias();}catch(e){console.error('renderPendencias:',e);document.getElementById('pend-lista').innerHTML='<p style="color:red;padding:20px">Erro: '+e.message+'</p>';}},contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){console.error('rAbono error:',e);}},gerencial:()=>{try{rGerencial();}catch(e){console.error('rGerencial error:',e);}},indicadores:()=>{try{indRender();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}}};
   if(renders[id]) renders[id]();
 }
 
@@ -7948,7 +7700,7 @@ function renderPendencias(){
       <div style="margin-top:8px">
         <div style="font-size:11px;font-weight:600;color:#6c757d;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">${CAT_ICONS[g]||'📋'} ${g==='docs'?'Docs TCU':g==='admissao'?'Admissão':g==='termos'?'Termos':g==='certs'?'Certificações':'Equipamentos'}</div>
         <div style="display:flex;flex-wrap:wrap;gap:4px">
-          ${items.map(i=>{const ag=i.includes('(agendado');return `<span style="background:${ag?'#E3F2FD':'#FFE0E0'};color:${ag?'#0D47A1':'#7A0000'};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${i}</span>`;}).join('')}
+          ${items.map((i,_idx,arr)=>{const ag=i.includes('(agendado');return `<span style="background:${ag?'#E3F2FD':'#FFE0E0'};color:${ag?'#0D47A1':'#7A0000'};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${i}</span>`;}).join('')}
         </div>
       </div>`).join('');
 
@@ -7961,6 +7713,7 @@ function renderPendencias(){
         <div style="display:flex;gap:6px">
           <button class="btn-sec" style="padding:4px 12px;font-size:12px" onclick="openDetail(${c._id})">Ver ficha</button>
           <button class="btn-primary" style="padding:4px 12px;font-size:12px;background:#C55A11;border-color:#C55A11" onclick="enviarLembretePend(${c._id})">📧 Solicitar Documentos</button>
+          <button class="btn-sec" style="padding:4px 12px;font-size:12px;color:#1F4E79;border-color:#2E75B6" onclick="addEmailDate(${c._id})">📅 Registrar</button>
           <button class="btn-sec" style="padding:4px 12px;font-size:12px;color:#1F4E79;border-color:#2E75B6" onclick="addEmailDate(${c._id})">📅 Registrar</button>
         </div>
       </div>
@@ -7987,6 +7740,8 @@ function exportPendencias(){
 
 function addEmailDate(id){var c=DATA.find(x=>x._id===id);if(!c)return;var now=new Date();var def=now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});var inp=prompt('Data/hora do envio:',def);if(inp===null)return;if(!c.emails_enviados)c.emails_enviados=[];c.emails_enviados.push(inp.trim());saveData();renderPendencias();}
 function removeEmailDate(id,idx){var c=DATA.find(x=>x._id===id);if(!c||!c.emails_enviados)return;c.emails_enviados.splice(idx,1);saveData();renderPendencias();}
+function addEmailDate(id){var c=DATA.find(x=>x._id===id);if(!c)return;var now=new Date();var def=now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});var inp=prompt('Data/hora do envio:',def);if(inp===null)return;if(!c.emails_enviados)c.emails_enviados=[];c.emails_enviados.push(inp.trim());saveData();renderPendencias();}
+function removeEmailDate(id,idx){var c=DATA.find(x=>x._id===id);if(!c||!c.emails_enviados)return;c.emails_enviados.splice(idx,1);saveData();renderPendencias();}
 function enviarLembretePend(id){
   const c=DATA.find(x=>x._id===id);
   if(!c) return;
@@ -8011,23 +7766,8 @@ function enviarLembretePend(id){
 
   const assunto=encodeURIComponent('[TCU/T&S] Pendências de documentação — '+c.nome);
   const corpo=encodeURIComponent(
-    'Prezado(a) '+c.nome+',\n\n'+
-    'Identificamos que os seguintes documentos ainda constam como PENDENTES em seu cadastro no Contrato T&S/TCU:\n\n'+
-    listaItens+'\n\n'+
-    'Solicitamos que regularize a situação em até 5 (cinco) dias úteis, inserindo o forms abaixo:\n\n'+
-    'Documentação – Preencher o formulário:\n'+
-    'https://forms.office.com/r/wrE4eJnCBj\n\n'+
-    'Observação: Caso não possua ainda a certificação prevista para o cargo, solicitamos o envio do comprovante de agendamento.\n\n'+
-    'Reforçamos que o prazo para entrega das certificações, conforme edital, é de 90 dias a partir da data de admissão.\n\n'+
-    'Em caso de dúvidas, entre em contato com sua supervisão imediata.\n\n'+
-    'Atenciosamente,\n'+
-    'Priscila Pamplona Torres\n'+
-    'Gestora do Service Desk — Central de Serviços de TI\n'+
-    'Tribunal de Contas da União | Contrato T&S'
+    'Prezado(a) '+c.nome+',\n\n'+'Identificamos que os seguintes documentos ainda constam como PENDENTES em seu cadastro no Contrato T&S/TCU:\n\n'+listaItens+'\n\nSolicitamos que regularize a situação em até 5 (cinco) dias úteis, inserindo o forms abaixo:\n\nDocumentação – Preencher o formulário:\nhttps://forms.office.com/r/wrE4eJnCBj\n\nObservação: Caso não possua ainda a certificação prevista para o cargo, solicitamos o envio do comprovante de agendamento.\n\nReforçamos que o prazo para entrega das certificações, conforme edital, é de 90 dias a partir da data de admissão.\n\nEm caso de dúvidas, entre em contato com sua supervisão imediata.\n\nAtenciosamente,\nPriscila Pamplona Torres\nGestora do Service Desk — Central de Serviços de TI\nTribunal de Contas da União | Contrato T&S'
   );
-  const _nE=new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  if(!c.emails_enviados)c.emails_enviados=[];c.emails_enviados.push(_nE);
-  saveData();
   window.location.href='mailto:'+emailTo+'?subject='+assunto+'&body='+corpo;
   setTimeout(function(){renderPendencias();},500);
 }
@@ -10295,7 +10035,116 @@ if(document.readyState==='loading'){
 // ── Auto-save before page unload ──────────
 window.addEventListener('beforeunload', ()=>{ try{saveData();}catch(e){} });
 setInterval(()=>{ try{saveData();}catch(e){}; }, 30000);
+
+// ══ Firebase Sync em Tempo Real ══════════════════════════════
+var _FB_API = 'AIzaSyB6gK-4UWyVnf0u7wQf-lge1LEXnoDmTz8';
+var _FB_PROJECT = 'portal-ts';
+var _FB_DOC = 'https://firestore.googleapis.com/v1/projects/'+_FB_PROJECT+'/databases/(default)/documents/portal-ts/gestao';
+var _FB_LISTEN = 'https://firestore.googleapis.com/v1/projects/'+_FB_PROJECT+'/databases/(default)/documents:listen?key='+_FB_API;
+var _FB_OWN_TS = 0;
+
+function _fbApply(payload){
+  if(!payload||!Array.isArray(payload.colaboradores)||payload.colaboradores.length<5) return;
+  var remTs = payload.ts||0;
+  var curTs = parseInt(localStorage.getItem('ts_data_saved_at')||'0');
+  if(remTs===_FB_OWN_TS||remTs<=curTs+3000) return;
+  var v=payload.colaboradores.filter(function(c){return c&&c.nome;});
+  if(v.length<5) return;
+  _safeSetItem(DATA_KEY,JSON.stringify(v));
+  localStorage.setItem('ts_data_saved_at',remTs.toString());
+  DATA=v.map(function(c,i){return Object.assign({},c,{_id:i});});
+  try{var at=document.querySelector('.tab.active');if(at){var oc=at.getAttribute('onclick')||'';var m=oc.match(/showTab\(['"]([\w-]+)['"]/);if(m&&typeof renders!=='undefined'&&renders[m[1]])renders[m[1]]();else renderGeral();}else renderGeral();}catch(e){try{renderGeral();}catch(e2){}}
+  try{fbStatus('Sincronizado ('+new Date(remTs).toLocaleTimeString('pt-BR')+')','ok');}catch(e){}
+}
+
+function _fbSave(colabs, ts){
+  var payload=JSON.stringify({ts:ts||Date.now(),colaboradores:colabs,source:'portal-gestao'});
+  if(payload.length>900000){
+    var slim=colabs.map(function(c){return{_id:c._id,nome:c.nome,cpf:c.cpf,cargo:c.cargo,uf:c.uf,status:c.status,email:c.email,email_inst:c.email_inst,data_admissao:c.data_admissao,docs:c.docs,certs:c.certs,emails_enviados:c.emails_enviados};});
+    payload=JSON.stringify({ts:ts||Date.now(),colaboradores:slim,source:'portal-gestao'});
+  }
+  var ts_=ts||Date.now();
+  _FB_OWN_TS=ts_;
+  var body=JSON.stringify({fields:{payload:{stringValue:payload},token:{stringValue:'PortalTS@TCU2026'},savedAt:{stringValue:new Date().toISOString()},ts:{integerValue:ts_.toString()}}});
+  return fetch(_FB_DOC+'?key='+_FB_API,{method:'PATCH',headers:{'Content-Type':'application/json'},body:body})
+    .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
+    .catch(function(e){console.warn('[fb save]',e.message);});
+}
+
+function _fbLoad(){
+  return fetch(_FB_DOC+'?key='+_FB_API)
+    .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
+    .then(function(doc){
+      if(doc&&doc.fields&&doc.fields.payload)
+        return JSON.parse(doc.fields.payload.stringValue);
+      return null;
+    }).catch(function(e){console.warn('[fb load]',e.message);return null;});
+}
+
+function _fbStartSync(){
+  var BODY=JSON.stringify({database:'projects/'+_FB_PROJECT+'/databases/(default)',addTarget:{documents:{documents:['projects/'+_FB_PROJECT+'/databases/(default)/documents/portal-ts/gestao']},targetId:1}});
+  function doSSE(){
+    fetch(_FB_LISTEN,{method:'POST',headers:{'Content-Type':'application/json'},body:BODY})
+    .then(function(res){
+      if(!res.ok){console.warn('[fb sync] SSE HTTP',res.status,'- polling');_fbPoll();return;}
+      var reader=res.body.getReader();var dec=new TextDecoder();var buf='';
+      function read(){reader.read().then(function(chunk){
+        if(chunk.done){console.warn('[fb sync] stream ended, retry');setTimeout(doSSE,5000);return;}
+        buf+=dec.decode(chunk.value,{stream:true});
+        var lines=buf.split('
+');buf=lines.pop();
+        lines.forEach(function(l){l=l.trim();if(!l)return;
+          try{var e=JSON.parse(l);
+            if(e.documentChange&&e.documentChange.document&&e.documentChange.document.fields){
+              var f=e.documentChange.document.fields;
+              if(f.payload){_fbApply(JSON.parse(f.payload.stringValue));}
+            }
+          }catch(ex){}
+        });
+        read();
+      }).catch(function(e){console.warn('[fb sync] err',e.message);_fbPoll();});}
+      read();
+      console.log('[fb sync] SSE listener ativo');
+    }).catch(function(e){console.warn('[fb sync] SSE falhou:',e.message,'polling');_fbPoll();});
+  }
+  // Check if doc exists first, create if not
+  fetch(_FB_DOC+'?key='+_FB_API).then(function(res){
+    if(res.status===404){
+      console.log('[fb sync] doc nao existe, criando...');
+      _fbSave(DATA, Date.now()).then(function(){doSSE();});
+    } else {
+      // Load and check if remote is newer
+      res.json().then(function(doc){
+        if(doc&&doc.fields&&doc.fields.payload){
+          try{
+            var p=JSON.parse(doc.fields.payload.stringValue);
+            _fbApply(p);
+          }catch(e){}
+        }
+        doSSE();
+      });
+    }
+  }).catch(function(){doSSE();});
+}
+
+function _fbPoll(){
+  if(window._fbPollTimer) return;
+  console.log('[fb sync] polling 30s');
+  window._fbPollTimer=setInterval(function(){
+    _fbLoad().then(function(p){if(p) _fbApply(p);}).catch(function(){});
+  },30000);
+}
+
+function syncFirebase(){
+  fbStatus('Sincronizando...','sync');
+  var ts=Date.now();
+  _fbSave(DATA,ts).then(function(){
+    fbStatus('Enviado ao Firebase','ok');
+  });
+}
+// ══════════════════════════════════════════════════════════════
+
 </script>
 </body>
-  _startRealtimeSync();
-  >
+</html>_fbStartSync();
+  
