@@ -2411,9 +2411,29 @@ function _startRealtimeSync(){
   var LISTEN='https://firestore.googleapis.com/v1/projects/'+PROJECT+'/databases/(default)/documents:listen?key='+API_KEY;
   var BODY=JSON.stringify({database:'projects/'+PROJECT+'/databases/(default)',addTarget:{documents:{documents:['projects/'+PROJECT+'/databases/(default)/documents/portal-ts/gestao']},targetId:1}});
 
+  function ensureDocExists(cb){
+    // Check if document exists, create if not
+    var checkUrl='https://firestore.googleapis.com/v1/projects/'+PROJECT+'/databases/(default)/documents/portal-ts/gestao?key='+API_KEY;
+    fetch(checkUrl).then(function(res){
+      if(res.status===404){
+        // Document doesn't exist — create it with current DATA
+        console.log('[sync] Documento nao existe — criando no Firebase...');
+        if(typeof window._fbGestaoSave==='function'){
+          window._fbGestaoSave({colaboradores:DATA, ts:Date.now()}).then(function(){
+            console.log('[sync] Documento criado com sucesso');
+            if(cb) cb();
+          }).catch(function(){ if(cb) cb(); });
+        } else { if(cb) cb(); }
+      } else {
+        if(cb) cb();
+      }
+    }).catch(function(){ if(cb) cb(); });
+  }
+
   function doSSE(){
     fetch(LISTEN,{method:'POST',headers:{'Content-Type':'application/json'},body:BODY})
     .then(function(res){
+      if(res.status===404){ console.warn('[sync] 404 - documento ainda nao existe'); _startFbPolling(); return; }
       if(!res.ok) throw new Error('HTTP '+res.status);
       var reader=res.body.getReader();
       var dec=new TextDecoder();
@@ -2442,7 +2462,7 @@ function _startRealtimeSync(){
       _startFbPolling();
     });
   }
-  doSSE();
+  ensureDocExists(function(){ doSSE(); });
 }
 
 
