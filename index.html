@@ -2346,7 +2346,31 @@ function setupFieldFormatting(){
 const DATA_KEY = 'ts_portal_data_v2';
 
 // ── Save DATA to localStorage (formato completo — garante persistência) ──
-function syncFirebase(){if(typeof window._fbGestaoSave==="function")window._fbGestaoSave({colaboradores:DATA,ts:Date.now()});if(typeof window._fbGestaoLoad!=="function"){alert("Firebase nao disponivel");return;}fbStatus("Sincronizando...","sync");window._fbGestaoLoad().then(function(p){if(!p||!p.colaboradores||p.colaboradores.length<5){fbStatus("Firebase vazio","erro");return;}var rTs=p.ts||0;var lTs=parseInt(localStorage.getItem("ts_data_saved_at")||"0");if(rTs>lTs+5000){if(confirm("Firebase tem dados mais recentes ("+new Date(rTs).toLocaleString("pt-BR")+").\nAtualizar este dispositivo?")){var v=p.colaboradores.filter(function(c){return c&&c.nome;});_safeSetItem(DATA_KEY,JSON.stringify(v));localStorage.setItem("ts_data_saved_at",rTs.toString());DATA=v.map(function(c,i){return Object.assign({},c,{_id:i});});try{renderGeral();}catch(e){}fbStatus("Atualizado ("+v.length+" colabs)","ok");}}else{fbStatus("Ja atualizado","ok");}}).catch(function(e){fbStatus("Erro: "+e.message,"erro");});}
+function syncFirebase(){
+  // Push local first
+  var localTs = parseInt(localStorage.getItem('ts_data_saved_at')||'0');
+  if(typeof window._fbGestaoSave==='function') window._fbGestaoSave({colaboradores:DATA,ts:Date.now()});
+  if(typeof window._fbGestaoLoad!=='function'){ fbStatus('Firebase indisponivel','err'); return; }
+  fbStatus('Sincronizando...','sync');
+  window._fbGestaoLoad().then(function(p){
+    if(!p||!p.colaboradores||p.colaboradores.length<5){ fbStatus('Firebase vazio','err'); return; }
+    var rTs=p.ts||0;
+    if(rTs > localTs + 10000){
+      if(confirm('Firebase tem dados mais recentes ('+new Date(rTs).toLocaleString('pt-BR')+').\nAtualizar este dispositivo?')){
+        var v=p.colaboradores.filter(function(c){return c&&c.nome;});
+        _safeSetItem(DATA_KEY,JSON.stringify(v));
+        localStorage.setItem('ts_data_saved_at',rTs.toString());
+        DATA=v.map(function(c,i){return Object.assign({},c,{_id:i});});
+        try{renderGeral();}catch(e){}
+        fbStatus('Atualizado ('+v.length+' colabs)','ok');
+      }
+    } else {
+      fbStatus('Ja atualizado — '+new Date(localTs).toLocaleTimeString('pt-BR'),'ok');
+    }
+  }).catch(function(e){ fbStatus('Erro: '+e.message,'err'); });
+}
+
+
 function saveData(){
   try{
     DATA = DATA.filter(c => c && c.nome && typeof c.nome === 'string');
@@ -10179,4 +10203,5 @@ setInterval(()=>{ try{saveData();}catch(e){}; }, 30000);
 </script>
 </body>
 </html>_initFbSync();
+  _startFbPolling();
   
