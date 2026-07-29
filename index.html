@@ -3085,6 +3085,20 @@ const ALL_CERTS_LIST = ["HDI SCA", "HDI CSR", "M365 Fundamentals", "MD-100 ou MD
 // Returns effective status of a cert for a colaborador
 // N/A if cargo doesn't need it; Entregue/Agendado/Pendente based on saved value
 // OR-group: if another cert in same OR group is Entregue/Agendado → this one is N/A
+
+var CERT_OR_GROUPS = {
+  // TEL: HDI SCA OU HDI CSR (precisa de pelo menos uma)
+  'Analista de suporte telefônico (TEL)': [['HDI SCA','HDI CSR']],
+  // EST: HDI DAST OU HDI CSR
+  'Analista de suporte (EST)':            [['HDI DAST','HDI CSR']],
+  // AE: HDI DAST OU HDI CSR
+  'Analista de suporte especializado (AE)':[['HDI DAST','HDI CSR']],
+  // AP: HDI DAST OU HDI SCA OU HDI CSR
+  'Administração de parque tecnológico (AP)':[['HDI DAST','HDI SCA','HDI CSR']],
+  // Gestor de SD: precisa de 2 entre SCTL, SCM, SCD, XLA Foundation
+  'Gestor de Service desk':               [['HDI SCTL','HDI SCM','HDI SCD','XLA Foundation']],
+};
+
 function certGetStatus(c, certName){
   const required = CARGO_CERTS_REQUIRED[c.cargo] || [];
   // Not required for this cargo
@@ -7748,19 +7762,6 @@ var PEND_CAT_MAP = {
 
 // ── Grupos de certificações alternativas (OR) ─────────────────
 // Se qualquer uma do grupo estiver Entregue/Agendado, as outras não são pendência
-var CERT_OR_GROUPS = {
-  // TEL: HDI SCA OU HDI CSR (precisa de pelo menos uma)
-  'Analista de suporte telefônico (TEL)': [['HDI SCA','HDI CSR']],
-  // EST: HDI DAST OU HDI CSR
-  'Analista de suporte (EST)':            [['HDI DAST','HDI CSR']],
-  // AE: HDI DAST OU HDI CSR
-  'Analista de suporte especializado (AE)':[['HDI DAST','HDI CSR']],
-  // AP: HDI DAST OU HDI SCA OU HDI CSR
-  'Administração de parque tecnológico (AP)':[['HDI DAST','HDI SCA','HDI CSR']],
-  // Gestor de SD: precisa de 2 entre SCTL, SCM, SCD, XLA Foundation
-  'Gestor de Service desk':               [['HDI SCTL','HDI SCM','HDI SCD','XLA Foundation']],
-};
-
 function certSatisfied(c, certName){
   // Returns true if this cert is already covered by an OR group
   const groups = CERT_OR_GROUPS[c.cargo] || [];
