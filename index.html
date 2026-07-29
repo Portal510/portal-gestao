@@ -449,6 +449,17 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     console.warn('[Firebase SDK] erro:', e.message);
   }
 </script>
+<script>
+if(location.protocol === 'file:'){
+  document.addEventListener('DOMContentLoaded', function(){
+    var banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#C55A11;color:#fff;padding:12px 20px;text-align:center;font-size:14px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.3)';
+    banner.innerHTML = '⚠️ Você está abrindo o portal como arquivo local — sincronização e Firebase NÃO funcionam assim. '
+      + '<a href="https://portal510.github.io/portal-gestao/" target="_blank" style="color:#FFE0A0;text-decoration:underline;margin-left:8px">👉 Clique aqui para abrir corretamente</a>';
+    document.body.prepend(banner);
+  });
+}
+</script>
 </head>
 <body>
 
