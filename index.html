@@ -725,52 +725,73 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 <div id="tab-tempo-servico" style="display:none">
 <div class="dash-page">
   <div class="ph">
-    <h2 class="ptitle">⏱️ Tempo de Serviço</h2>
-    <p class="psub">Controle do tempo de serviço dos colaboradores · Mínimo exigido por cargo</p>
+    <h2 class="ptitle">&#9201; Tempo de Servi&#231;o</h2>
+    <p class="psub">Controle do tempo de servico dos colaboradores</p>
   </div>
-
-  <!-- Filtros -->
-  <div class="card" style="margin-bottom:.75rem;padding:.75rem 1rem">
-    <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center">
-      <input type="text" id="ts-busca" placeholder="🔍 Buscar nome..." oninput="renderTempoServico()" style="padding:7px 11px;border:1px solid #ced4da;border-radius:6px;font-size:13px;min-width:200px">
-      <select id="ts-cargo" onchange="renderTempoServico()" style="padding:7px 11px;border:1px solid #ced4da;border-radius:6px;font-size:13px">
-        <option value="">Todos os cargos</option>
-      </select>
-      <select id="ts-uf" onchange="renderTempoServico()" style="padding:7px 11px;border:1px solid #ced4da;border-radius:6px;font-size:13px">
-        <option value="">Todas as UF</option>
-      </select>
-      <select id="ts-status" onchange="renderTempoServico()" style="padding:7px 11px;border:1px solid #ced4da;border-radius:6px;font-size:13px">
-        <option value="">Todos</option>
-        <option value="ok">✅ Dentro do prazo</option>
-        <option value="atencao">⚠️ Abaixo do mínimo</option>
-      </select>
-      <button onclick="exportTempoServico()" class="btn g-only" style="padding:6px 14px;font-size:12px;margin-left:auto">↓ Exportar XLSX</button>
+  <div style="display:flex;gap:4px;margin-bottom:16px;border-bottom:2px solid #dee2e6">
+    <button id="ts-sub-visao" onclick="tsSubAba('visao')" style="padding:8px 20px;border:none;border-bottom:3px solid #1F4E79;background:none;font-weight:700;color:#1F4E79;cursor:pointer;font-size:13px">Visao Geral</button>
+    <button id="ts-sub-reg" onclick="tsSubAba('reg')" style="padding:8px 20px;border:none;border-bottom:3px solid transparent;background:none;font-weight:600;color:#6c757d;cursor:pointer;font-size:13px">Registros de Periodos</button>
+  </div>
+  <div id="ts-pane-visao">
+    <div class="card" style="margin-bottom:.75rem;padding:.75rem 1rem">
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center">
+        <input type="text" id="ts-busca" placeholder="Buscar nome..." oninput="renderTempoServico()" style="padding:7px 11px;border:1px solid #ced4da;border-radius:6px;font-size:13px;min-width:200px">
+        <select id="ts-cargo" onchange="renderTempoServico()" style="padding:7px 11px;border:1px solid #ced4da;border-radius:6px;font-size:13px"><option value="">Todos os cargos</option></select>
+        <select id="ts-uf" onchange="renderTempoServico()" style="padding:7px 11px;border:1px solid #ced4da;border-radius:6px;font-size:13px"><option value="">Todas as UF</option></select>
+        <select id="ts-status" onchange="renderTempoServico()" style="padding:7px 11px;border:1px solid #ced4da;border-radius:6px;font-size:13px">
+          <option value="">Todos</option>
+          <option value="ok">Dentro do prazo</option>
+          <option value="atencao">Abaixo do minimo</option>
+        </select>
+        <button onclick="exportTempoServico()" class="btn g-only" style="padding:6px 14px;font-size:12px;margin-left:auto">Exportar XLSX</button>
+      </div>
+    </div>
+    <div class="stats-row" id="ts-kpis" style="margin-bottom:.75rem"></div>
+    <div class="tbl-wrap">
+      <table><thead>
+        <tr style="background:#1F4E79;color:#fff">
+          <th style="padding:10px 12px">#</th>
+          <th style="padding:10px 12px">Colaborador</th>
+          <th style="padding:10px 12px">Cargo</th>
+          <th style="padding:10px 12px">UF</th>
+          <th style="padding:10px 12px">Admissao</th>
+          <th style="padding:10px 12px">Tempo (cargo atual)</th>
+          <th style="padding:10px 12px">Total acumulado</th>
+          <th style="padding:10px 12px">Minimo Exigido</th>
+          <th style="padding:10px 12px">Status</th>
+        </tr>
+      </thead><tbody id="ts-tbody"></tbody></table>
     </div>
   </div>
-
-  <!-- KPIs -->
-  <div class="stats-row" id="ts-kpis" style="margin-bottom:.75rem"></div>
-
-  <!-- Tabela -->
-  <div class="tbl-wrap">
-    <table id="ts-table">
-      <thead>
-        <tr style="background:#1F4E79;color:#fff">
-          <th style="padding:10px 12px;text-align:left">#</th>
-          <th style="padding:10px 12px;text-align:left">Colaborador</th>
-          <th style="padding:10px 12px;text-align:left">Cargo</th>
-          <th style="padding:10px 12px;text-align:left">UF</th>
-          <th style="padding:10px 12px;text-align:left">Admissão</th>
-          <th style="padding:10px 12px;text-align:left">Tempo de Serviço</th>
-          <th style="padding:10px 12px;text-align:left">Mínimo Exigido</th>
-          <th style="padding:10px 12px;text-align:left">Status</th>
-        </tr>
-      </thead>
-      <tbody id="ts-tbody"></tbody>
-    </table>
+  <div id="ts-pane-reg" style="display:none">
+    <div class="card" style="margin-bottom:16px;padding:16px">
+      <div style="font-weight:700;color:#1F4E79;font-size:14px;margin-bottom:12px">Adicionar Periodo</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+        <div>
+          <label style="font-size:11px;color:#6c757d;display:block;margin-bottom:4px">Colaborador</label>
+          <select id="ts-reg-colab" style="padding:7px 11px;border:1px solid #ced4da;border-radius:6px;font-size:13px;min-width:220px"><option value="">Selecione...</option></select>
+        </div>
+        <div>
+          <label style="font-size:11px;color:#6c757d;display:block;margin-bottom:4px">Data de Entrada</label>
+          <input type="date" id="ts-reg-entrada" style="padding:7px 11px;border:1px solid #ced4da;border-radius:6px;font-size:13px">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#6c757d;display:block;margin-bottom:4px">Data de Saida</label>
+          <input type="date" id="ts-reg-saida" style="padding:7px 11px;border:1px solid #ced4da;border-radius:6px;font-size:13px">
+        </div>
+        <button onclick="tsAdicionarRegistro()" class="btn-primary" style="padding:8px 20px">Adicionar</button>
+      </div>
+      <div id="ts-reg-erro" style="color:#a32d2d;font-size:12px;margin-top:8px;display:none"></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+      <input type="text" id="ts-reg-busca" placeholder="Filtrar por colaborador..." oninput="renderTsRegistros()" style="padding:7px 11px;border:1px solid #ced4da;border-radius:6px;font-size:13px;min-width:240px">
+      <button onclick="exportTsRegistros()" class="btn g-only" style="padding:6px 14px;font-size:12px;margin-left:auto">Exportar XLSX</button>
+    </div>
+    <div id="ts-reg-lista"></div>
   </div>
 </div>
 </div>
+
 
 <!-- ═══════════════════ CALENDÁRIO ═══════════════════ -->
 <div id="tab-calendario" style="display:none">
@@ -2449,134 +2470,191 @@ function _fbAutoSync(){
 }
 
 // ══ Tempo de Serviço ══════════════════════════════════════════════
-var TS_MIN_ANOS = {
-  'Analista de suporte telefônico (TEL)': 3,
-  'Analista de suporte (BSB)': 5,
-  'Analista de suporte (EST)': 3,
-  'Analista de suporte especializado (AE)': 5,
-  'Cabeamento estruturado (CE)': 5,
-  'Analista de suporte especializado (AC)': 5,
-  'Administração de parque tecnológico (AP)': 5,
-  'Supervisor de suporte (STEL)': 4,
-  'Supervisor de suporte (BSB)': 4,
-  'Supervisor de suporte (EST)': 4,
-  'Supervisor de suporte (SCHA)': 4,
-  'Supervisor de suporte (SAE)': 4,
-  'Gestor de conhecimento': 4,
-  'Gestor de Service desk': 6
+var TS_MIN_ANOS={
+  'Analista de suporte telefonico (TEL)':3,
+  'Analista de suporte telefônico (TEL)':3,
+  'Analista de suporte (BSB)':5,
+  'Analista de suporte (EST)':3,
+  'Analista de suporte especializado (AE)':5,
+  'Cabeamento estruturado (CE)':5,
+  'Analista de suporte especializado (AC)':5,
+  'Administracao de parque tecnologico (AP)':5,
+  'Administração de parque tecnológico (AP)':5,
+  'Supervisor de suporte (STEL)':4,
+  'Supervisor de suporte (BSB)':4,
+  'Supervisor de suporte (EST)':4,
+  'Supervisor de suporte (SCHA)':4,
+  'Supervisor de suporte (SAE)':4,
+  'Gestor de conhecimento':4,
+  'Gestor de Service desk':6
 };
-
-function tsCalcMeses(dataAdm){
-  if(!dataAdm) return 0;
-  var e=new Date(dataAdm+'T00:00:00'), s=new Date();
-  var a=s.getFullYear()-e.getFullYear(), m=s.getMonth()-e.getMonth();
-  if(s.getDate()<e.getDate()) m--;
-  if(m<0){a--;m+=12;}
-  return Math.max(0,a*12+m);
+var TS_REGISTROS=JSON.parse(localStorage.getItem('ts_periodos')||'[]');
+function tsSaveReg(){localStorage.setItem('ts_periodos',JSON.stringify(TS_REGISTROS));}
+function tsSubAba(sub){
+  var pv=document.getElementById('ts-pane-visao'),pr=document.getElementById('ts-pane-reg');
+  var bv=document.getElementById('ts-sub-visao'),br=document.getElementById('ts-sub-reg');
+  pv.style.display=sub==='visao'?'':'none';
+  pr.style.display=sub==='reg'?'':'none';
+  [bv,br].forEach(function(b){b.style.borderBottomColor='transparent';b.style.color='#6c757d';b.style.fontWeight='600';});
+  var active=sub==='visao'?bv:br;
+  active.style.borderBottomColor='#1F4E79';active.style.color='#1F4E79';active.style.fontWeight='700';
+  if(sub==='reg'){renderTsRegistros();tsPopulateColab();}else renderTempoServico();
 }
-
-function tsFmtTempo(meses){
-  var a=Math.floor(meses/12), m=meses%12;
-  return a+'a '+m+'m';
+function tsCalcMeses(a,b){
+  var e=new Date(a+'T00:00:00'),s=new Date(b+'T00:00:00');
+  var yr=s.getFullYear()-e.getFullYear(),m=s.getMonth()-e.getMonth();
+  if(s.getDate()<e.getDate())m--;if(m<0){yr--;m+=12;}return Math.max(0,yr*12+m);
 }
-
+function tsCalcAtual(d){if(!d)return 0;return tsCalcMeses(d,new Date().toISOString().slice(0,10));}
+function tsFmt(meses){var a=Math.floor(meses/12),m=meses%12;return a+' ano'+(a!==1?'s':'')+' e '+m+' '+(m!==1?'meses':'mes');}
+function tsFmtD(d){if(!d)return '-';return d.split('-').reverse().join('/');}
+function tsAcum(nome){return TS_REGISTROS.filter(function(r){return r.nome===nome;}).reduce(function(s,r){return s+r.meses;},0);}
+function tsPopulateColab(){
+  var sel=document.getElementById('ts-reg-colab');if(!sel)return;
+  var cur=sel.value;sel.innerHTML='<option value="">Selecione...</option>';
+  var nomes=[...new Set(DATA.filter(function(c){return c&&c.nome&&c.status!=='inativo';}).map(function(c){return c.nome;}))].sort();
+  nomes.forEach(function(n){var o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
+  if(cur&&[...sel.options].some(function(o){return o.value===cur;}))sel.value=cur;
+}
+function tsAdicionarRegistro(){
+  var nome=(document.getElementById('ts-reg-colab')||{}).value||'';
+  var entrada=(document.getElementById('ts-reg-entrada')||{}).value||'';
+  var saida=(document.getElementById('ts-reg-saida')||{}).value||'';
+  var eEl=document.getElementById('ts-reg-erro');
+  function err(msg){eEl.textContent=msg;eEl.style.display='block';setTimeout(function(){eEl.style.display='none';},3500);}
+  if(!nome)return err('Selecione um colaborador.');
+  if(!entrada)return err('Informe a data de entrada.');
+  if(!saida)return err('Informe a data de saida.');
+  if(saida<=entrada)return err('A data de saida deve ser posterior a data de entrada.');
+  TS_REGISTROS.push({nome:nome,entrada:entrada,saida:saida,meses:tsCalcMeses(entrada,saida)});
+  tsSaveReg();
+  document.getElementById('ts-reg-entrada').value='';
+  document.getElementById('ts-reg-saida').value='';
+  renderTsRegistros();
+}
+function tsRemoverRegistro(i){
+  if(!confirm('Remover este periodo?'))return;
+  TS_REGISTROS.splice(i,1);tsSaveReg();renderTsRegistros();
+}
+function renderTsRegistros(){
+  var lista=document.getElementById('ts-reg-lista');if(!lista)return;
+  var busca=((document.getElementById('ts-reg-busca')||{}).value||'').toLowerCase();
+  var grupos={};
+  TS_REGISTROS.forEach(function(r,i){if(!grupos[r.nome])grupos[r.nome]=[];grupos[r.nome].push({r:r,idx:i});});
+  var nomes=Object.keys(grupos).filter(function(n){return !busca||n.toLowerCase().includes(busca);}).sort();
+  if(!nomes.length){lista.innerHTML='<div style="text-align:center;padding:2rem;color:#6c757d">Nenhum periodo registrado.</div>';return;}
+  lista.innerHTML=nomes.map(function(nome){
+    var itens=grupos[nome];
+    var tot=itens.reduce(function(s,x){return s+x.r.meses;},0);
+    var colab=DATA.find(function(c){return c&&c.nome===nome;});
+    var cargo=colab?colab.cargo||'':'';
+    var minA=TS_MIN_ANOS[cargo]||null;
+    var ok=minA===null||tot>=minA*12;
+    return '<div class="card" style="margin-bottom:12px;padding:0;overflow:hidden">'+
+      '<div style="background:#1F4E79;color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'+
+        '<div style="font-weight:700;font-size:14px">'+nome+(cargo?' <span style="font-size:11px;opacity:.8">('+cargo+')</span>':'')+'</div>'+
+        '<div style="display:flex;gap:16px;align-items:center;font-size:13px">'+
+          '<span>'+itens.length+' periodo'+(itens.length>1?'s':'')+'</span>'+
+          '<span style="font-weight:700">Total: '+tsFmt(tot)+'</span>'+
+          (minA?'<span style="background:'+(ok?'#d4edda':'#f8d7da')+';color:'+(ok?'#155724':'#721c24')+';padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600">'+(ok?'OK':'Abaixo')+'</span>':'')+
+        '</div>'+
+      '</div>'+
+      '<table style="width:100%;border-collapse:collapse">'+
+        '<thead><tr style="background:#f8f9fa;font-size:12px;color:#6c757d">'+
+          '<th style="padding:8px 16px;text-align:left">Colaborador</th>'+
+          '<th style="padding:8px 16px;text-align:left">Data de Entrada</th>'+
+          '<th style="padding:8px 16px;text-align:left">Data de Saida</th>'+
+          '<th style="padding:8px 16px;text-align:left">Tempo de Trabalho</th>'+
+          '<th style="padding:8px 16px"></th>'+
+        '</tr></thead><tbody>'+
+        itens.map(function(x){return '<tr style="border-top:1px solid #dee2e6">'+
+          '<td style="padding:8px 16px;font-size:13px;font-weight:600">'+x.r.nome+'</td>'+
+          '<td style="padding:8px 16px;font-size:13px">'+tsFmtD(x.r.entrada)+'</td>'+
+          '<td style="padding:8px 16px;font-size:13px">'+tsFmtD(x.r.saida)+'</td>'+
+          '<td style="padding:8px 16px;font-size:13px;font-weight:600;color:#1F4E79">'+tsFmt(x.r.meses)+'</td>'+
+          '<td style="padding:8px 16px"><button onclick="tsRemoverRegistro('+x.idx+')" style="background:#f8d7da;color:#721c24;border:none;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:11px">Remover</button></td>'+
+        '</tr>';}).join('')+
+        '</tbody></table></div>';
+  }).join('');
+}
 function renderTempoServico(){
-  var tbody=document.getElementById('ts-tbody');
-  var kpis=document.getElementById('ts-kpis');
-  if(!tbody) return;
-
-  // Populate filters
+  var tbody=document.getElementById('ts-tbody'),kpis=document.getElementById('ts-kpis');
+  if(!tbody)return;
   var cargoSel=document.getElementById('ts-cargo');
   if(cargoSel&&cargoSel.options.length<=1){
-    var cargos=[...new Set(DATA.filter(c=>c&&c.nome&&c.status!=='inativo').map(c=>c.cargo).filter(Boolean))].sort();
-    cargos.forEach(function(cargo){var o=document.createElement('option');o.value=cargo;o.textContent=cargo;cargoSel.appendChild(o);});
+    [...new Set(DATA.filter(function(c){return c&&c.nome&&c.status!=='inativo';}).map(function(c){return c.cargo;}).filter(Boolean))].sort().forEach(function(v){var o=document.createElement('option');o.value=v;o.textContent=v;cargoSel.appendChild(o);});
   }
   var ufSel=document.getElementById('ts-uf');
   if(ufSel&&ufSel.options.length<=1){
-    var ufs=[...new Set(DATA.filter(c=>c&&c.nome&&c.status!=='inativo').map(c=>c.uf).filter(Boolean))].sort();
-    ufs.forEach(function(uf){var o=document.createElement('option');o.value=uf;o.textContent=uf;ufSel.appendChild(o);});
+    [...new Set(DATA.filter(function(c){return c&&c.nome&&c.status!=='inativo';}).map(function(c){return c.uf;}).filter(Boolean))].sort().forEach(function(v){var o=document.createElement('option');o.value=v;o.textContent=v;ufSel.appendChild(o);});
   }
-
-  var busca=(document.getElementById('ts-busca')||{}).value||'';
-  var fCargo=(document.getElementById('ts-cargo')||{}).value||'';
-  var fUF=(document.getElementById('ts-uf')||{}).value||'';
-  var fStatus=(document.getElementById('ts-status')||{}).value||'';
-
+  var busca=((document.getElementById('ts-busca')||{}).value||'').toLowerCase();
+  var fC=(document.getElementById('ts-cargo')||{}).value||'';
+  var fU=(document.getElementById('ts-uf')||{}).value||'';
+  var fS=(document.getElementById('ts-status')||{}).value||'';
   var rows=DATA.filter(function(c){
-    if(!c||!c.nome||c.status==='inativo') return false;
-    if(busca&&!c.nome.toLowerCase().includes(busca.toLowerCase())) return false;
-    if(fCargo&&c.cargo!==fCargo) return false;
-    if(fUF&&c.uf!==fUF) return false;
+    if(!c||!c.nome||c.status==='inativo')return false;
+    if(busca&&!c.nome.toLowerCase().includes(busca))return false;
+    if(fC&&c.cargo!==fC)return false;
+    if(fU&&c.uf!==fU)return false;
     return true;
   });
-
-  var total=rows.length, abaixo=0, dentro=0;
-
+  var total=rows.length,abaixo=0,dentro=0;
   rows=rows.map(function(c){
-    var meses=tsCalcMeses(c.data_admissao);
-    var minAnos=TS_MIN_ANOS[c.cargo]||null;
-    var minMeses=minAnos?minAnos*12:null;
-    var ok=minMeses===null||meses>=minMeses;
-    if(!ok) abaixo++; else dentro++;
-    return {c:c,meses:meses,minAnos:minAnos,minMeses:minMeses,ok:ok};
-  }).filter(function(r){
-    if(fStatus==='ok') return r.ok;
-    if(fStatus==='atencao') return !r.ok;
-    return true;
-  });
-
-  // KPIs
-  kpis.innerHTML=(
+    var ma=tsCalcAtual(c.data_admissao);
+    var mAcum=tsAcum(c.nome);
+    var mTot=ma+mAcum;
+    var minA=TS_MIN_ANOS[c.cargo]||null;
+    var ok=minA===null||mTot>=minA*12;
+    if(minA){if(!ok)abaixo++;else dentro++;}
+    return {c:c,ma:ma,mAcum:mAcum,mTot:mTot,minA:minA,ok:ok};
+  }).filter(function(r){if(fS==='ok')return r.ok;if(fS==='atencao')return!r.ok;return true;});
+  kpis.innerHTML=
     '<div class="stat-card"><div class="stat-label">Total</div><div class="stat-val">'+total+'</div></div>'+
-    '<div class="stat-card"><div class="stat-label" style="color:#27ae60">✅ Dentro do mínimo</div><div class="stat-val" style="color:#27ae60">'+dentro+'</div></div>'+
-    '<div class="stat-card"><div class="stat-label" style="color:#e74c3c">⚠️ Abaixo do mínimo</div><div class="stat-val" style="color:#e74c3c">'+abaixo+'</div></div>'
-  );
-
-  if(!rows.length){
-    tbody.innerHTML='<tr><td colspan="8" style="padding:2rem;text-align:center;color:#6c757d">Nenhum colaborador encontrado.</td></tr>';
-    return;
-  }
-
+    '<div class="stat-card"><div class="stat-label" style="color:#27ae60">Dentro do minimo</div><div class="stat-val" style="color:#27ae60">'+dentro+'</div></div>'+
+    '<div class="stat-card"><div class="stat-label" style="color:#e74c3c">Abaixo do minimo</div><div class="stat-val" style="color:#e74c3c">'+abaixo+'</div></div>';
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="9" style="padding:2rem;text-align:center;color:#6c757d">Nenhum colaborador encontrado.</td></tr>';return;}
   tbody.innerHTML=rows.map(function(r,i){
     var c=r.c;
-    var admFmt=c.data_admissao?c.data_admissao.split('-').reverse().join('/'):'—';
-    var tempoStr=r.meses>0?tsFmtTempo(r.meses):'—';
-    var minStr=r.minAnos?r.minAnos+' anos':'—';
-    var statusBadge=r.minAnos===null
-      ? '<span style="background:#dee2e6;color:#555;padding:2px 8px;border-radius:10px;font-size:11px">Sem mínimo</span>'
-      : r.ok
-        ? '<span style="background:#d4edda;color:#155724;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">✅ OK</span>'
-        : '<span style="background:#f8d7da;color:#721c24;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">⚠️ Abaixo</span>';
-    var tempoColor=r.minAnos&&!r.ok?'color:#e74c3c;font-weight:700':'color:#1F4E79;font-weight:600';
+    var acStr=r.mAcum>0?' <span style="font-size:10px;color:#888">(+'+tsFmt(r.mAcum)+' acum.)</span>':'';
+    var corTot=r.minA&&!r.ok?'color:#e74c3c;font-weight:700':'font-weight:600';
+    var badge=r.minA===null
+      ?'<span style="background:#dee2e6;color:#555;padding:2px 8px;border-radius:10px;font-size:11px">Sem minimo</span>'
+      :r.ok
+        ?'<span style="background:#d4edda;color:#155724;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">OK</span>'
+        :'<span style="background:#f8d7da;color:#721c24;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">Abaixo</span>';
     return '<tr style="border-bottom:1px solid #dee2e6">'+
       '<td style="padding:8px 12px;color:#6c757d;font-size:12px">'+(i+1)+'</td>'+
       '<td style="padding:8px 12px;font-weight:600;color:#1F4E79">'+c.nome+'</td>'+
-      '<td style="padding:8px 12px;font-size:12px">'+( c.cargo||'—')+'</td>'+
-      '<td style="padding:8px 12px;font-size:12px">'+( c.uf||'—')+'</td>'+
-      '<td style="padding:8px 12px;font-size:12px">'+admFmt+'</td>'+
-      '<td style="padding:8px 12px;font-size:13px;'+tempoColor+'">'+tempoStr+'</td>'+
-      '<td style="padding:8px 12px;font-size:12px">'+minStr+'</td>'+
-      '<td style="padding:8px 12px">'+statusBadge+'</td>'+
+      '<td style="padding:8px 12px;font-size:12px">'+(c.cargo||'-')+'</td>'+
+      '<td style="padding:8px 12px;font-size:12px">'+(c.uf||'-')+'</td>'+
+      '<td style="padding:8px 12px;font-size:12px">'+tsFmtD(c.data_admissao)+'</td>'+
+      '<td style="padding:8px 12px;font-size:13px;color:#1F4E79;font-weight:600">'+tsFmt(r.ma)+acStr+'</td>'+
+      '<td style="padding:8px 12px;font-size:13px;'+corTot+'">'+tsFmt(r.mTot)+'</td>'+
+      '<td style="padding:8px 12px;font-size:12px">'+(r.minA?r.minA+' anos':'-')+'</td>'+
+      '<td style="padding:8px 12px">'+badge+'</td>'+
     '</tr>';
   }).join('');
 }
-
 function exportTempoServico(){
-  if(typeof XLSX==='undefined'){alert('Biblioteca XLSX não disponível.');return;}
-  var dados=[['Nome','Cargo','UF','Admissão','Tempo (meses)','Tempo','Mínimo (anos)','Status']];
+  if(typeof XLSX==='undefined'){alert('XLSX nao disponivel.');return;}
+  var d=[['Nome','Cargo','UF','Admissao','Tempo atual','Total acumulado','Minimo (anos)','Status']];
   DATA.filter(function(c){return c&&c.nome&&c.status!=='inativo';}).forEach(function(c){
-    var meses=tsCalcMeses(c.data_admissao);
-    var minAnos=TS_MIN_ANOS[c.cargo]||null;
-    var ok=minAnos===null||meses>=minAnos*12;
-    var adm=c.data_admissao?c.data_admissao.split('-').reverse().join('/'):'';
-    dados.push([c.nome,c.cargo||'',c.uf||'',adm,meses,tsFmtTempo(meses),minAnos||'',ok?'OK':'Abaixo do mínimo']);
+    var ma=tsCalcAtual(c.data_admissao),mA=tsAcum(c.nome),mT=ma+mA,minA=TS_MIN_ANOS[c.cargo]||null,ok=minA===null||mT>=minA*12;
+    d.push([c.nome,c.cargo||'',c.uf||'',tsFmtD(c.data_admissao),tsFmt(ma),tsFmt(mT),minA||'',ok?'OK':'Abaixo']);
   });
-  var ws=XLSX.utils.aoa_to_sheet(dados);
-  var wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,'Tempo de Serviço');
-  XLSX.writeFile(wb,'Tempo_Servico_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  var ws=XLSX.utils.aoa_to_sheet(d),wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Tempo');XLSX.writeFile(wb,'Tempo_Servico.xlsx');
 }
-// ══════════════════════════════════════════════════════════════════
+function exportTsRegistros(){
+  if(typeof XLSX==='undefined'){alert('XLSX nao disponivel.');return;}
+  if(!TS_REGISTROS.length){alert('Nenhum registro.');return;}
+  var d=[['Colaborador','Data de Entrada','Data de Saida','Tempo de Trabalho','Meses']];
+  TS_REGISTROS.forEach(function(r){d.push([r.nome,tsFmtD(r.entrada),tsFmtD(r.saida),tsFmt(r.meses),r.meses]);});
+  var ws=XLSX.utils.aoa_to_sheet(d),wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Periodos');XLSX.writeFile(wb,'Periodos_Tempo.xlsx');
+}
+
 function saveData(){
   try{
     DATA = DATA.filter(c => c && c.nome && typeof c.nome === 'string');
