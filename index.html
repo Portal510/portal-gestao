@@ -744,7 +744,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           <option value="atencao">Abaixo do minimo</option>
         </select>
         <input type="file" id="ts-import-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="tsImportarVisao(this)"><button onclick="document.getElementById('ts-import-input').click()" class="btn g-only" style="padding:6px 14px;font-size:12px">&#8593; Importar XLSX</button>
-        <button onclick="exportTempoServico()" class="btn g-only" style="padding:6px 14px;font-size:12px;margin-left:auto">&#8595; Exportar XLSX</button>
+        <input type="file" id="ts-imp" accept=".xlsx,.xls" style="display:none" onchange="tsImportarVisao(this)"><button onclick="document.getElementById('ts-imp').click()" class="btn-primary" style="padding:6px 14px;font-size:12px;background:#1F4E79;border-color:#1F4E79;margin-left:auto">&#8593; Importar</button> <button onclick="exportTempoServico()" class="btn g-only" style="padding:6px 14px;font-size:12px">&#8595; Exportar XLSX</button>
       </div>
     </div>
     <div class="stats-row" id="ts-kpis" style="margin-bottom:.75rem"></div>
@@ -787,7 +787,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
       <input type="text" id="ts-reg-busca" placeholder="Filtrar por colaborador..." oninput="renderTsRegistros()" style="padding:7px 11px;border:1px solid #ced4da;border-radius:6px;font-size:13px;min-width:240px">
       <input type="file" id="ts-reg-import-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="tsImportarRegistros(this)"><button onclick="document.getElementById('ts-reg-import-input').click()" class="btn g-only" style="padding:6px 14px;font-size:12px">&#8593; Importar XLSX</button>
-      <button onclick="exportTsRegistros()" class="btn g-only" style="padding:6px 14px;font-size:12px;margin-left:auto">&#8595; Exportar XLSX</button>
+      <input type="file" id="ts-reg-imp" accept=".xlsx,.xls" style="display:none" onchange="tsImportarRegistros(this)"><button onclick="document.getElementById('ts-reg-imp').click()" class="btn-primary" style="padding:6px 14px;font-size:12px;background:#1F4E79;border-color:#1F4E79;margin-left:auto">&#8593; Importar</button> <button onclick="exportTsRegistros()" class="btn g-only" style="padding:6px 14px;font-size:12px">&#8595; Exportar XLSX</button>
     </div>
     <div id="ts-reg-lista"></div>
   </div>
