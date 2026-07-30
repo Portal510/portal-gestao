@@ -2564,9 +2564,7 @@ function tsImportarRegistros(input){
       var entCol=keys.find(function(k){return /entrada|inicio|start|admiss/i.test(k.trim());});
       var saiCol=keys.find(function(k){return /sa[ií]da|fim|end|deslig/i.test(k.trim());});
       if(!nomeCol||!entCol||!saiCol){
-        alert('Colunas necessarias nao encontradas.
-Esperado: Colaborador, Entrada (ou Data de Entrada), Saida (ou Data de Saida).
-Encontrado: '+keys.join(', '));
+        alert('Colunas necessarias nao encontradas. Esperado: Colaborador, Entrada, Saida. Encontrado: '+keys.join(', '));
         return;
       }
       function parseDate(val){
