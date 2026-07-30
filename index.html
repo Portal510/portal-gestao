@@ -2492,6 +2492,113 @@ var TS_MIN_ANOS={
 };
 var TS_REGISTROS=JSON.parse(localStorage.getItem('ts_periodos')||'[]');
 function tsSaveReg(){localStorage.setItem('ts_periodos',JSON.stringify(TS_REGISTROS));}
+
+function tsImportarVisao(input){
+  // Import admissao dates from XLSX for visao geral
+  // Expected columns: Nome, Data Admissao (or Admissao)
+  if(!input.files||!input.files[0]) return;
+  if(typeof XLSX==='undefined'){alert('XLSX nao disponivel.');return;}
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var wb=XLSX.read(e.target.result,{type:'array'});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      if(!rows.length){alert('Nenhuma linha encontrada.');return;}
+      // Find column names
+      var keys=Object.keys(rows[0]).map(function(k){return k.trim();});
+      var nomeCol=keys.find(function(k){return /nome|colaborador/i.test(k);});
+      var admCol=keys.find(function(k){return /admiss|entrada|data.*admiss/i.test(k);});
+      if(!nomeCol){alert('Coluna "Nome" ou "Colaborador" nao encontrada.');return;}
+      var atualizados=0,naoEncontrados=[];
+      rows.forEach(function(row){
+        var nome=String(row[nomeCol]||'').trim();
+        if(!nome) return;
+        var colab=DATA.find(function(c){return c&&c.nome&&c.nome.toLowerCase()===nome.toLowerCase();});
+        if(!colab){naoEncontrados.push(nome);return;}
+        if(admCol&&row[admCol]){
+          var d=String(row[admCol]).trim();
+          // Handle DD/MM/YYYY or YYYY-MM-DD
+          if(/\d{2}\/\d{2}\/\d{4}/.test(d)){
+            var p=d.split('/');d=p[2]+'-'+p[1]+'-'+p[0];
+          } else if(/\d{4}-\d{2}-\d{2}/.test(d)){
+            // already ISO
+          } else {
+            // Try Excel date serial
+            var n=parseFloat(d);
+            if(!isNaN(n)){
+              var dt=new Date(Math.round((n-25569)*86400*1000));
+              d=dt.toISOString().slice(0,10);
+            }
+          }
+          if(/^\d{4}-\d{2}-\d{2}$/.test(d)){
+            colab.data_admissao=d;
+            atualizados++;
+          }
+        }
+      });
+      saveData();
+      renderTempoServico();
+      var msg='Importacao concluida: '+atualizados+' colaboradores atualizados.';
+      if(naoEncontrados.length) msg+='
+Nao encontrados: '+naoEncontrados.slice(0,5).join(', ')+(naoEncontrados.length>5?' e mais...':'');
+      alert(msg);
+    }catch(err){alert('Erro ao importar: '+err.message);}
+    input.value='';
+  };
+  reader.readAsArrayBuffer(input.files[0]);
+}
+
+function tsImportarRegistros(input){
+  // Import periods: Nome/Colaborador, Entrada, Saida
+  if(!input.files||!input.files[0]) return;
+  if(typeof XLSX==='undefined'){alert('XLSX nao disponivel.');return;}
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var wb=XLSX.read(e.target.result,{type:'array'});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      if(!rows.length){alert('Nenhuma linha encontrada.');return;}
+      var keys=Object.keys(rows[0]);
+      var nomeCol=keys.find(function(k){return /nome|colaborador/i.test(k.trim());});
+      var entCol=keys.find(function(k){return /entrada|inicio|start|admiss/i.test(k.trim());});
+      var saiCol=keys.find(function(k){return /sa[ií]da|fim|end|deslig/i.test(k.trim());});
+      if(!nomeCol||!entCol||!saiCol){
+        alert('Colunas necessarias nao encontradas.
+Esperado: Colaborador, Entrada (ou Data de Entrada), Saida (ou Data de Saida).
+Encontrado: '+keys.join(', '));
+        return;
+      }
+      function parseDate(val){
+        var d=String(val||'').trim();
+        if(/\d{2}\/\d{2}\/\d{4}/.test(d)){var p=d.split('/');return p[2]+'-'+p[1]+'-'+p[0];}
+        if(/\d{4}-\d{2}-\d{2}/.test(d)) return d;
+        var n=parseFloat(d);
+        if(!isNaN(n)){var dt=new Date(Math.round((n-25569)*86400*1000));return dt.toISOString().slice(0,10);}
+        return '';
+      }
+      var adicionados=0,erros=[];
+      rows.forEach(function(row){
+        var nome=String(row[nomeCol]||'').trim();
+        var ent=parseDate(row[entCol]);
+        var sai=parseDate(row[saiCol]);
+        if(!nome||!ent||!sai){erros.push(nome||'(vazio)');return;}
+        if(sai<=ent){erros.push(nome+' (datas invalidas)');return;}
+        TS_REGISTROS.push({nome:nome,entrada:ent,saida:sai,meses:tsCalcMeses(ent,sai)});
+        adicionados++;
+      });
+      tsSaveReg();
+      renderTsRegistros();
+      var msg='Importacao concluida: '+adicionados+' periodos adicionados.';
+      if(erros.length) msg+='
+Ignorados: '+erros.slice(0,5).join(', ')+(erros.length>5?' e mais...':'');
+      alert(msg);
+    }catch(err){alert('Erro ao importar: '+err.message);}
+    input.value='';
+  };
+  reader.readAsArrayBuffer(input.files[0]);
+}
 function tsSubAba(sub){
   var pv=document.getElementById('ts-pane-visao'),pr=document.getElementById('ts-pane-reg');
   var bv=document.getElementById('ts-sub-visao'),br=document.getElementById('ts-sub-reg');
