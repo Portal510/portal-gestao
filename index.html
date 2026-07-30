@@ -2540,8 +2540,7 @@ function tsImportarVisao(input){
       saveData();
       renderTempoServico();
       var msg='Importacao concluida: '+atualizados+' colaboradores atualizados.';
-      if(naoEncontrados.length) msg+='
-Nao encontrados: '+naoEncontrados.slice(0,5).join(', ')+(naoEncontrados.length>5?' e mais...':'');
+      if(naoEncontrados.length) msg+=' | Nao encontrados: '+naoEncontrados.slice(0,5).join(', ')+(naoEncontrados.length>5?' e mais...':'');
       alert(msg);
     }catch(err){alert('Erro ao importar: '+err.message);}
     input.value='';
@@ -2591,8 +2590,7 @@ Encontrado: '+keys.join(', '));
       tsSaveReg();
       renderTsRegistros();
       var msg='Importacao concluida: '+adicionados+' periodos adicionados.';
-      if(erros.length) msg+='
-Ignorados: '+erros.slice(0,5).join(', ')+(erros.length>5?' e mais...':'');
+      if(erros.length) msg+=' | Ignorados: '+erros.slice(0,5).join(', ')+(erros.length>5?' e mais...':'');
       alert(msg);
     }catch(err){alert('Erro ao importar: '+err.message);}
     input.value='';
