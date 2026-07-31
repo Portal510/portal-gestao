@@ -2443,7 +2443,7 @@ function syncFirebase(){
   window._fbGestaoLoad().then(function(p){
     if(!p||!p.colaboradores||p.colaboradores.length<5){ _fb('Firebase vazio','err'); return; }
     var rTs=p.ts||0;
-    if(rTs > localTs + 10000){
+    if(rTs>1000000000000 && rTs > localTs + 10000){
       if(confirm('Firebase tem dados mais recentes ('+new Date(rTs).toLocaleString('pt-BR')+').\nAtualizar este dispositivo?')){
         var v=p.colaboradores.filter(function(c){return c&&c.nome;});
         _safeSetItem(DATA_KEY,JSON.stringify(v));
@@ -2466,7 +2466,9 @@ function _fbAutoSync(){
     var lTs=parseInt(localStorage.getItem("ts_data_saved_at")||"0");
     _fbLoad().then(function(p){
       if(!p||!p.colaboradores||p.colaboradores.length<10) return;
-      if((p.ts||0)<=lTs+5000) return;
+      var remTs=p.ts||0;
+      if(remTs<1000000000000) return; // ignora payloads de teste (ts muito pequeno)
+      if(remTs<=lTs+5000) return;
       var v=p.colaboradores.filter(function(c){return c&&c.nome;});
       if(v.length<10) return;
       _safeSetItem(DATA_KEY,JSON.stringify(v));
