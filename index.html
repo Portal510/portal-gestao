@@ -2684,6 +2684,7 @@ function renderTsRegistros(){
   }).join('');
 }
 function renderTempoServico(){
+  tsAtualizarExpSuporte();
   var tbody=document.getElementById('ts-tbody'),kpis=document.getElementById('ts-kpis');
   if(!tbody)return;
   var cargoSel=document.getElementById('ts-cargo');
@@ -2854,8 +2855,11 @@ function exportTsRegistros(){
   XLSX.utils.book_append_sheet(wb,ws,'Periodos');XLSX.writeFile(wb,'Periodos_Tempo.xlsx');
 }
 
+function tsAtualizarExpSuporte(){if(typeof TS_MIN_ANOS==="undefined")return;DATA.forEach(function(c){if(!c||!c.nome||c.status==="inativo")return;var minAnos=TS_MIN_ANOS[c.cargo]||null;if(minAnos===null)return;var mAt=(typeof tsCalcAtual==="function")?tsCalcAtual(c.data_admissao):0;var mAc=(typeof tsAcum==="function")?tsAcum(c.nome):0;if(!c.docs)c.docs={};if(c.docs["Exp. Suporte"]==="Agendado")return;c.docs["Exp. Suporte"]=(mAt+mAc>=minAnos*12)?"Entregue":"Pendente";});}
+
 function saveData(){
   try{
+    tsAtualizarExpSuporte();
     DATA = DATA.filter(c => c && c.nome && typeof c.nome === 'string');
     DATA.sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt-BR',{sensitivity:'base'}));
     DATA.forEach((c,i)=>{ c._id=i; });
@@ -10693,4 +10697,5 @@ setInterval(()=>{ try{saveData();}catch(e){}; }, 30000);
 </html>_initFbSync();
   _startFbPolling();
   _fbAutoSync();
+  tsAtualizarExpSuporte();
   
