@@ -2474,8 +2474,12 @@ function _fbAutoSync(){
       _safeSetItem(DATA_KEY,JSON.stringify(v));
       localStorage.setItem("ts_data_saved_at",(p.ts).toString());
       DATA=v.map(function(c,i){return Object.assign({},c,{_id:i});});
-      try{var at=document.querySelector(".tab.active");if(at){var oc=at.getAttribute("onclick")||"";var m=oc.match(/showTab\(['"]([\w-]+)['"]/);if(m&&typeof renders!=="undefined"&&renders[m[1]])renders[m[1]]();}}
-      catch(e){try{renderGeral();}catch(e2){}}
+      try{
+        var _at=document.querySelector(".tab.active");
+        var _tabId=_at?(_at.id||(_at.getAttribute("onclick")||"").replace(/.*showTab\(['"]([-\w]+)['"].*/,"")):"geral";
+        if(typeof renders!=="undefined"&&renders[_tabId]) renders[_tabId]();
+        else renderGeral();
+      }catch(e){try{renderGeral();}catch(e2){}}
       try{(typeof fbStatus==="function"?fbStatus:function(){})("Sincronizado "+new Date(p.ts).toLocaleTimeString("pt-BR"),"ok");}catch(e){}
       console.log("[auto-sync] Atualizado:",v.length,"colabs");
     }).catch(function(){});
