@@ -2919,7 +2919,7 @@ function tsVerificarAgendamentosVencidos(){
 
 function saveData(){
   try{
-    tsAtualizarExpSuporte();
+    try{ tsAtualizarExpSuporte(); }catch(_e){ console.warn('[tsExpSuporte]',_e); }
     DATA = DATA.filter(c => c && c.nome && typeof c.nome === 'string');
     DATA.sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt-BR',{sensitivity:'base'}));
     DATA.forEach((c,i)=>{ c._id=i; });
