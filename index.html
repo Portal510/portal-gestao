@@ -2428,11 +2428,11 @@ const DATA_KEY = 'ts_portal_data_v2';
 
 // ── Save DATA to localStorage (formato completo — garante persistência) ──
 function syncFirebase(){
-  // Push local first
+  function _fb(msg,t){try{fbStatus(msg,t);}catch(e){console.log('[sync]',msg);}}
   var localTs = parseInt(localStorage.getItem('ts_data_saved_at')||'0');
   if(typeof window._fbGestaoSave==='function') window._fbGestaoSave({colaboradores:DATA,ts:Date.now()});
-  if(typeof window._fbGestaoLoad!=='function'){ fbStatus('Firebase indisponivel','err'); return; }
-  fbStatus('Sincronizando...','sync');
+  if(typeof window._fbGestaoLoad!=='function'){ _fb('Firebase indisponivel','err'); return; }
+  _fb('Sincronizando...','sync');
   window._fbGestaoLoad().then(function(p){
     if(!p||!p.colaboradores||p.colaboradores.length<5){ fbStatus('Firebase vazio','err'); return; }
     var rTs=p.ts||0;
