@@ -7116,6 +7116,16 @@ function showQuickUploadResult(rows){
 function upAtualizarStatus(colabId, tipo, fileName){
   const c = DATA.find(x=>x._id===colabId);
   if(!c) return;
+  // Caso especial: Comprovante de Agendamento
+  // Marca o doc/cert agendado como Entregue
+  if(tipo==='Comprovante de Agendamento'){
+    let found=false;
+    // Procura o primeiro doc Agendado
+    if(c.docs){ Object.keys(c.docs).forEach(function(k){ if(c.docs[k]==='Agendado'&&!found){ c.docs[k]='Entregue'; if(c.docs_agenda) delete c.docs_agenda[k]; found=true; } }); }
+    // Se nao achou em docs, procura em certs
+    if(!found&&c.certs){ Object.keys(c.certs).forEach(function(k){ if(c.certs[k]==='Agendado'&&!found){ c.certs[k]='Entregue'; if(c.certs_agenda) delete c.certs_agenda[k]; found=true; } }); }
+    saveData(); return;
+  }
   const field = TIPO_TO_FIELD[tipo];
   if(!field) return;
   if(field.cat==='docs'){
