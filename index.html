@@ -2462,50 +2462,45 @@ function syncFirebase(){
 function _fbAutoSync(){
   if(typeof _fbLoad!=="function") return;
   setInterval(function(){
+    // Nao sincronizar se modal aberto
     if(document.querySelector(".modal-bg.open")) return;
     var lTs=parseInt(localStorage.getItem("ts_data_saved_at")||"0");
     _fbLoad().then(function(p){
       if(!p||!p.colaboradores||p.colaboradores.length<10) return;
       var remTs=p.ts||0;
-      if(remTs<1000000000000) return; // ignora payloads de teste (ts muito pequeno)
-      if(remTs<=lTs+5000) return;
+      // Ignorar timestamps de teste ou dados mais antigos
+      if(remTs<1000000000000||remTs<=lTs+3000) return;
       var v=p.colaboradores.filter(function(c){return c&&c.nome;});
       if(v.length<10) return;
       _safeSetItem(DATA_KEY,JSON.stringify(v));
-      localStorage.setItem("ts_data_saved_at",(p.ts).toString());
+      localStorage.setItem("ts_data_saved_at",remTs.toString());
       DATA=v.map(function(c,i){return Object.assign({},c,{_id:i});});
+      console.log("[auto-sync] Dados atualizados:",v.length,"colabs de",new Date(remTs).toLocaleTimeString("pt-BR"));
+      // Re-renderizar aba atual
       try{
-        var _at=document.querySelector(".tab.active");
-        var _tabId=_at?(_at.id||(_at.getAttribute("onclick")||"").replace(/.*showTab\(['"]([-\w]+)['"].*/,"")):"geral";
-        if(typeof renders!=="undefined"&&renders[_tabId]) renders[_tabId]();
-        else renderGeral();
-      }catch(e){try{renderGeral();}catch(e2){}}
-      try{(typeof fbStatus==="function"?fbStatus:function(){})("Sincronizado "+new Date(p.ts).toLocaleTimeString("pt-BR"),"ok");}catch(e){}
-      console.log("[auto-sync] Atualizado:",v.length,"colabs");
+        var activeEl=document.querySelector(".tab.active");
+        if(activeEl){
+          var oc=(activeEl.getAttribute("onclick")||"");
+          var tabMatch=oc.match(/showTab\(['"]([-\w]+)['"]/);
+          var tabId=tabMatch?tabMatch[1]:"geral";
+          if(typeof renders!=="undefined"&&renders[tabId]){
+            renders[tabId]();
+          } else {
+            renderGeral();
+          }
+        } else {
+          renderGeral();
+        }
+      }catch(e){ try{renderGeral();}catch(e2){} }
+      // Atualizar indicador
+      try{
+        var fbEl=document.getElementById("fb-status-gestao");
+        if(fbEl){ fbEl.textContent="Sincronizado "+new Date(remTs).toLocaleTimeString("pt-BR"); fbEl.style.background="#D4EDDA"; }
+      }catch(e){}
     }).catch(function(){});
-  },15000);
+  },10000);
 }
 
-// ══ Tempo de Serviço ══════════════════════════════════════════════
-var TS_MIN_ANOS={
-  'Analista de suporte telefonico (TEL)':3,
-  'Analista de suporte telefônico (TEL)':3,
-  'Analista de suporte (BSB)':5,
-  'Analista de suporte (EST)':3,
-  'Analista de suporte especializado (AE)':5,
-  'Cabeamento estruturado (CE)':5,
-  'Analista de suporte especializado (AC)':5,
-  'Administracao de parque tecnologico (AP)':5,
-  'Administração de parque tecnológico (AP)':5,
-  'Supervisor de suporte (STEL)':4,
-  'Supervisor de suporte (BSB)':4,
-  'Supervisor de suporte (EST)':4,
-  'Supervisor de suporte (SCHA)':4,
-  'Supervisor de suporte (SAE)':4,
-  'Gestor de conhecimento':4,
-  'Gestor de Service desk':6
-};
-var TS_REGISTROS=JSON.parse(localStorage.getItem('ts_periodos')||'[]');
 function tsSaveReg(){localStorage.setItem('ts_periodos',JSON.stringify(TS_REGISTROS));}
 
 function tsImportarVisao(input){
@@ -2932,20 +2927,20 @@ function tsVerificarAgendamentosVencidos(){
 
 function saveData(){
   try{
-    try{ tsAtualizarExpSuporte(); }catch(_e){ console.warn('[tsExpSuporte]',_e); }
-    DATA = DATA.filter(c => c && c.nome && typeof c.nome === 'string');
-    DATA.sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt-BR',{sensitivity:'base'}));
-    DATA.forEach((c,i)=>{ c._id=i; });
+    try{ tsAtualizarExpSuporte(); }catch(_e){}
+    DATA = DATA.filter(function(c){ return c && c.nome && typeof c.nome==='string'; });
+    DATA.sort(function(a,b){ return (a.nome||'').localeCompare(b.nome||'','pt-BR',{sensitivity:'base'}); });
+    DATA.forEach(function(c,i){ c._id=i; });
     _safeSetItem(DATA_KEY, JSON.stringify(DATA));
-    localStorage.setItem('ts_data_saved_at', Date.now().toString());
-    // Salvar cópia de segurança no Firebase (documento separado 'gestao-data')
-    try{ _fbBackupData(); }catch(fe){}
+    var _ts = Date.now();
+    localStorage.setItem('ts_data_saved_at', _ts.toString());
+    // Salvar no Firebase imediatamente
+    if(typeof window._fbGestaoSave==='function'){
+      window._fbGestaoSave({colaboradores:DATA, ts:_ts});
+    }
   }catch(e){ console.warn('[saveData]',e); }
 }
-
-// Restaura DATA do Firebase se localStorage vazio ou corrompido
-// Firebase backup desativado (rede bloqueia acesso)
-function _fbBackupData(){if(window._fbThrottle)return;window._fbThrottle=setTimeout(function(){window._fbThrottle=null;},15000);try{if(typeof window._fbGestaoSave==="function")window._fbGestaoSave({colaboradores:DATA,ts:Date.now()});}catch(e){}}
+function _fbBackupData(){ /* saveData now calls _fbGestaoSave directly */ }
 
 async function _fbRestoreIfEmpty(){
   try{
