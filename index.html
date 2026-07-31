@@ -2857,6 +2857,65 @@ function exportTsRegistros(){
 
 function tsAtualizarExpSuporte(){if(typeof TS_MIN_ANOS==="undefined")return;DATA.forEach(function(c){if(!c||!c.nome||c.status==="inativo")return;var minAnos=TS_MIN_ANOS[c.cargo]||null;if(minAnos===null)return;var mAt=(typeof tsCalcAtual==="function")?tsCalcAtual(c.data_admissao):0;var mAc=(typeof tsAcum==="function")?tsAcum(c.nome):0;if(!c.docs)c.docs={};if(c.docs["Exp. Suporte"]==="Agendado")return;c.docs["Exp. Suporte"]=(mAt+mAc>=minAnos*12)?"Entregue":"Pendente";});}
 
+
+// == Alerta de agendamentos vencidos =================================
+function tsVerificarAgendamentosVencidos(){
+  var hoje = new Date(); hoje.setHours(0,0,0,0);
+  var hojeStr = hoje.toISOString().slice(0,10);
+  var vencidos = [];
+  DATA.forEach(function(c){
+    if(!c||!c.nome||c.status==='inativo') return;
+    if(c.docs){
+      Object.keys(c.docs).forEach(function(k){
+        if(c.docs[k]==='Agendado'){
+          var dt=(c.docs_agenda&&c.docs_agenda[k])||'';
+          if(dt && dt<=hojeStr) vencidos.push({nome:c.nome,tipo:'Documento',item:k,data:dt});
+        }
+      });
+    }
+    if(c.certs){
+      Object.keys(c.certs).forEach(function(k){
+        if(c.certs[k]==='Agendado'){
+          var dt=(c.certs_agenda&&c.certs_agenda[k])||'';
+          if(dt && dt<=hojeStr) vencidos.push({nome:c.nome,tipo:'Certif.',item:k,data:dt});
+        }
+      });
+    }
+  });
+  var old=document.getElementById('agend-alert-banner');
+  if(old) old.remove();
+  if(!vencidos.length) return;
+
+  var banner=document.createElement('div');
+  banner.id='agend-alert-banner';
+  banner.style.cssText='position:fixed;top:56px;left:0;right:0;z-index:9999;background:#C55A11;color:#fff;padding:10px 16px;font-size:13px;box-shadow:0 3px 8px rgba(0,0,0,.3)';
+
+  var itens=vencidos.slice(0,5).map(function(v){
+    var d=v.data?v.data.split('-').reverse().join('/'):'';
+    return '<b>'+v.nome+'</b> &mdash; '+v.item+(d?' ('+d+')':'');
+  }).join('<br>');
+  var extra=vencidos.length>5?'<br><i>... e mais '+(vencidos.length-5)+' agendamento(s).</i>':'';
+
+  banner.innerHTML=
+    '<div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">'+
+      '<div style="flex:1">'+
+        '<b>&#9200; '+vencidos.length+' agendamento(s) com prazo hoje ou vencido &mdash; solicite o resultado!</b>'+
+        '<div style="margin-top:4px;font-size:12px;opacity:.95">'+itens+extra+'</div>'+
+      '</div>'+
+      '<div style="display:flex;gap:8px;align-items:center;flex-shrink:0">'+
+        '<button onclick="var el=document.querySelector(\'[onclick*=&quot;pendencias&quot;]\');if(el)el.click();" '+
+          'style="background:#fff;color:#C55A11;border:none;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;font-weight:700">'+
+          'Ver Pend&ecirc;ncias</button>'+
+        '<button onclick="document.getElementById(\'agend-alert-banner\').remove()" '+
+          'style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:14px">'+
+          '&times;</button>'+
+      '</div>'+
+    '</div>';
+
+  document.body.appendChild(banner);
+}
+// ====================================================================
+
 function saveData(){
   try{
     tsAtualizarExpSuporte();
@@ -3780,6 +3839,7 @@ function saveEdit(){
   closeModal('modal-edit');
   const active=document.querySelector('.tab.active');
   if(active) active.click();
+  try{ tsVerificarAgendamentosVencidos(); }catch(e){}
 }
 
 // DETAIL MODAL
@@ -10704,4 +10764,5 @@ setInterval(()=>{ try{saveData();}catch(e){}; }, 30000);
   _startFbPolling();
   _fbAutoSync();
   tsAtualizarExpSuporte();
+  try{ tsVerificarAgendamentosVencidos(); }catch(e){}
   
