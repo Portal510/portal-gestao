@@ -3567,6 +3567,12 @@ function certGetStatus(c, certName){
   const required = CARGO_CERTS_REQUIRED[c.cargo] || [];
   // Not required for this cargo
   if(!required.includes(certName)) return 'N/A';
+  // Regra especial: Curso Montagem/Config. Micro (20h) equivale a Exp. Microcomputadores
+  if(certName === 'Curso Montagem/Config. Micro (20h)'){
+    const expMicro = c.docs && c.docs['Exp. Microcomputadores'];
+    if(expMicro === 'Entregue') return 'Entregue';
+    if(expMicro === 'Agendado') return 'Agendado';
+  }
   // Check saved value
   const saved = c.certs && c.certs[certName];
   if(saved === 'Entregue' || saved === 'Agendado') return saved;
