@@ -2309,6 +2309,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <option value="Pendente">Pendente</option>
       <option value="Entregue">Entregue</option>
       <option value="Agendado">Agendado</option>
+      <option value="Comprovante de Agendamento">Comprovante de Agendamento</option>
       <option value="Sim">Sim</option>
       <option value="Não">Não</option>
       <option value="N/A">N/A</option>
@@ -3790,7 +3791,7 @@ function openEdit(id, field){
   // If Agendado, show date field with existing date
   const wrap=document.getElementById('edit-agenda-wrap');
   const dateInput=document.getElementById('edit-agenda-date');
-  if(cur==='Agendado'){
+  if(cur==='Agendado'||cur==='Comprovante de Agendamento'){
     const _key=field.startsWith('certs.')?field.slice(6):field.startsWith('docs.')?field.slice(5):field;
     const _store=field.startsWith('certs.')?c.certs_agenda:c.docs_agenda;
     const existingDate=(_store&&_store[_key])||'';
@@ -3815,7 +3816,7 @@ function saveEdit(){
     const key=field.slice(5);
     if(!c.docs) c.docs={};
     c.docs[key]=val;
-    if(val==='Agendado'){
+    if(val==='Agendado'||val==='Comprovante de Agendamento'){
       if(!c.docs_agenda) c.docs_agenda={};
       if(dt) c.docs_agenda[key]=dt;
     } else {
@@ -3825,7 +3826,7 @@ function saveEdit(){
     const certName=field.slice(6);
     if(!c.certs) c.certs={};
     c.certs[certName]=val;
-    if(val==='Agendado'){
+    if(val==='Agendado'||val==='Comprovante de Agendamento'){
       if(!c.certs_agenda) c.certs_agenda={};
       if(dt) c.certs_agenda[certName]=dt;
     } else {
