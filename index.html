@@ -3762,7 +3762,7 @@ function onEditValChange(){
   const val=document.getElementById('edit-val').value;
   const wrap=document.getElementById('edit-agenda-wrap');
   const dateInput=document.getElementById('edit-agenda-date');
-  if(val==='Agendado'){
+  if(val==='Agendado'||val==='Comprovante de Agendamento'){
     if(wrap) wrap.style.display='block';
     // Pre-fill with today if no date set
     if(dateInput && !dateInput.value){
