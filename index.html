@@ -8269,19 +8269,7 @@ function importarBackup(input){
   reader.readAsText(file);
 }
 
-function _safeSetItem(key, value){
-  try{
-    localStorage.setItem(key, value);
-  }catch(e){
-    // Quota exceeded — clear old upload files first then retry
-    if(e.name==='QuotaExceededError'||e.message.includes('quota')||e.message.includes('exceeded')){
-      try{ localStorage.removeItem('ts_upload_docs'); }catch(e2){}
-      try{ localStorage.setItem(key, value); }catch(e3){
-        console.warn(`[backup] Could not save ${key}: still too large`);
-      }
-    }
-  }
-}
+function _safeSetItem(key,value){try{localStorage.setItem(key,value);return;}catch(e){}["ts_upload_docs","ts_portal_docs","ts_upload_files"].forEach(function(k){try{localStorage.removeItem(k);}catch(e2){}});try{localStorage.setItem(key,value);return;}catch(e3){}try{var p=JSON.parse(value);if(Array.isArray(p)){var s=p.map(function(c){if(!c)return c;var o=Object.assign({},c);delete o.foto;delete o.assinatura;return o;});localStorage.setItem(key,JSON.stringify(s));}}catch(e4){console.error("[save failed]",e4);}}
 
 // ══════════════════════════════════════════
 // PENDÊNCIAS
