@@ -191,6 +191,13 @@
   window._fbGestaoReady=true;
   setTimeout(function(){window.dispatchEvent(new Event('fbgestao-ready'));},100);
 })();
+// fbStatus global fallback — usado por sync functions em outros scripts
+if(typeof window.fbStatus!=='function'){
+  window.fbStatus=function(msg,t){var el=document.getElementById('fb-status-gestao');
+    if(el){el.textContent=msg;el.style.background=t==='ok'?'#D4EDDA':t==='err'?'#FFE0E0':'#FFF3CD';}
+    console.log('[fbStatus]',msg);
+  };
+}
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
