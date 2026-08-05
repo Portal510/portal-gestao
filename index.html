@@ -3149,10 +3149,25 @@ function declGerarPDF(enviarEmail){
     doc.save(fname);
     var email=c.email_inst||c.email||'';
     var assunto=encodeURIComponent('Declaração de Recebimento — Locação de Equipamentos — '+mes);
+    var uf=c.uf||'';
+    var nomeArq=uf+' – '+c.nome+' – '+mes;
     var corpo=encodeURIComponent(
       'Prezado(a) '+c.nome+',\n\n'+
-      'Segue em anexo a Declaração de Recebimento referente à locação de equipamentos do mês de '+mes+'.\n\n'+
-      'Por favor, assine e retorne o documento.\n\n'+
+      'Conforme orientação do fiscal do contrato, a empresa deverá apresentar, mensalmente, uma Declaração de Recebimento de Valor referente à locação de equipamentos ou ajuda de custo (desktop e internet), conforme definido pela contratante, confirmando que o pagamento foi realizado.\n\n'+
+      'Para atender a essa exigência:\n\n'+
+      '• Será encaminhado o modelo de declaração para preenchimento mensal.\n'+
+      '• O documento deverá ser anexado no formulário correspondente ao respectivo mês, disponível no seguinte link:\n'+
+      '  👉 Formulário de Anexos: https://forms.cloud.microsoft/r/pSfD92kPTn\n\n'+
+      'Exemplo de referência:\n'+
+      '• O pagamento de julho corresponde ao mês de junho.\n'+
+      '• O pagamento de agosto corresponde ao mês de julho.\n'+
+      '• O pagamento de setembro corresponde ao mês de agosto.\n\n'+
+      'Prazo: O documento deverá ser anexado até o 5º dia útil de cada mês.\n\n'+
+      'Observações importantes:\n'+
+      '• É essencial que a declaração seja inserida dentro do prazo estabelecido, garantindo o cumprimento da exigência contratual.\n'+
+      '• A nomenclatura do arquivo deve seguir o padrão: UF – Nome Completo – Mês\n'+
+      '  Exemplo: '+nomeArq+'\n\n'+
+      'Contamos com a sua colaboração.\n\n'+
       'Atenciosamente,\n'+
       'Priscila Pamplona Torres\n'+
       'Gestora do Service Desk — Central de Serviços de TI\n'+
