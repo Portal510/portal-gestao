@@ -1515,7 +1515,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <div style="font-size:12px;color:#6c757d;margin-top:3px">Declaração de ajuste de custo (Desktop/Internet) e Declaração de locação de equipamentos · Preenchimento mensal</div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <select id="decl-mes" onchange="renderDeclaracoes()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
+      <select id="decl-mes-ref" onchange="renderDeclaracoes()" style="padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:12px">
         <option>Janeiro</option><option>Fevereiro</option><option>Março</option><option>Abril</option>
         <option>Maio</option><option>Junho</option><option>Julho</option><option>Agosto</option>
         <option>Setembro</option><option>Outubro</option><option>Novembro</option><option>Dezembro</option>
@@ -2995,7 +2995,7 @@ function declInicializar(){
   });
   // Set current month
   var meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  var mesEl=document.getElementById('decl-mes');
+  var mesEl=document.getElementById('decl-mes-ref');
   if(mesEl) mesEl.value=meses[new Date().getMonth()];
   var _de=document.getElementById('decl-data-envio');
   if(_de&&!_de.value) _de.value=new Date().toISOString().slice(0,10);
@@ -3021,7 +3021,7 @@ function declGerarPDF(enviarEmail){
 
   if(!c) return err('Selecione um colaborador.');
   var celular=(document.getElementById('decl-celular')||{}).value||c.celular||'';
-  var mes=(document.getElementById('decl-mes')||{}).value||'';
+  var mes=(document.getElementById('decl-mes-ref')||{}).value||'';
   var cpf=c.cpf||'';
   var nome=(c.nome||'').toUpperCase();
 
