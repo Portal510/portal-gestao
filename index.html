@@ -1606,7 +1606,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           <option value="Abril">Abril</option>
           <option value="Maio">Maio</option>
           <option value="Junho">Junho</option>
-          <option value="Julho" selected>Julho</option>
+          <option value="Julho">Julho</option>
           <option value="Agosto">Agosto</option>
           <option value="Setembro">Setembro</option>
           <option value="Outubro">Outubro</option>
@@ -2996,7 +2996,10 @@ function declInicializar(){
   // Set current month
   var meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   var mesEl=document.getElementById('decl-mes-ref');
-  if(mesEl&&!mesEl.value) mesEl.value=meses[new Date().getMonth()];
+  if(mesEl&&!mesEl.getAttribute("data-init")){
+    mesEl.value=meses[new Date().getMonth()];
+    mesEl.setAttribute("data-init","1");
+  }
   var _de=document.getElementById('decl-data-envio');
   if(_de&&!_de.value) _de.value=new Date().toISOString().slice(0,10);
 }
