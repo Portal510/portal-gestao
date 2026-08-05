@@ -1614,6 +1614,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           <option value="Dezembro">Dezembro</option>
         </select>
       </div>
+      <div>
+        <label style="font-size:11px;color:#6c757d;display:block;margin-bottom:4px">Data de Envio</label>
+        <input type="date" id="decl-data-envio" style="width:100%;padding:8px 10px;border:1px solid #ced4da;border-radius:6px;font-size:13px">
+      </div>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
       <button onclick="declGerarPDF(false)" class="btn-primary" style="padding:9px 20px;font-size:13px">
@@ -2993,6 +2997,8 @@ function declInicializar(){
   var meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   var mesEl=document.getElementById('decl-mes');
   if(mesEl) mesEl.value=meses[new Date().getMonth()];
+  var _de=document.getElementById('decl-data-envio');
+  if(_de&&!_de.value) _de.value=new Date().toISOString().slice(0,10);
 }
 
 function declPreencherColab(){
@@ -3151,6 +3157,8 @@ function declGerarPDF(enviarEmail){
     var assunto=encodeURIComponent('Declaração de Recebimento — Locação de Equipamentos — '+mes);
     var uf=c.uf||'';
     var nomeArq=uf+' – '+c.nome+' – '+mes;
+    var _deEl=document.getElementById('decl-data-envio');
+    var dataEnvio=_deEl&&_deEl.value?_deEl.value.split('-').reverse().join('/'):new Date().toLocaleDateString('pt-BR');
     var corpo=encodeURIComponent(
       'Prezado(a) '+c.nome+',\n\n'+
       'Conforme orientação do fiscal do contrato, a empresa deverá apresentar, mensalmente, uma Declaração de Recebimento de Valor referente à locação de equipamentos ou ajuda de custo (desktop e internet), conforme definido pela contratante, confirmando que o pagamento foi realizado.\n\n'+
@@ -3162,7 +3170,8 @@ function declGerarPDF(enviarEmail){
       '• O pagamento de julho corresponde ao mês de junho.\n'+
       '• O pagamento de agosto corresponde ao mês de julho.\n'+
       '• O pagamento de setembro corresponde ao mês de agosto.\n\n'+
-      'Prazo: O documento deverá ser anexado até o 5º dia útil de cada mês.\n\n'+
+      'Prazo: O documento deverá ser anexado até o 5º dia útil de cada mês.\n'+
+      'Data de envio deste e-mail: '+dataEnvio+'\n\n'+
       'Observações importantes:\n'+
       '• É essencial que a declaração seja inserida dentro do prazo estabelecido, garantindo o cumprimento da exigência contratual.\n'+
       '• A nomenclatura do arquivo deve seguir o padrão: UF – Nome Completo – Mês\n'+
