@@ -4207,7 +4207,7 @@ function showTab(id,el){
   });
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,'pend-cert':renderPendCert,calendario:renderCal,'tempo-servico':renderTempoServico,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:()=>{try{renderDeclaracoes();}catch(e){}},requisitos:function(){try{renderRequisitos();}catch(e){console.error('renderRequisitos:',e);document.getElementById('req-cards').innerHTML='<p style="color:red;padding:20px">Erro: '+e.message+'</p>';}},pendencias:function(){try{renderPendencias();}catch(e){console.error('renderPendencias:',e);document.getElementById('pend-lista').innerHTML='<p style="color:red;padding:20px">Erro: '+e.message+'</p>';}},contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){console.error('rAbono error:',e);}},gerencial:()=>{try{rGerencial();}catch(e){console.error('rGerencial error:',e);}},indicadores:()=>{try{indRender();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}}};
+  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,'pend-cert':renderPendCert,calendario:renderCal,'tempo-servico':renderTempoServico,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:()=>{try{declInicializar();renderDeclaracoes();}catch(e){}},requisitos:function(){try{renderRequisitos();}catch(e){console.error('renderRequisitos:',e);document.getElementById('req-cards').innerHTML='<p style="color:red;padding:20px">Erro: '+e.message+'</p>';}},pendencias:function(){try{renderPendencias();}catch(e){console.error('renderPendencias:',e);document.getElementById('pend-lista').innerHTML='<p style="color:red;padding:20px">Erro: '+e.message+'</p>';}},contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){console.error('rAbono error:',e);}},gerencial:()=>{try{rGerencial();}catch(e){console.error('rGerencial error:',e);}},indicadores:()=>{try{indRender();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}}};
   if(renders[id]) renders[id]();
 }
 
@@ -6070,7 +6070,7 @@ function declCiclar(nome, mes, ano, campo){
   toast(`${campo==='desk'?'Desktop/Internet':'Locação Equipamento'}: ${prox}`,'ok');
 }
 
-function renderDeclaracoes(){
+function renderDeclaracoes(){declInicializar();
   const mes  = document.getElementById('decl-mes')?.value  || 'Junho';
   const ano  = document.getElementById('decl-ano')?.value  || '2026';
   const fUf  = document.getElementById('decl-uf')?.value   || '';
