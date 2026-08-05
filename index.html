@@ -2979,7 +2979,9 @@ function tsVerificarAgendamentosVencidos(){
 // ══ Gerador de Declaração PDF ═════════════════════════════════════
 function declInicializar(){
   var sel=document.getElementById('decl-colab');
-  if(!sel||sel.options.length>1) return;
+  if(!sel) return;
+  var _cur=sel.value;
+  sel.innerHTML='<option value="">Selecione o colaborador...</option>';
   var colabs=DATA.filter(function(c){return c&&c.nome&&c.status!=='inativo';}).sort(function(a,b){return (a.nome||'').localeCompare(b.nome||'');});
   colabs.forEach(function(c){
     var o=document.createElement('option');
