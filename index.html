@@ -1574,9 +1574,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </div>
   </div>
 
-
-</div>
-
   <!-- Gerador de Declaração de Equipamentos -->
   <div class="card" style="margin-top:20px;padding:20px">
     <div style="font-size:16px;font-weight:700;color:#1F4E79;margin-bottom:16px">
@@ -1630,6 +1627,197 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <div id="decl-erro" style="color:#a32d2d;font-size:12px;margin-top:8px;display:none"></div>
   </div>
 
+  <!-- Gerador de Declaração de Ajuda de Custo -->
+  <div class="card" style="margin-top:20px;padding:20px">
+    <div style="font-size:16px;font-weight:700;color:#1F4E79;margin-bottom:16px">
+      📄 Gerar Declaração de Ajuda de Custo — Equipamento &amp; Internet
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:16px">
+      <div>
+        <label style="font-size:11px;color:#6c757d;display:block;margin-bottom:4px">Colaborador</label>
+        <select id="decl2-colab" onchange="decl2PreencherColab()" style="width:100%;padding:8px 10px;border:1px solid #ced4da;border-radius:6px;font-size:13px">
+          <option value="">Selecione o colaborador...</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:#6c757d;display:block;margin-bottom:4px">CPF</label>
+        <input type="text" id="decl2-cpf" readonly style="width:100%;padding:8px 10px;border:1px solid #ced4da;border-radius:6px;font-size:13px;background:#f8f9fa">
+      </div>
+      <div>
+        <label style="font-size:11px;color:#6c757d;display:block;margin-bottom:4px">Mês de Referência</label>
+        <select id="decl2-mes-ref" style="width:100%;padding:8px 10px;border:1px solid #ced4da;border-radius:6px;font-size:13px">
+          <option value="Janeiro">Janeiro</option>
+          <option value="Fevereiro">Fevereiro</option>
+          <option value="Março">Março</option>
+          <option value="Abril">Abril</option>
+          <option value="Maio">Maio</option>
+          <option value="Junho">Junho</option>
+          <option value="Julho">Julho</option>
+          <option value="Agosto">Agosto</option>
+          <option value="Setembro">Setembro</option>
+          <option value="Outubro">Outubro</option>
+          <option value="Novembro">Novembro</option>
+          <option value="Dezembro">Dezembro</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:#6c757d;display:block;margin-bottom:4px">Data de Envio</label>
+        <input type="date" id="decl2-data-envio" style="width:100%;padding:8px 10px;border:1px solid #ced4da;border-radius:6px;font-size:13px">
+      </div>
+    </div>
+    <div style="background:#E8F0FE;border:1px solid #2E75B6;border-radius:6px;padding:8px 12px;margin-bottom:14px;font-size:12px;color:#1F4E79">
+      💡 Valor fixo: <strong>R$ 224,14</strong> — Duzentos e vinte e quatro reais e quatorze centavos
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button onclick="decl2GerarPDF(false)" class="btn-primary" style="padding:9px 20px;font-size:13px">
+        📄 Gerar PDF
+      </button>
+      <button onclick="decl2GerarPDF(true)" class="btn-primary" style="padding:9px 20px;font-size:13px;background:#C55A11;border-color:#C55A11">
+        📧 Gerar e Enviar por E-mail
+      </button>
+    </div>
+    <div id="decl2-erro" style="color:#a32d2d;font-size:12px;margin-top:8px;display:none"></div>
+  </div>
+
+  <!-- Gerador de Declaração Proporcional -->
+  <div class="card" style="margin-top:20px;padding:20px">
+    <div style="font-size:16px;font-weight:700;color:#1F4E79;margin-bottom:4px">
+      📄 Gerar Declaração Proporcional — Locação de Equipamentos e Ajuda de Custo
+    </div>
+    <div style="font-size:12px;color:#6c757d;margin-bottom:16px">Para pagamentos proporcionais ao período trabalhado no mês</div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:16px">
+      <div>
+        <label style="font-size:11px;color:#6c757d;display:block;margin-bottom:4px">Colaborador</label>
+        <select id="decl3-colab" onchange="decl3PreencherColab()" style="width:100%;padding:8px 10px;border:1px solid #ced4da;border-radius:6px;font-size:13px">
+          <option value="">Selecione o colaborador...</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:#6c757d;display:block;margin-bottom:4px">CPF</label>
+        <input type="text" id="decl3-cpf" readonly style="width:100%;padding:8px 10px;border:1px solid #ced4da;border-radius:6px;font-size:13px;background:#f8f9fa">
+      </div>
+      <div>
+        <label style="font-size:11px;color:#6c757d;display:block;margin-bottom:4px">Mês de Referência</label>
+        <select id="decl3-mes-ref" style="width:100%;padding:8px 10px;border:1px solid #ced4da;border-radius:6px;font-size:13px">
+          <option value="Janeiro">Janeiro</option><option value="Fevereiro">Fevereiro</option>
+          <option value="Março">Março</option><option value="Abril">Abril</option>
+          <option value="Maio">Maio</option><option value="Junho">Junho</option>
+          <option value="Julho">Julho</option><option value="Agosto">Agosto</option>
+          <option value="Setembro">Setembro</option><option value="Outubro">Outubro</option>
+          <option value="Novembro">Novembro</option><option value="Dezembro">Dezembro</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:#6c757d;display:block;margin-bottom:4px">Data de Envio</label>
+        <input type="date" id="decl3-data-envio" style="width:100%;padding:8px 10px;border:1px solid #ced4da;border-radius:6px;font-size:13px">
+      </div>
+    </div>
+
+    <!-- Dias e valor -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px">
+      <div>
+        <label style="font-size:11px;color:#6c757d;display:block;margin-bottom:4px">Dias de Desktop</label>
+        <input type="number" id="decl3-dias-desk" min="1" max="31" placeholder="Ex: 15" oninput="decl3CalcValor()" style="width:100%;padding:8px 10px;border:1px solid #ced4da;border-radius:6px;font-size:13px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:#6c757d;display:block;margin-bottom:4px">Dias de Internet</label>
+        <input type="number" id="decl3-dias-inet" min="1" max="31" placeholder="Ex: 15" oninput="decl3CalcValor()" style="width:100%;padding:8px 10px;border:1px solid #ced4da;border-radius:6px;font-size:13px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:#6c757d;display:block;margin-bottom:4px">Dias úteis do mês</label>
+        <input type="number" id="decl3-dias-uteis" min="1" max="31" placeholder="Ex: 22" oninput="decl3CalcValor()" style="width:100%;padding:8px 10px;border:1px solid #ced4da;border-radius:6px;font-size:13px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:#6c757d;display:block;margin-bottom:4px">Valor Total Calculado</label>
+        <input type="text" id="decl3-valor" readonly placeholder="R$ 0,00" style="width:100%;padding:8px 10px;border:1px solid #2E75B6;border-radius:6px;font-size:14px;font-weight:700;color:#1F4E79;background:#E8F0FE">
+      </div>
+    </div>
+
+    <div style="background:#FFF3E0;border:1px solid #F9A825;border-radius:6px;padding:8px 12px;margin-bottom:14px;font-size:12px;color:#7A4500">
+      💡 Base de cálculo: Desktop R$ 224,14/mês · Internet inclusa no mesmo valor · Proporcional = (dias ÷ dias úteis) × R$ 224,14
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button onclick="decl3GerarPDF(false)" class="btn-primary" style="padding:9px 20px;font-size:13px">
+        📄 Gerar PDF
+      </button>
+      <button onclick="decl3GerarPDF(true)" class="btn-primary" style="padding:9px 20px;font-size:13px;background:#C55A11;border-color:#C55A11">
+        📧 Gerar e Enviar por E-mail
+      </button>
+    </div>
+    <div id="decl3-erro" style="color:#a32d2d;font-size:12px;margin-top:8px;display:none"></div>
+  </div>
+
+  <!-- Gerador de Declaração Benefício Único -->
+  <div class="card" style="margin-top:20px;padding:20px">
+    <div style="font-size:16px;font-weight:700;color:#1F4E79;margin-bottom:4px">
+      📄 Gerar Declaração de Ajuda de Custo — Benefício Único
+    </div>
+    <div style="font-size:12px;color:#6c757d;margin-bottom:16px">Para colaboradores que recebem apenas internet ou apenas depreciação de equipamento</div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:16px">
+      <div>
+        <label style="font-size:11px;color:#6c757d;display:block;margin-bottom:4px">Colaborador</label>
+        <select id="decl4-colab" onchange="decl4PreencherColab()" style="width:100%;padding:8px 10px;border:1px solid #ced4da;border-radius:6px;font-size:13px">
+          <option value="">Selecione o colaborador...</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:#6c757d;display:block;margin-bottom:4px">CPF</label>
+        <input type="text" id="decl4-cpf" readonly style="width:100%;padding:8px 10px;border:1px solid #ced4da;border-radius:6px;font-size:13px;background:#f8f9fa">
+      </div>
+      <div>
+        <label style="font-size:11px;color:#6c757d;display:block;margin-bottom:4px">Mês de Referência</label>
+        <select id="decl4-mes-ref" style="width:100%;padding:8px 10px;border:1px solid #ced4da;border-radius:6px;font-size:13px">
+          <option value="Janeiro">Janeiro</option><option value="Fevereiro">Fevereiro</option>
+          <option value="Março">Março</option><option value="Abril">Abril</option>
+          <option value="Maio">Maio</option><option value="Junho">Junho</option>
+          <option value="Julho">Julho</option><option value="Agosto">Agosto</option>
+          <option value="Setembro">Setembro</option><option value="Outubro">Outubro</option>
+          <option value="Novembro">Novembro</option><option value="Dezembro">Dezembro</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:#6c757d;display:block;margin-bottom:4px">Data de Envio</label>
+        <input type="date" id="decl4-data-envio" style="width:100%;padding:8px 10px;border:1px solid #ced4da;border-radius:6px;font-size:13px">
+      </div>
+    </div>
+
+    <!-- Tipo de benefício -->
+    <div style="margin-bottom:16px">
+      <label style="font-size:11px;color:#6c757d;display:block;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Benefício que está sendo pago</label>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px 16px;border:2px solid #dee2e6;border-radius:8px;font-size:13px;font-weight:500;transition:all .15s" id="decl4-opt-inet-label">
+          <input type="radio" name="decl4-tipo" id="decl4-opt-inet" value="internet" onchange="decl4TipoChange()" style="accent-color:#1F4E79">
+          🌐 Despesas de Internet
+          <span style="font-size:11px;color:#6c757d;font-weight:400">(R$ 112,07)</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px 16px;border:2px solid #dee2e6;border-radius:8px;font-size:13px;font-weight:500;transition:all .15s" id="decl4-opt-micro-label">
+          <input type="radio" name="decl4-tipo" id="decl4-opt-micro" value="micro" onchange="decl4TipoChange()">
+          💻 Depreciação do Equipamento (Micro)
+          <span style="font-size:11px;color:#6c757d;font-weight:400">(R$ 112,07)</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Info dinâmica -->
+    <div id="decl4-info" style="background:#E8F0FE;border:1px solid #2E75B6;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#1F4E79;display:none">
+      <span id="decl4-info-txt"></span>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button onclick="decl4GerarPDF(false)" class="btn-primary" style="padding:9px 20px;font-size:13px">
+        📄 Gerar PDF
+      </button>
+      <button onclick="decl4GerarPDF(true)" class="btn-primary" style="padding:9px 20px;font-size:13px;background:#C55A11;border-color:#C55A11">
+        📧 Gerar e Enviar por E-mail
+      </button>
+    </div>
+    <div id="decl4-erro" style="color:#a32d2d;font-size:12px;margin-top:8px;display:none"></div>
+  </div>
+
+</div>
 
 <!-- ═══════════════════ FÉRIAS ═══════════════════ -->
 <div id="tab-ferias" style="display:none">
@@ -3002,6 +3190,69 @@ function declInicializar(){
   }
   var _de=document.getElementById('decl-data-envio');
   if(_de&&!_de.value) _de.value=new Date().toISOString().slice(0,10);
+
+  // Preencher select do gerador de Ajuda de Custo
+  var sel2=document.getElementById('decl2-colab');
+  if(sel2){
+    var _cur2=sel2.value;
+    sel2.innerHTML='<option value="">Selecione o colaborador...</option>';
+    colabs.forEach(function(c){
+      var o=document.createElement('option');
+      o.value=c._id;
+      o.textContent=c.nome+(c.uf?' ('+c.uf+')':'');
+      sel2.appendChild(o);
+    });
+    if(_cur2) sel2.value=_cur2;
+  }
+  var mesEl2=document.getElementById('decl2-mes-ref');
+  if(mesEl2&&!mesEl2.getAttribute('data-init')){
+    mesEl2.value=meses[new Date().getMonth()];
+    mesEl2.setAttribute('data-init','1');
+  }
+  var _de2=document.getElementById('decl2-data-envio');
+  if(_de2&&!_de2.value) _de2.value=new Date().toISOString().slice(0,10);
+
+  // Preencher select do gerador proporcional
+  var sel3=document.getElementById('decl3-colab');
+  if(sel3){
+    var _cur3=sel3.value;
+    sel3.innerHTML='<option value="">Selecione o colaborador...</option>';
+    colabs.forEach(function(c){
+      var o=document.createElement('option');
+      o.value=c._id;
+      o.textContent=c.nome+(c.uf?' ('+c.uf+')':'');
+      sel3.appendChild(o);
+    });
+    if(_cur3) sel3.value=_cur3;
+  }
+  var mesEl3=document.getElementById('decl3-mes-ref');
+  if(mesEl3&&!mesEl3.getAttribute('data-init')){
+    mesEl3.value=meses[new Date().getMonth()];
+    mesEl3.setAttribute('data-init','1');
+  }
+  var _de3=document.getElementById('decl3-data-envio');
+  if(_de3&&!_de3.value) _de3.value=new Date().toISOString().slice(0,10);
+
+  // Preencher select do gerador benefício único
+  var sel4=document.getElementById('decl4-colab');
+  if(sel4){
+    var _cur4=sel4.value;
+    sel4.innerHTML='<option value="">Selecione o colaborador...</option>';
+    colabs.forEach(function(c){
+      var o=document.createElement('option');
+      o.value=c._id;
+      o.textContent=c.nome+(c.uf?' ('+c.uf+')':'');
+      sel4.appendChild(o);
+    });
+    if(_cur4) sel4.value=_cur4;
+  }
+  var mesEl4=document.getElementById('decl4-mes-ref');
+  if(mesEl4&&!mesEl4.getAttribute('data-init')){
+    mesEl4.value=meses[new Date().getMonth()];
+    mesEl4.setAttribute('data-init','1');
+  }
+  var _de4=document.getElementById('decl4-data-envio');
+  if(_de4&&!_de4.value) _de4.value=new Date().toISOString().slice(0,10);
 }
 
 function declPreencherColab(){
@@ -3180,6 +3431,606 @@ function declGerarPDF(enviarEmail){
       'Observações importantes:\n'+
       '• É essencial que a declaração seja inserida dentro do prazo estabelecido, garantindo o cumprimento da exigência contratual.\n'+
       '• A nomenclatura do arquivo deve seguir o padrão: UF – Nome Completo – Mês\n'+
+      '  Exemplo: '+nomeArq+'\n\n'+
+      'Contamos com a sua colaboração.\n\n'+
+      'Atenciosamente,\n'+
+      'Priscila Pamplona Torres\n'+
+      'Gestora do Service Desk — Central de Serviços de TI\n'+
+      'Tribunal de Contas da União | Contrato T&S'
+    );
+    setTimeout(function(){
+      window.location.href='mailto:'+email+'?subject='+assunto+'&body='+corpo;
+    },500);
+  } else {
+    doc.save(fname);
+  }
+}
+// ══ Gerador de Declaração Ajuda de Custo PDF ══════════════════════
+function decl2PreencherColab(){
+  var sel=document.getElementById('decl2-colab');
+  var id=parseInt(sel.value);
+  var c=DATA.find(function(x){return x._id===id;});
+  if(!c) return;
+  var cpfEl=document.getElementById('decl2-cpf');
+  if(cpfEl) cpfEl.value=c.cpf||'';
+}
+
+function decl2GerarPDF(enviarEmail){
+  var sel=document.getElementById('decl2-colab');
+  var id=parseInt(sel.value);
+  var c=DATA.find(function(x){return x._id===id;});
+  var erroEl=document.getElementById('decl2-erro');
+  function err(msg){erroEl.textContent=msg;erroEl.style.display='block';setTimeout(function(){erroEl.style.display='none';},4000);}
+
+  if(!c) return err('Selecione um colaborador.');
+  var mes=(document.getElementById('decl2-mes-ref')||{}).value||'';
+  var cpf=c.cpf||'';
+  var nome=(c.nome||'').toUpperCase();
+
+  if(typeof window.jspdf==='undefined'&&typeof jsPDF==='undefined'){
+    return err('Biblioteca jsPDF não carregada. Verifique conexão com a internet.');
+  }
+
+  var JsPDF=window.jspdf?window.jspdf.jsPDF:jsPDF;
+  var doc=new JsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+
+  var pw=210, ml=20, mr=190, lh=7;
+  var y=15;
+
+  // Logo / Cabeçalho
+  try{doc.addImage('data:image/jpeg;base64,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','JPEG',pw/2-15,y-5,30,21);}catch(e){}
+  y+=20;
+  doc.setFontSize(11);
+  doc.setFont('helvetica','bold');
+  doc.text('T&S Engenharia Telemática e Sistemas Ltda.',pw/2,y,{align:'center'});
+  y+=6;
+  doc.setFontSize(9);
+  doc.setFont('helvetica','normal');
+  doc.text('Rua 01 Lote 06 – Acampamento Tamboril – Vila Planalto',pw/2,y,{align:'center'});
+  y+=5;
+  doc.text('Cep.: 70.801-010 – Brasília - DF - Tel.: (61) 3083-9250',pw/2,y,{align:'center'});
+  y+=3;
+  doc.setLineWidth(0.3);
+  doc.line(ml,y,mr,y);
+  y+=8;
+
+  // Título
+  doc.setFontSize(11);
+  doc.setFont('helvetica','bold');
+  doc.text('DECLARAÇÃO DE RECEBIMENTO DE AJUDA DE CUSTO',pw/2,y,{align:'center'});
+  y+=12;
+
+  // Corpo
+  doc.setFontSize(11);
+  doc.setFont('helvetica','normal');
+
+  // Parágrafo 1
+  doc.text('Eu, ',ml,y);
+  var x1=ml+doc.getTextWidth('Eu, ');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(13);
+  doc.text(nome,x1,y);
+  var x2=x1+doc.getTextWidth(nome);
+  doc.setFontSize(11);
+  doc.setFont('helvetica','normal');
+  doc.text(', portador(a) do CPF nº ',x2,y);
+  var xc=x2+doc.getTextWidth(', portador(a) do CPF nº ');
+  doc.setFont('helvetica','bold');
+  doc.text(cpf,xc,y);
+  y+=lh;
+
+  doc.setFont('helvetica','normal');
+  doc.text('colaborador(a) da empresa ',ml,y);
+  var xt=ml+doc.getTextWidth('colaborador(a) da empresa ');
+  doc.setFont('helvetica','bold');
+  doc.text('T&S Engenharia',xt,y);
+  var xt2=xt+doc.getTextWidth('T&S Engenharia');
+  doc.setFont('helvetica','normal');
+  doc.text(', declaro, para os devidos fins, que recebi da empresa',xt2,y);
+  y+=lh;
+
+  doc.setFont('helvetica','bold');
+  doc.text('T&S Engenharia',ml,y);
+  var xe=ml+doc.getTextWidth('T&S Engenharia');
+  doc.setFont('helvetica','normal');
+  doc.text(' a quantia de ',xe,y);
+  var xv=xe+doc.getTextWidth(' a quantia de ');
+  doc.setFont('helvetica','bold');
+  doc.text('R$ 224,14 (Duzentos e vinte e quatro reais e quatorze centavos)',xv,y);
+  y+=lh;
+
+  doc.setFont('helvetica','normal');
+  doc.text('a título de ',ml,y);
+  var xtt=ml+doc.getTextWidth('a título de ');
+  doc.setFont('helvetica','bold');
+  doc.text('ajuda de custo referente à utilização de equipamento próprio e despesas com',xtt,y);
+  y+=lh;
+
+  doc.setFont('helvetica','bold');
+  doc.text('internet para o desempenho das atividades profissionais',ml,y);
+  var xm=ml+doc.getTextWidth('internet para o desempenho das atividades profissionais');
+  doc.setFont('helvetica','normal');
+  doc.text(', correspondente ao mês de ',xm,y);
+  var xmes=xm+doc.getTextWidth(', correspondente ao mês de ');
+  doc.setFont('helvetica','bold');
+  doc.text(mes,xmes,y);
+  doc.setFont('helvetica','normal');
+  doc.text('.',xmes+doc.getTextWidth(mes),y);
+  y+=10;
+
+  // Parágrafo 2
+  var par2='      Declaro que o referido valor foi devidamente recebido nesta data, dando quitação exclusivamente à ajuda de custo referente ao período acima mencionado.';
+  var lines2=doc.splitTextToSize(par2,mr-ml);
+  doc.text(lines2,ml,y);
+  y+=lines2.length*lh+10;
+
+  // Fecho
+  doc.text('Por ser verdade, firmo a presente declaração.',ml,y);
+  y+=16;
+
+  // Linha de assinatura
+  doc.line(ml,y,ml+80,y);
+  doc.text(', _____ de ___________________ de ________',ml+80,y);
+  y+=12;
+  doc.line(ml+40,y,ml+120,y);
+  y+=5;
+  doc.setFontSize(10);
+  doc.text(c.nome,ml+80-(doc.getTextWidth(c.nome)/2),y,{align:'center'});
+
+  // Rodapé
+  y=285;
+  doc.setLineWidth(0.3);
+  doc.line(ml,y,mr,y);
+  y+=4;
+  doc.setFontSize(9);
+  doc.text('Rua 01 Lote 06 – Acampamento Tamboril – Vila Planalto | Cep.: 70.801-010 – Brasília - DF | Tel.: (61) 3083-9250',pw/2,y,{align:'center'});
+
+  var fname='AjudaCusto_'+nome.replace(/\s+/g,'_')+'_'+mes+'.pdf';
+
+  if(enviarEmail){
+    doc.save(fname);
+    var email=c.email_inst||c.email||'';
+    var assunto=encodeURIComponent('Declaração de Ajuda de Custo — Equipamento & Internet — '+mes);
+    var uf=c.uf||'';
+    var nomeArq=uf+' – '+c.nome+' – '+mes;
+    var _deEl=document.getElementById('decl2-data-envio');
+    var dataEnvio=_deEl&&_deEl.value?_deEl.value.split('-').reverse().join('/'):new Date().toLocaleDateString('pt-BR');
+    var corpo=encodeURIComponent(
+      'Prezado(a) '+c.nome+',\n\n'+
+      'Conforme orientação do fiscal do contrato, a empresa deverá apresentar, mensalmente, uma Declaração de Ajuda de Custo referente à utilização de equipamento próprio e despesas com internet, confirmando que o pagamento foi realizado.\n\n'+
+      'Para atender a essa exigência:\n\n'+
+      '• Será encaminhado o modelo de declaração para preenchimento mensal.\n'+
+      '• O documento deverá ser anexado no formulário correspondente ao respectivo mês, disponível no seguinte link:\n'+
+      '  👉 Formulário de Anexos: https://forms.cloud.microsoft/r/pSfD92kPTn\n\n'+
+      'Prazo: O documento deverá ser anexado até o 5º dia útil de cada mês.\n'+
+      'Data de envio deste e-mail: '+dataEnvio+'\n\n'+
+      '• A nomenclatura do arquivo deve seguir o padrão: UF – Nome Completo – Mês\n'+
+      '  Exemplo: '+nomeArq+'\n\n'+
+      'Contamos com a sua colaboração.\n\n'+
+      'Atenciosamente,\n'+
+      'Priscila Pamplona Torres\n'+
+      'Gestora do Service Desk — Central de Serviços de TI\n'+
+      'Tribunal de Contas da União | Contrato T&S'
+    );
+    setTimeout(function(){
+      window.location.href='mailto:'+email+'?subject='+assunto+'&body='+corpo;
+    },500);
+  } else {
+    doc.save(fname);
+  }
+}
+// ══ Gerador de Declaração Proporcional PDF ════════════════════════
+function decl3PreencherColab(){
+  var sel=document.getElementById('decl3-colab');
+  var id=parseInt(sel.value);
+  var c=DATA.find(function(x){return x._id===id;});
+  if(!c) return;
+  var cpfEl=document.getElementById('decl3-cpf');
+  if(cpfEl) cpfEl.value=c.cpf||'';
+}
+
+function decl3CalcValor(){
+  var diasDesk=parseFloat(document.getElementById('decl3-dias-desk').value)||0;
+  var diasInet=parseFloat(document.getElementById('decl3-dias-inet').value)||0;
+  var diasUteis=parseFloat(document.getElementById('decl3-dias-uteis').value)||0;
+  var valEl=document.getElementById('decl3-valor');
+  if(!diasUteis||diasUteis===0){ valEl.value=''; return; }
+  var diasMed=(diasDesk+diasInet)/2;
+  var valor=(diasMed/diasUteis)*224.14;
+  valEl.value='R$ '+valor.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+function decl3NumPorExtenso(valor){
+  // Converte valor numérico para extenso em reais
+  var n=Math.round(valor*100);
+  var reais=Math.floor(n/100);
+  var centavos=n%100;
+  var unidades=['','um','dois','três','quatro','cinco','seis','sete','oito','nove','dez','onze','doze','treze','quatorze','quinze','dezesseis','dezessete','dezoito','dezenove'];
+  var dezenas=['','','vinte','trinta','quarenta','cinquenta','sessenta','setenta','oitenta','noventa'];
+  var centenas=['','cento','duzentos','trezentos','quatrocentos','quinhentos','seiscentos','setecentos','oitocentos','novecentos'];
+  function grupo(n){
+    var s='';
+    if(n>=100){ s+=centenas[Math.floor(n/100)]; n=n%100; if(n>0) s+=' e '; }
+    if(n>=20){ s+=dezenas[Math.floor(n/10)]; n=n%10; if(n>0) s+=' e '; }
+    if(n>0) s+=unidades[n];
+    return s;
+  }
+  var ext='';
+  if(reais===0) ext='zero reais';
+  else if(reais===1) ext='um real';
+  else ext=grupo(reais)+' reais';
+  if(centavos>0){
+    ext+=' e '+(centavos===1?'um centavo':grupo(centavos)+' centavos');
+  }
+  return ext.charAt(0).toUpperCase()+ext.slice(1);
+}
+
+function decl3GerarPDF(enviarEmail){
+  var sel=document.getElementById('decl3-colab');
+  var id=parseInt(sel.value);
+  var c=DATA.find(function(x){return x._id===id;});
+  var erroEl=document.getElementById('decl3-erro');
+  function err(msg){erroEl.textContent=msg;erroEl.style.display='block';setTimeout(function(){erroEl.style.display='none';},4000);}
+
+  if(!c) return err('Selecione um colaborador.');
+  var diasDesk=parseInt(document.getElementById('decl3-dias-desk').value)||0;
+  var diasInet=parseInt(document.getElementById('decl3-dias-inet').value)||0;
+  var diasUteis=parseInt(document.getElementById('decl3-dias-uteis').value)||0;
+  if(!diasDesk) return err('Informe os dias de desktop.');
+  if(!diasInet) return err('Informe os dias de internet.');
+  if(!diasUteis) return err('Informe os dias úteis do mês.');
+
+  var mes=(document.getElementById('decl3-mes-ref')||{}).value||'';
+  var cpf=c.cpf||'';
+  var nome=(c.nome||'').toUpperCase();
+
+  var diasMed=(diasDesk+diasInet)/2;
+  var valorNum=(diasMed/diasUteis)*224.14;
+  var valorFmt='R$ '+valorNum.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  var valorExtenso=decl3NumPorExtenso(valorNum);
+
+  if(typeof window.jspdf==='undefined'&&typeof jsPDF==='undefined'){
+    return err('Biblioteca jsPDF não carregada. Verifique conexão com a internet.');
+  }
+
+  var JsPDF=window.jspdf?window.jspdf.jsPDF:jsPDF;
+  var doc=new JsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+
+  var pw=210, ml=20, mr=190, lh=7;
+  var y=15;
+
+  // Logo / Cabeçalho
+  try{doc.addImage('data:image/jpeg;base64,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','JPEG',pw/2-15,y-5,30,21);}catch(e){}
+  y+=20;
+  doc.setFontSize(11);
+  doc.setFont('helvetica','bold');
+  doc.text('T&S Engenharia Telemática e Sistemas Ltda.',pw/2,y,{align:'center'});
+  y+=6;
+  doc.setFontSize(9);
+  doc.setFont('helvetica','normal');
+  doc.text('Rua 01 Lote 06 – Acampamento Tamboril – Vila Planalto',pw/2,y,{align:'center'});
+  y+=5;
+  doc.text('Cep.: 70.801-010 – Brasília - DF - Tel.: (61) 3083-9250',pw/2,y,{align:'center'});
+  y+=3;
+  doc.setLineWidth(0.3);
+  doc.line(ml,y,mr,y);
+  y+=8;
+
+  // Título
+  doc.setFontSize(11);
+  doc.setFont('helvetica','bold');
+  doc.text('DECLARAÇÃO DE RECEBIMENTO DE VALOR REFERENTE À LOCAÇÃO DE',pw/2,y,{align:'center'});
+  y+=6;
+  doc.text('EQUIPAMENTOS E AJUDA DE CUSTO',pw/2,y,{align:'center'});
+  y+=12;
+
+  // Parágrafo 1
+  doc.setFontSize(11);
+  doc.setFont('helvetica','normal');
+  doc.text('Eu, ',ml,y);
+  var x1=ml+doc.getTextWidth('Eu, ');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(13);
+  doc.text(nome,x1,y);
+  var x2=x1+doc.getTextWidth(nome);
+  doc.setFontSize(11);
+  doc.setFont('helvetica','normal');
+  doc.text(', portador(a) do CPF nº ',x2,y);
+  var xc=x2+doc.getTextWidth(', portador(a) do CPF nº ');
+  doc.setFont('helvetica','bold');
+  doc.text(cpf,xc,y);
+  doc.setFont('helvetica','normal');
+  doc.text(',',xc+doc.getTextWidth(cpf),y);
+  y+=lh;
+
+  doc.text('colaborador(a) da empresa ',ml,y);
+  var xt=ml+doc.getTextWidth('colaborador(a) da empresa ');
+  doc.setFont('helvetica','bold');
+  doc.text('T&S Engenharia',xt,y);
+  var xt2=xt+doc.getTextWidth('T&S Engenharia');
+  doc.setFont('helvetica','normal');
+  doc.text(', declaro, para os devidos fins, que recebi da referida empresa a quantia de ',xt2,y);
+  y+=lh;
+
+  doc.setFont('helvetica','bold');
+  doc.text(valorFmt+' ('+valorExtenso+')',ml,y);
+  doc.setFont('helvetica','normal');
+  doc.text(', a título de ajuda de custo referente a:',ml+doc.getTextWidth(valorFmt+' ('+valorExtenso+')'),y);
+  y+=lh+3;
+
+  // Bullets
+  doc.text('•   '+diasDesk+' dias de utilização de desktop particular',ml+5,y);
+  y+=lh;
+  doc.text('•   '+diasInet+' dias de depreciação de internet;',ml+5,y);
+  y+=lh+3;
+
+  var linhaFim='necessários ao desempenho das atividades profissionais, correspondente ao mês de ';
+  doc.text(linhaFim,ml,y);
+  var xmes=ml+doc.getTextWidth(linhaFim);
+  doc.setFont('helvetica','bold');
+  doc.text(mes,xmes,y);
+  doc.setFont('helvetica','normal');
+  doc.text('.',xmes+doc.getTextWidth(mes),y);
+  y+=10;
+
+  // Parágrafo 2
+  var par2='      Afirmo que o valor acima mencionado foi devidamente recebido nesta data, dando quitação exclusivamente à ajuda de custo referente ao período informado.';
+  var lines2=doc.splitTextToSize(par2,mr-ml);
+  doc.text(lines2,ml,y);
+  y+=lines2.length*lh+10;
+
+  // Fecho
+  doc.text('Por ser expressão da verdade, firmo a presente declaração.',ml,y);
+  y+=16;
+
+  // Linha de assinatura
+  doc.line(ml,y,ml+80,y);
+  doc.text(', _____ de ___________________ de ________',ml+80,y);
+  y+=12;
+  doc.line(ml+40,y,ml+120,y);
+  y+=5;
+  doc.setFontSize(10);
+  doc.text(c.nome,ml+80-(doc.getTextWidth(c.nome)/2),y,{align:'center'});
+
+  // Rodapé
+  y=285;
+  doc.setLineWidth(0.3);
+  doc.line(ml,y,mr,y);
+  y+=4;
+  doc.setFontSize(9);
+  doc.text('Rua 01 Lote 06 – Acampamento Tamboril – Vila Planalto | Cep.: 70.801-010 – Brasília - DF | Tel.: (61) 3083-9250',pw/2,y,{align:'center'});
+
+  var fname='DeclProporcional_'+nome.replace(/\s+/g,'_')+'_'+mes+'.pdf';
+
+  if(enviarEmail){
+    doc.save(fname);
+    var email=c.email_inst||c.email||'';
+    var assunto=encodeURIComponent('Declaração Proporcional — Locação de Equipamentos e Ajuda de Custo — '+mes);
+    var uf=c.uf||'';
+    var nomeArq=uf+' – '+c.nome+' – '+mes;
+    var _deEl=document.getElementById('decl3-data-envio');
+    var dataEnvio=_deEl&&_deEl.value?_deEl.value.split('-').reverse().join('/'):new Date().toLocaleDateString('pt-BR');
+    var corpo=encodeURIComponent(
+      'Prezado(a) '+c.nome+',\n\n'+
+      'Segue em anexo a Declaração Proporcional de Recebimento referente à Locação de Equipamentos e Ajuda de Custo no valor de '+valorFmt+', correspondente ao mês de '+mes+'.\n\n'+
+      '• '+diasDesk+' dias de utilização de desktop particular\n'+
+      '• '+diasInet+' dias de depreciação de internet\n\n'+
+      'O documento deverá ser anexado no formulário correspondente ao respectivo mês:\n'+
+      '  👉 Formulário de Anexos: https://forms.cloud.microsoft/r/pSfD92kPTn\n\n'+
+      'Prazo: O documento deverá ser anexado até o 5º dia útil de cada mês.\n'+
+      'Data de envio: '+dataEnvio+'\n\n'+
+      '• Nomenclatura do arquivo: UF – Nome Completo – Mês\n'+
+      '  Exemplo: '+nomeArq+'\n\n'+
+      'Contamos com a sua colaboração.\n\n'+
+      'Atenciosamente,\n'+
+      'Priscila Pamplona Torres\n'+
+      'Gestora do Service Desk — Central de Serviços de TI\n'+
+      'Tribunal de Contas da União | Contrato T&S'
+    );
+    setTimeout(function(){
+      window.location.href='mailto:'+email+'?subject='+assunto+'&body='+corpo;
+    },500);
+  } else {
+    doc.save(fname);
+  }
+}
+// ══ Gerador de Declaração Benefício Único PDF ════════════════════
+function decl4PreencherColab(){
+  var sel=document.getElementById('decl4-colab');
+  var id=parseInt(sel.value);
+  var c=DATA.find(function(x){return x._id===id;});
+  if(!c) return;
+  var cpfEl=document.getElementById('decl4-cpf');
+  if(cpfEl) cpfEl.value=c.cpf||'';
+}
+
+function decl4TipoChange(){
+  var tipo=document.querySelector('input[name="decl4-tipo"]:checked');
+  var infoEl=document.getElementById('decl4-info');
+  var infoTxt=document.getElementById('decl4-info-txt');
+  var lbInet=document.getElementById('decl4-opt-inet-label');
+  var lbMicro=document.getElementById('decl4-opt-micro-label');
+  if(!tipo){infoEl.style.display='none';return;}
+  infoEl.style.display='block';
+  lbInet.style.border='2px solid #dee2e6';
+  lbMicro.style.border='2px solid #dee2e6';
+  if(tipo.value==='internet'){
+    lbInet.style.border='2px solid #1F4E79';
+    infoTxt.innerHTML='✅ Colaborador recebe <strong>R$ 112,07</strong> pelas despesas de internet. Declaração informará que a depreciação do equipamento <strong>não será paga</strong> pois usa equipamento da empresa.';
+  } else {
+    lbMicro.style.border='2px solid #1F4E79';
+    infoTxt.innerHTML='✅ Colaborador recebe <strong>R$ 112,07</strong> pela depreciação do equipamento (micro). Declaração informará que a ajuda de custo de internet <strong>não será paga</strong> neste mês.';
+  }
+}
+
+function decl4GerarPDF(enviarEmail){
+  var sel=document.getElementById('decl4-colab');
+  var id=parseInt(sel.value);
+  var c=DATA.find(function(x){return x._id===id;});
+  var erroEl=document.getElementById('decl4-erro');
+  function err(msg){erroEl.textContent=msg;erroEl.style.display='block';setTimeout(function(){erroEl.style.display='none';},4000);}
+
+  if(!c) return err('Selecione um colaborador.');
+  var tipoEl=document.querySelector('input[name="decl4-tipo"]:checked');
+  if(!tipoEl) return err('Selecione o benefício que está sendo pago.');
+
+  var tipo=tipoEl.value; // 'internet' ou 'micro'
+  var mes=(document.getElementById('decl4-mes-ref')||{}).value||'';
+  var cpf=c.cpf||'';
+  var nome=(c.nome||'').toUpperCase();
+
+  if(typeof window.jspdf==='undefined'&&typeof jsPDF==='undefined'){
+    return err('Biblioteca jsPDF não carregada. Verifique conexão com a internet.');
+  }
+
+  var JsPDF=window.jspdf?window.jspdf.jsPDF:jsPDF;
+  var doc=new JsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+
+  var pw=210, ml=20, mr=190, lh=7;
+  var y=15;
+
+  // Logo / Cabeçalho
+  try{doc.addImage('data:image/jpeg;base64,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','JPEG',pw/2-15,y-5,30,21);}catch(e){}
+  y+=20;
+  doc.setFontSize(11);
+  doc.setFont('helvetica','bold');
+  doc.text('T&S Engenharia Telemática e Sistemas Ltda.',pw/2,y,{align:'center'});
+  y+=6;
+  doc.setFontSize(9);
+  doc.setFont('helvetica','normal');
+  doc.text('Rua 01 Lote 06 – Acampamento Tamboril – Vila Planalto',pw/2,y,{align:'center'});
+  y+=5;
+  doc.text('Cep.: 70.801-010 – Brasília - DF - Tel.: (61) 3083-9250',pw/2,y,{align:'center'});
+  y+=3;
+  doc.setLineWidth(0.3);
+  doc.line(ml,y,mr,y);
+  y+=8;
+
+  // Título
+  doc.setFontSize(11);
+  doc.setFont('helvetica','bold');
+  doc.text('DECLARAÇÃO DE RECEBIMENTO DE AJUDA DE CUSTO',pw/2,y,{align:'center'});
+  y+=12;
+
+  // Parágrafo 1 — Eu, NOME, CPF
+  doc.setFontSize(11);
+  doc.setFont('helvetica','normal');
+  doc.text('Eu, ',ml,y);
+  var x1=ml+doc.getTextWidth('Eu, ');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(13);
+  doc.text(nome,x1,y);
+  var x2=x1+doc.getTextWidth(nome);
+  doc.setFontSize(11);
+  doc.setFont('helvetica','normal');
+  doc.text(', portador(a) do CPF nº ',x2,y);
+  var xc=x2+doc.getTextWidth(', portador(a) do CPF nº ');
+  doc.setFont('helvetica','bold');
+  doc.text(cpf,xc,y);
+  doc.setFont('helvetica','normal');
+  doc.text(',',xc+doc.getTextWidth(cpf),y);
+  y+=lh;
+
+  doc.text('colaborador(a) da empresa ',ml,y);
+  var xt=ml+doc.getTextWidth('colaborador(a) da empresa ');
+  doc.setFont('helvetica','bold');
+  doc.text('T&S Engenharia',xt,y);
+  var xt2=xt+doc.getTextWidth('T&S Engenharia');
+  doc.setFont('helvetica','normal');
+  doc.text(', declaro, para os devidos fins, que recebi da referida empresa a quantia de',xt2,y);
+  y+=lh;
+
+  doc.setFont('helvetica','bold');
+  doc.text('R$ 112,07 (cento e doze reais e sete centavos)',ml,y);
+  doc.setFont('helvetica','normal');
+  var xv=ml+doc.getTextWidth('R$ 112,07 (cento e doze reais e sete centavos)');
+  doc.text(', a título de ajuda de custo pelas despesas de',xv,y);
+  y+=lh;
+
+  // Linha específica conforme tipo
+  if(tipo==='internet'){
+    doc.setFont('helvetica','bold');
+    doc.text('internet',ml,y);
+    doc.setFont('helvetica','normal');
+    var xi=ml+doc.getTextWidth('internet');
+    doc.text(' necessárias ao desempenho das atividades profissionais, correspondente ao mês de ',xi,y);
+    var xmes=xi+doc.getTextWidth(' necessárias ao desempenho das atividades profissionais, correspondente ao mês de ');
+    doc.setFont('helvetica','bold');
+    doc.text(mes,xmes,y);
+    doc.setFont('helvetica','normal');
+    doc.text('.',xmes+doc.getTextWidth(mes),y);
+    y+=10;
+    // Parágrafo 2 — internet
+    var par2='      Declaro, ainda, que estou utilizando um equipamento cedido pela empresa T&S Engenharia e, portanto, tenho ciência de que o valor referente à depreciação do meu equipamento neste mês não será pago.';
+    var lines2=doc.splitTextToSize(par2,mr-ml);
+    doc.text(lines2,ml,y);
+    y+=lines2.length*lh+8;
+  } else {
+    doc.setFont('helvetica','bold');
+    doc.text('depreciação do equipamento (micro)',ml,y);
+    doc.setFont('helvetica','normal');
+    var xd=ml+doc.getTextWidth('depreciação do equipamento (micro)');
+    doc.text(' necessárias ao desempenho das atividades profissionais, correspondente ao mês de ',xd,y);
+    var xmes=xd+doc.getTextWidth(' necessárias ao desempenho das atividades profissionais, correspondente ao mês de ');
+    doc.setFont('helvetica','bold');
+    doc.text(mes,xmes,y);
+    doc.setFont('helvetica','normal');
+    doc.text('.',xmes+doc.getTextWidth(mes),y);
+    y+=10;
+    // Parágrafo 2 — micro
+    var par2='      Declaro, ainda, que as despesas de internet neste mês não serão pagas, conforme acordado com a empresa T&S Engenharia.';
+    var lines2=doc.splitTextToSize(par2,mr-ml);
+    doc.text(lines2,ml,y);
+    y+=lines2.length*lh+8;
+  }
+
+  // Parágrafo 3 — comum
+  var par3='      Afirmo que o valor acima mencionado foi devidamente recebido nesta data, dando quitação exclusivamente à ajuda de custo referente ao período informado.';
+  var lines3=doc.splitTextToSize(par3,mr-ml);
+  doc.text(lines3,ml,y);
+  y+=lines3.length*lh+10;
+
+  // Fecho
+  doc.text('Por ser expressão da verdade, firmo a presente declaração.',ml,y);
+  y+=16;
+
+  // Linha de assinatura
+  doc.line(ml,y,ml+80,y);
+  doc.text(', _____ de ___________________ de ________',ml+80,y);
+  y+=12;
+  doc.line(ml+40,y,ml+120,y);
+  y+=5;
+  doc.setFontSize(10);
+  doc.text(c.nome,ml+80-(doc.getTextWidth(c.nome)/2),y,{align:'center'});
+
+  // Rodapé
+  y=285;
+  doc.setLineWidth(0.3);
+  doc.line(ml,y,mr,y);
+  y+=4;
+  doc.setFontSize(9);
+  doc.text('Rua 01 Lote 06 – Acampamento Tamboril – Vila Planalto | Cep.: 70.801-010 – Brasília - DF | Tel.: (61) 3083-9250',pw/2,y,{align:'center'});
+
+  var tipoNome=tipo==='internet'?'Internet':'Micro';
+  var fname='DeclBenefUnico_'+tipoNome+'_'+nome.replace(/\s+/g,'_')+'_'+mes+'.pdf';
+
+  if(enviarEmail){
+    doc.save(fname);
+    var email=c.email_inst||c.email||'';
+    var tipoTexto=tipo==='internet'?'despesas de internet':'depreciação de equipamento (micro)';
+    var assunto=encodeURIComponent('Declaração de Ajuda de Custo — '+tipoTexto+' — '+mes);
+    var uf=c.uf||'';
+    var nomeArq=uf+' – '+c.nome+' – '+mes;
+    var _deEl=document.getElementById('decl4-data-envio');
+    var dataEnvio=_deEl&&_deEl.value?_deEl.value.split('-').reverse().join('/'):new Date().toLocaleDateString('pt-BR');
+    var corpo=encodeURIComponent(
+      'Prezado(a) '+c.nome+',\n\n'+
+      'Segue em anexo a Declaração de Recebimento de Ajuda de Custo referente às '+tipoTexto+', no valor de R$ 112,07, correspondente ao mês de '+mes+'.\n\n'+
+      'O documento deverá ser anexado no formulário correspondente ao respectivo mês:\n'+
+      '  👉 Formulário de Anexos: https://forms.cloud.microsoft/r/pSfD92kPTn\n\n'+
+      'Prazo: O documento deverá ser anexado até o 5º dia útil de cada mês.\n'+
+      'Data de envio: '+dataEnvio+'\n\n'+
+      '• Nomenclatura do arquivo: UF – Nome Completo – Mês\n'+
       '  Exemplo: '+nomeArq+'\n\n'+
       'Contamos com a sua colaboração.\n\n'+
       'Atenciosamente,\n'+
