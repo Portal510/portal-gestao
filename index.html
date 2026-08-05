@@ -2996,7 +2996,7 @@ function declInicializar(){
   // Set current month
   var meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   var mesEl=document.getElementById('decl-mes-ref');
-  if(mesEl) mesEl.value=meses[new Date().getMonth()];
+  if(mesEl&&!mesEl.value) mesEl.value=meses[new Date().getMonth()];
   var _de=document.getElementById('decl-data-envio');
   if(_de&&!_de.value) _de.value=new Date().toISOString().slice(0,10);
 }
