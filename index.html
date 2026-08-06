@@ -160,7 +160,7 @@
         }).catch(function(){});
     }
     setTimeout(poll,2000);
-    return setInterval(poll,5000);
+    return setInterval(poll,15000);
   };
 
   // ── Poll portal-gestao for changes (other devices) ────
@@ -185,7 +185,7 @@
         }).catch(function(){fbStatus('Offline','err');});
     }
     setTimeout(poll,1500);
-    return setInterval(poll,5000);
+    return setInterval(poll,15000);
   };
 
   window._fbGestaoReady=true;
@@ -441,6 +441,80 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
+<script>
+// ═══════════════════════════════════════════════════
+// RESET ÚNICO: limpa admissão, termos, certificações
+// e uniforme. Roda após o Firebase sincronizar para
+// garantir que os dados resetados prevaleçam.
+// ═══════════════════════════════════════════════════
+var _RESET_DONE = false;
+
+function _executarReset(){
+  if(_RESET_DONE) return;
+  if(localStorage.getItem('ts_reset_v2')) return;
+  _RESET_DONE = true;
+
+  var admDocs=['Diploma/Superior','Especialização TI','Exp. Suporte','Exp. Microcomputadores','ASO Admissional','CTPS','Contrato de Trabalho'];
+  var termDocs=['Termo TCU','Cadastro TCU','Decl. Não Parentesco','Termo Vale Transporte','Termo de Conduta T&S'];
+  var allCerts=['HDI SCA','HDI CSR','M365 Fundamentals','MD-100 ou MD-102','HDI DAST','AZ-900','ITIL Foundations v4','HDI SCTL','HDI KCS','HDI SCM','HDI SCD','XLA Foundation','Curso Montagem/Config. Micro (20h)'];
+
+  // 1. Limpar caches de sync antes de tudo
+  localStorage.removeItem('gestao_sync_cache');
+  try{ localStorage.removeItem(typeof SYNC_KEY!=='undefined'?SYNC_KEY:'hepta_portal_data'); }catch(e){}
+
+  // 2. Uniforme
+  localStorage.removeItem('ts_uni_termos');
+  if(typeof uniformeTermos !== 'undefined') uniformeTermos = [];
+
+  // 2. Resetar docs/certs em DATA (variável global do portal)
+  var dados = (typeof DATA !== 'undefined' && DATA.length) ? DATA : [];
+  if(!dados.length){
+    try{
+      var raw = localStorage.getItem('ts_portal_data_v2');
+      if(raw) dados = JSON.parse(raw);
+    }catch(e){}
+  }
+
+  dados.forEach(function(c){
+    if(!c.docs) c.docs = {};
+    if(!c.certs) c.certs = {};
+    admDocs.forEach(function(d){ c.docs[d] = 'Pendente'; });
+    termDocs.forEach(function(d){ c.docs[d] = 'Pendente'; });
+    allCerts.forEach(function(k){
+      if(c.certs.hasOwnProperty(k) && c.certs[k] !== 'N/A') c.certs[k] = 'Pendente';
+    });
+  });
+
+  // 3. Salvar localmente com timestamp atual (para vencer o Firebase)
+  var ts = Date.now();
+  try{
+    localStorage.setItem('ts_portal_data_v2', JSON.stringify(dados));
+    localStorage.setItem('ts_data_saved_at', ts.toString());
+  }catch(e){}
+
+  // 4. Salvar no Firebase para sobrescrever dados antigos
+  if(typeof window._fbGestaoSave === 'function'){
+    window._fbGestaoSave({colaboradores: dados, ts: ts});
+    console.log('[Portal] Reset salvo no Firebase.');
+  }
+
+  // 5. Marcar como executado
+  localStorage.setItem('ts_reset_v2','1');
+  console.log('[Portal] Reset de admissão/termos/certif/uniforme concluído.');
+}
+
+// Executar após o Firebase estar pronto (garante que sobrescreve sync)
+window.addEventListener('fbgestao-ready', function(){
+  // Aguarda 3s para o pullFromFirestore terminar, depois reseta e salva
+  setTimeout(_executarReset, 3000);
+});
+
+// Fallback: se Firebase não estiver disponível, executar após 5s
+setTimeout(function(){
+  if(!_RESET_DONE) _executarReset();
+}, 5000);
+</script>
+
 
 <div class="header">
   <div>
@@ -626,6 +700,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <option value="N/A">— N/A</option>
       <option value="Agendado">📅 Agendado</option></select>
     <button class="btn-clear" onclick="clearFilters('adm')">Limpar</button>
+    <button onclick="resetarAba('admissao')" class="btn-export" style="background:#fff;border:1px solid #dc3545;color:#dc3545" title="Resetar registros">🗑️ Resetar</button>
     <button class="btn-export" onclick="withBtn(this,()=>exportXlsx('admissao'))" style="margin-left:auto">⬇ Exportar XLSX</button>
     <button class="btn-danger" onclick="resetarPendente('admissao')" style="padding:7px 14px;background:#C55A11;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">🔄 Resetar para Pendente</button>
   </div>
@@ -666,6 +741,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <option value="N/A">— N/A</option>
       <option value="Agendado">📅 Agendado</option></select>
     <button class="btn-clear" onclick="clearFilters('termos')">Limpar</button>
+    <button onclick="resetarAba('termos')" class="btn-export" style="background:#fff;border:1px solid #dc3545;color:#dc3545" title="Resetar registros">🗑️ Resetar</button>
     <button class="btn-export" onclick="withBtn(this,()=>exportXlsx('termos'))" style="margin-left:auto">⬇ Exportar XLSX</button>
     <button class="btn-danger" onclick="resetarPendente('termos')" style="padding:7px 14px;background:#C55A11;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">🔄 Resetar para Pendente</button>
   </div>
@@ -702,6 +778,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <option value="N/A">— N/A</option>
       <option value="Agendado">📅 Agendado</option></select>
     <button class="btn-clear" onclick="clearFilters('cert')">Limpar</button>
+    <button onclick="resetarAba('certif')" class="btn-export" style="background:#fff;border:1px solid #dc3545;color:#dc3545" title="Resetar registros">🗑️ Resetar</button>
     <button class="btn-export" onclick="withBtn(this,()=>exportXlsx('certif'))" style="margin-left:auto">⬇ Exportar XLSX</button>
     <button class="btn-danger" onclick="resetarPendente('certif')" style="padding:7px 14px;background:#C55A11;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">🔄 Resetar para Pendente</button>
   </div>
@@ -994,7 +1071,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <div style="font-weight:700;font-size:15px;color:#1F4E79">📋 Termos Gerados</div>
       <div style="display:flex;gap:8px">
         <input type="text" id="uni-busca" placeholder="🔍 Buscar colaborador…" style="padding:6px 10px;border:1px solid #ced4da;border-radius:6px;font-size:13px" oninput="renderTermosUni()">
-        <button class="btn-clear" onclick="if(confirm('Limpar todos os termos?')){uniformeTermos=[];localStorage.removeItem(\'ts_uni_termos\');renderTermosUni()}">Limpar tudo</button>
+        <button class="btn-clear" style="background:#fff;border:1px solid #dc3545;color:#dc3545;padding:6px 14px;font-size:12px;border-radius:6px;cursor:pointer" onclick="resetarAba('uniforme')">🗑️ Resetar tudo</button>
       </div>
     </div>
     <div id="uni-termos-lista">
@@ -2868,11 +2945,35 @@ function tsFmtD(d){if(!d)return '-';return d.split('-').reverse().join('/');}
 function tsAcum(nome){return TS_REGISTROS.filter(function(r){return r.nome===nome;}).reduce(function(s,r){return s+r.meses;},0);}
 function tsPopulateColab(){
   var sel=document.getElementById('ts-reg-colab');if(!sel)return;
+  // Aguarda DATA estar disponível
+  var dados=(typeof DATA!=='undefined'&&DATA&&DATA.length)?DATA:[];
+  if(!dados.length){
+    try{var raw=localStorage.getItem('ts_portal_data_v2');if(raw)dados=JSON.parse(raw);}catch(e){}
+  }
+  if(!dados.length){setTimeout(tsPopulateColab,800);return;}
   var cur=sel.value;sel.innerHTML='<option value="">Selecione...</option>';
-  var nomes=[...new Set(DATA.filter(function(c){return c&&c.nome&&c.status!=='inativo';}).map(function(c){return c.nome;}))].sort();
+  var nomes=[...new Set(dados.filter(function(c){return c&&c.nome&&c.status!=='inativo';}).map(function(c){return c.nome;}))].sort();
   nomes.forEach(function(n){var o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
   if(cur&&[...sel.options].some(function(o){return o.value===cur;}))sel.value=cur;
 }
+// Repopular sempre que DATA atualizar (após sync Firebase)
+var _tsOrigRenderGeral=typeof renderGeral==='function'?renderGeral:null;
+document.addEventListener('DOMContentLoaded',function(){
+  // Observer: repopula o select sempre que o painel de registro estiver visível
+  var pane=document.getElementById('ts-pane-reg');
+  if(pane){
+    var obs=new MutationObserver(function(muts){
+      muts.forEach(function(m){
+        if(m.attributeName==='style'&&pane.style.display!=='none'){
+          setTimeout(tsPopulateColab,100);
+        }
+      });
+    });
+    obs.observe(pane,{attributes:true});
+  }
+  // Também repopular 2s após carregamento (Firebase já sincronizou)
+  setTimeout(tsPopulateColab,2000);
+});
 function tsAdicionarRegistro(){
   var nome=(document.getElementById('ts-reg-colab')||{}).value||'';
   var entrada=(document.getElementById('ts-reg-entrada')||{}).value||'';
@@ -4045,6 +4146,63 @@ function decl4GerarPDF(enviarEmail){
     doc.save(fname);
   }
 }
+// ══ Reset de abas ════════════════════════════════════════════════
+function resetarAba(aba){
+  var labels={
+    admissao:'Admissão (Diploma, Especialização, Exp. Suporte, Exp. Micro, ASO, CTPS, Contrato)',
+    termos:'Termos (TCU, Cadastro TCU, Decl. Parentesco, Vale Transporte, Conduta T&S)',
+    certif:'Certificações (HDI, M365, MD-100/102, AZ-900, ITIL, XLA)',
+    uniforme:'Uniforme (todos os termos de recebimento)'
+  };
+  if(!confirm('⚠️ Resetar todos os registros de '+labels[aba]+'?\n\nEsta ação zerará todos os campos para "Pendente" e salvará no Firebase. Não pode ser desfeita.'))return;
+
+  if(aba==='uniforme'){
+    uniformeTermos=[];
+    localStorage.removeItem('ts_uni_termos');
+    try{renderTermosUni();}catch(e){}
+    alert('✅ Registros de Uniforme resetados.');
+    return;
+  }
+
+  var admDocs=['Diploma/Superior','Especialização TI','Exp. Suporte','Exp. Microcomputadores','ASO Admissional','CTPS','Contrato de Trabalho'];
+  var termDocs=['Termo TCU','Cadastro TCU','Decl. Não Parentesco','Termo Vale Transporte','Termo de Conduta T&S'];
+  var allCerts=['HDI SCA','HDI CSR','M365 Fundamentals','MD-100 ou MD-102','HDI DAST','AZ-900','ITIL Foundations v4','HDI SCTL','HDI KCS','HDI SCM','HDI SCD','XLA Foundation','Curso Montagem/Config. Micro (20h)'];
+
+  DATA.forEach(function(c){
+    if(!c.docs) c.docs={};
+    if(!c.certs) c.certs={};
+    if(aba==='admissao'){
+      admDocs.forEach(function(d){ c.docs[d]='Pendente'; });
+    } else if(aba==='termos'){
+      termDocs.forEach(function(d){ c.docs[d]='Pendente'; });
+    } else if(aba==='certif'){
+      allCerts.forEach(function(k){ if(c.certs.hasOwnProperty(k)&&c.certs[k]!=='N/A') c.certs[k]='Pendente'; });
+    }
+  });
+
+  // Gravar timestamp de bloqueio — qualquer payload do Firebase com ts <= _ts
+  // será ignorado pelo applyGestaoPayload, preservando o reset
+  var _ts = Date.now() + 30000; // +30s de margem garante prioridade total
+  localStorage.setItem('ts_reset_block', _ts.toString());
+  localStorage.setItem('ts_data_saved_at', _ts.toString());
+
+  // Limpar cache do sync para evitar que dados antigos sejam reaplicados
+  try{ localStorage.removeItem('gestao_sync_cache'); }catch(e){}
+  try{ localStorage.removeItem(SYNC_KEY||'hepta_portal_data'); }catch(e){}
+  try{ localStorage.setItem('ts_portal_data_v2', JSON.stringify(DATA)); }catch(e){}
+
+  // Salvar no Firebase com timestamp superior — sobrescreve dados antigos
+  if(typeof window._fbGestaoSave==='function'){
+    window._fbGestaoSave({colaboradores:DATA, ts:_ts});
+    console.log('[resetarAba] Reset salvo no Firebase:', aba);
+  }
+
+  if(aba==='admissao'){ try{renderAdm();}catch(e){} }
+  else if(aba==='termos'){ try{renderTermos();}catch(e){} }
+  else if(aba==='certif'){ try{renderCert();}catch(e){} }
+
+  alert('✅ Registros de '+labels[aba]+' resetados e salvos no Firebase.');
+}
 // ══════════════════════════════════════════════════════════════════
 function saveData(){
   try{
@@ -4084,7 +4242,44 @@ async function _fbRestoreIfEmpty(){
   }catch(e){ return false; } // silenced — Firebase may be unavailable
 }
 
-function _initFbSync(){var lTs=parseInt(localStorage.getItem("ts_data_saved_at")||"0");if(typeof window._fbGestaoLoad!=="function")return;window._fbGestaoLoad().then(function(p){if(!p||!Array.isArray(p.colaboradores)||p.colaboradores.length<5)return;if((p.ts||0)>lTs+5000){var v=p.colaboradores.filter(function(c){return c&&c.nome;});if(v.length<5)return;_safeSetItem(DATA_KEY,JSON.stringify(v));localStorage.setItem("ts_data_saved_at",(p.ts||Date.now()).toString());DATA=v.map(function(c,i){return Object.assign({},c,{_id:i});});try{renderGeral();}catch(e){}try{(typeof fbStatus==="function"?fbStatus:function(){})("Dados sincronizados do Firebase","ok");}catch(e){}console.log("[initFbSync] Firebase mais recente:"+v.length+" colabs");}}).catch(function(){});}
+
+// ── Aplicar proteção de reset sobre um array de colaboradores ──────────
+function _aplicarFiltroReset(incoming, local){
+  var resetTs = parseInt(localStorage.getItem('ts_reset_block')||'0');
+  var admDocs=['Diploma/Superior','Especialização TI','Exp. Suporte','Exp. Microcomputadores','ASO Admissional','CTPS','Contrato de Trabalho'];
+  var termDocs=['Termo TCU','Cadastro TCU','Decl. Não Parentesco','Termo Vale Transporte','Termo de Conduta T&S'];
+  var allCerts=['HDI SCA','HDI CSR','M365 Fundamentals','MD-100 ou MD-102','HDI DAST','AZ-900','ITIL Foundations v4','HDI SCTL','HDI KCS','HDI SCM','HDI SCD','XLA Foundation','Curso Montagem/Config. Micro (20h)'];
+  var camposProtegidos = admDocs.concat(termDocs);
+  if(!resetTs) return incoming; // sem reset, retorna normal
+  // Se tem reset, zera docs/certs protegidos no incoming
+  return incoming.map(function(c){
+    var clone = Object.assign({}, c);
+    if(clone.docs){ clone.docs = Object.assign({}, clone.docs);
+      camposProtegidos.forEach(function(d){ if(clone.docs[d]) clone.docs[d]='Pendente'; }); }
+    if(clone.certs){ clone.certs = Object.assign({}, clone.certs);
+      allCerts.forEach(function(k){ if(clone.certs[k]&&clone.certs[k]!=='N/A') clone.certs[k]='Pendente'; }); }
+    return clone;
+  });
+}
+
+function _initFbSync(){
+  var lTs=parseInt(localStorage.getItem("ts_data_saved_at")||"0");
+  if(typeof window._fbGestaoLoad!=="function")return;
+  window._fbGestaoLoad().then(function(p){
+    if(!p||!Array.isArray(p.colaboradores)||p.colaboradores.length<5)return;
+    if((p.ts||0)>lTs+5000){
+      var v=p.colaboradores.filter(function(c){return c&&c.nome;});
+      if(v.length<5)return;
+      // Aplicar proteção de reset antes de sobrescrever DATA
+      v=_aplicarFiltroReset(v, DATA);
+      _safeSetItem(DATA_KEY,JSON.stringify(v));
+      localStorage.setItem("ts_data_saved_at",(p.ts||Date.now()).toString());
+      DATA=v.map(function(c,i){return Object.assign({},c,{_id:i});});
+      try{renderGeral();}catch(e){}
+      try{(typeof fbStatus==="function"?fbStatus:function(){})("Dados sincronizados do Firebase","ok");}catch(e){}
+    }
+  }).catch(function(){});
+}
 // ── Load DATA from localStorage ──────────────────────
 function loadData(){
   const _CM={"46188061172": "619920026082", "01705347150": "62984042945", "85407119234": "96991188289", "01322263248": "91992345022", "81367783020": "51992172455", "09166760488": "84988698928", "85216445153": "61993022484", "58847383587": "79998754768", "08731129463": "81983002258", "01166458148": "61999944752", "97089117200": "69984824337", "05772713779": "27998205907", "78744709315": "85996635387", "81854021168": "61985545275", "64200728320": "86988364931", "71032002115": "61981245149", "04938168103": "61998691590", "00537335170": "61998765529", "06637296961": "41996996537", "65700481200": "95991413492", "01874505110": "61998495835", "03675067696": "31971383032", "59514914287": "92981297292", "04158093557": "71988920836", "39383768134": "65992960534", "04503695100": "61998358224", "00802669247": "98984436622", "02145201106": "61981046836", "11591701775": "21992752228", "03165674183": "61994063361", "89687329149": "61993030129", "00008120994": "48999208778", "12854358775": "21988815635", "00628388225": "67981558067", "38100332860": "11982401940", "09224369324": "88999175419", "02283223164": "61984883782", "04456140488": "82988013645", "07678566433": "83998311191", "04843563137": "61991853088", "00330495305": "63984365737", "05505759106": "61991162568", "05751737180": "61992416617", "01562131176": "61991599905", "02040216189": "61981635164", "02873773189": "61991453537", "00055184154": "61991253899", "87428148200": "68999646021"};
@@ -5089,7 +5284,7 @@ function showTab(id,el){
   });
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,'pend-cert':renderPendCert,calendario:renderCal,'tempo-servico':renderTempoServico,comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:()=>{try{declInicializar();renderDeclaracoes();}catch(e){}},requisitos:function(){try{renderRequisitos();}catch(e){console.error('renderRequisitos:',e);document.getElementById('req-cards').innerHTML='<p style="color:red;padding:20px">Erro: '+e.message+'</p>';}},pendencias:function(){try{renderPendencias();}catch(e){console.error('renderPendencias:',e);document.getElementById('pend-lista').innerHTML='<p style="color:red;padding:20px">Erro: '+e.message+'</p>';}},contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){console.error('rAbono error:',e);}},gerencial:()=>{try{rGerencial();}catch(e){console.error('rGerencial error:',e);}},indicadores:()=>{try{indRender();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}}};
+  const renders={geral:renderGeral,equipamentos:renderEquip,admissao:renderAdm,termos:renderTermos,certif:renderCert,'pend-cert':renderPendCert,calendario:renderCal,'tempo-servico':function(){renderTempoServico();tsPopulateColab();},comunicados:initComunicados,predef:renderPreDef,uniforme:initUniforme,upload:initUpload,declaracoes:()=>{try{declInicializar();renderDeclaracoes();}catch(e){}},requisitos:function(){try{renderRequisitos();}catch(e){console.error('renderRequisitos:',e);document.getElementById('req-cards').innerHTML='<p style="color:red;padding:20px">Erro: '+e.message+'</p>';}},pendencias:function(){try{renderPendencias();}catch(e){console.error('renderPendencias:',e);document.getElementById('pend-lista').innerHTML='<p style="color:red;padding:20px">Erro: '+e.message+'</p>';}},contrata:renderContrata,abono:()=>{try{rAbono();}catch(e){console.error('rAbono error:',e);}},gerencial:()=>{try{rGerencial();}catch(e){console.error('rGerencial error:',e);}},indicadores:()=>{try{indRender();}catch(e){}},ferias:()=>{try{ferRender();}catch(e){}}};
   if(renders[id]) renders[id]();
 }
 
@@ -9905,17 +10100,21 @@ function gestaoToPayload(){
 // ── Apply our payload → DATA ──────────────
 function applyGestaoPayload(payload){
   if(!payload?.colaboradores) return 0;
-  // Nunca aplicar payload com menos colabs que DATA local — proteção contra corrupção
   if(payload.colaboradores.length < DATA.length) return 0;
-  // Skip if payload is stale (older than local DATA save)
   const payloadTs = payload.ts||0;
   const localTs   = parseInt(localStorage.getItem('ts_data_saved_at')||'0');
   if(payloadTs && localTs && payloadTs < localTs) return 0;
+
+  // ── Proteção de reset: só aplica docs/certs se o payload for
+  //    POSTERIOR ao último reset manual. Assim dados antigos do
+  //    Firebase nunca sobrescrevem o que foi resetado. ──
+  const resetTs = parseInt(localStorage.getItem('ts_reset_block')||'0');
+  const payloadEhPosteriorAoReset = !resetTs || (payloadTs > resetTs);
+
   let n=0;
   payload.colaboradores.forEach(inc=>{
     const local=DATA.find(c=>c.cpf===inc.cpf||c.nome.trim().toLowerCase()===inc.nome.trim().toLowerCase());
     if(!local) return;
-    // Only apply non-empty values that actually differ
     const apply=(key,val)=>{ if(val&&val!=='Pendente'&&val!==local[key]){local[key]=val;n++;} };
     apply('email_inst', inc.email_inst);
     apply('email', inc.email);
@@ -9924,12 +10123,13 @@ function applyGestaoPayload(payload){
     if(inc.data_admissao && inc.data_admissao!==local.data_admissao){local.data_admissao=inc.data_admissao;n++;}
     if(inc.data_demissao && inc.data_demissao!==local.data_demissao){local.data_demissao=inc.data_demissao;n++;}
     if(inc.rg && inc.rg!==local.rg){local.rg=inc.rg;n++;}
-    // Docs — only update if incoming value is better (Entregue > Pendente)
-    if(inc.docs){ Object.entries(inc.docs).forEach(([k,v])=>{
-      if(v&&v==='Entregue'&&local.docs&&local.docs[k]!==undefined&&local.docs[k]!==v){local.docs[k]=v;n++;}
-    }); }
-    // Certs
-    if(inc.certs){ Object.entries(inc.certs).forEach(([k,v])=>{ if(v&&local.certs&&local.certs[k]!==undefined&&local.certs[k]!==v){local.certs[k]=v;n++;} }); }
+    // Docs/Certs — só aplica se o payload vier de APÓS o reset
+    if(payloadEhPosteriorAoReset){
+      if(inc.docs){ Object.entries(inc.docs).forEach(([k,v])=>{
+        if(v&&v==='Entregue'&&local.docs&&local.docs[k]!==undefined&&local.docs[k]!==v){local.docs[k]=v;n++;}
+      }); }
+      if(inc.certs){ Object.entries(inc.certs).forEach(([k,v])=>{ if(v&&local.certs&&local.certs[k]!==undefined&&local.certs[k]!==v){local.certs[k]=v;n++;} }); }
+    }
     if(inc.certs_agenda&&Object.keys(inc.certs_agenda).length){local.certs_agenda=inc.certs_agenda;n++;}
   });
   return n;
@@ -9980,12 +10180,16 @@ function syncFromLocalStorage(){
     if(raw){ const d=JSON.parse(raw); if(d?.COLL) n+=applyTsData(d); }
   }catch(e){}
   try{
-    // Só aplicar gestao_sync_cache se tiver mais colabs que DATA atual
     const raw=localStorage.getItem('gestao_sync_cache');
     if(raw){
       const d=JSON.parse(raw);
+      // Não reaplicar cache se há reset ativo e o cache é anterior ao reset
+      const resetTs=parseInt(localStorage.getItem('ts_reset_block')||'0');
+      const cacheTs=d?.ts||0;
       if(d && d.colaboradores && d.colaboradores.length >= DATA.length){
-        n+=applyGestaoPayload(d);
+        if(!resetTs || cacheTs > resetTs){
+          n+=applyGestaoPayload(d);
+        }
       }
     }
   }catch(e){}
@@ -10084,14 +10288,15 @@ window.addEventListener('fbgestao-ready', function(){
   // Listen to portal-gestao changes from other devices
   window._fbGestaoListen(function(payload){
     const n=applyGestaoPayload(payload);
-    if(n>0){ saveData(); try{renderGeral();}catch(e){} showSyncToast(n,0); }
+    if(n>0){ saveData(); try{renderGeral();}catch(e){} showSyncToast(n,0); try{tsPopulateColab();}catch(e){} }
   });
   // Load portal-ts data for abono/gerencial tabs
   loadTsDataForTabs();
   // Initial pull only (no push on load — avoids Failed to fetch on startup)
   pullFromFirestore().then(n=>{
     if(n>0) try{renderGeral();}catch(e){}
-  }).catch(()=>{});
+    try{tsPopulateColab();}catch(e){}
+  }).catch(()=>{ try{tsPopulateColab();}catch(e){} });
 });
 
 // ── localStorage events (same machine, diff browsers) ─
